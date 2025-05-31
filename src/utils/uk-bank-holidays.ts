@@ -1,60 +1,475 @@
-/**
- * UK bank holidays utility
- * 
- * This file contains utility functions for handling UK bank holidays
- */
+import { DateTime } from "luxon";
 
-// UK bank holidays for 2025-2026 (add more as needed)
-const UK_BANK_HOLIDAYS: string[] = [
-  // 2025 holidays
-  '20250101', // New Year's Day
-  '20250418', // Good Friday
-  '20250421', // Easter Monday
-  '20250505', // Early May Bank Holiday
-  '20250526', // Spring Bank Holiday
-  '20250825', // Summer Bank Holiday
-  '20251225', // Christmas Day
-  '20251226', // Boxing Day
-  
-  // 2026 holidays (add when available)
-  '20260101', // New Year's Day
-];
-
-/**
- * Checks if a date is a UK bank holiday
- * 
- * @param dateString - Date string in format YYYYMMDD
- * @returns boolean - true if date is a UK bank holiday
- */
-export function isUKBankHoliday(dateString: string): boolean {
-  return UK_BANK_HOLIDAYS.includes(dateString);
+export function IsBankHoliday(dt: DateTime): boolean {
+  // Format date as YYYY-MM-DD to match the format in our bank holiday list
+  const formattedDate = dt.toFormat('yyyy-MM-dd');
+  return UKBankHolidays.events.some(x => x.date === formattedDate);
 }
 
-/**
- * Checks if a date is a weekend (Saturday or Sunday)
- * 
- * @param dateString - Date string in format YYYYMMDD
- * @returns boolean - true if date is a weekend
- */
-export function isWeekend(dateString: string): boolean {
-  // Parse the dateString to a Date object
-  const year = parseInt(dateString.substring(0, 4));
-  const month = parseInt(dateString.substring(4, 6)) - 1; // Month is 0-indexed in JS
-  const day = parseInt(dateString.substring(6, 8));
-  
-  const date = new Date(year, month, day);
-  const dayOfWeek = date.getDay();
-  
-  // 0 is Sunday, 6 is Saturday
-  return dayOfWeek === 0 || dayOfWeek === 6;
+interface BankHolidays {
+  events: BankHoliday[];
 }
 
-/**
- * Checks if a date is a business day (not a weekend or UK bank holiday)
- * 
- * @param dateString - Date string in format YYYYMMDD
- * @returns boolean - true if date is a business day
- */
-export function isBusinessDay(dateString: string): boolean {
-  return !isWeekend(dateString) && !isUKBankHoliday(dateString);
+interface BankHoliday {
+  title: string;
+  date: string;
+  notes: Notes;
+  bunting: boolean;
 }
+
+type Notes = "" | "Substitute day";
+
+export const UKBankHolidays: BankHolidays = {
+  events: [
+    {
+      title: "New Year's Day",
+      date: "2019-01-01",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Good Friday",
+      date: "2019-04-19",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Easter Monday",
+      date: "2019-04-22",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Early May bank holiday",
+      date: "2019-05-06",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Spring bank holiday",
+      date: "2019-05-27",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Summer bank holiday",
+      date: "2019-08-26",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Christmas Day",
+      date: "2019-12-25",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Boxing Day",
+      date: "2019-12-26",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "New Year's Day",
+      date: "2020-01-01",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Good Friday",
+      date: "2020-04-10",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Easter Monday",
+      date: "2020-04-13",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Early May bank holiday (VE day)",
+      date: "2020-05-08",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Spring bank holiday",
+      date: "2020-05-25",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Summer bank holiday",
+      date: "2020-08-31",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Christmas Day",
+      date: "2020-12-25",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Boxing Day",
+      date: "2020-12-28",
+      notes: "Substitute day",
+      bunting: true,
+    },
+    {
+      title: "New Year's Day",
+      date: "2021-01-01",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Good Friday",
+      date: "2021-04-02",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Easter Monday",
+      date: "2021-04-05",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Early May bank holiday",
+      date: "2021-05-03",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Spring bank holiday",
+      date: "2021-05-31",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Summer bank holiday",
+      date: "2021-08-30",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Christmas Day",
+      date: "2021-12-27",
+      notes: "Substitute day",
+      bunting: true,
+    },
+    {
+      title: "Boxing Day",
+      date: "2021-12-28",
+      notes: "Substitute day",
+      bunting: true,
+    },
+    {
+      title: "New Year's Day",
+      date: "2022-01-03",
+      notes: "Substitute day",
+      bunting: true,
+    },
+    {
+      title: "Good Friday",
+      date: "2022-04-15",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Easter Monday",
+      date: "2022-04-18",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Early May bank holiday",
+      date: "2022-05-02",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Spring bank holiday",
+      date: "2022-06-02",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Platinum Jubilee bank holiday",
+      date: "2022-06-03",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Summer bank holiday",
+      date: "2022-08-29",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Bank Holiday for the State Funeral of Queen Elizabeth II",
+      date: "2022-09-19",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Boxing Day",
+      date: "2022-12-26",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Christmas Day",
+      date: "2022-12-27",
+      notes: "Substitute day",
+      bunting: true,
+    },
+    {
+      title: "New Year's Day",
+      date: "2023-01-02",
+      notes: "Substitute day",
+      bunting: true,
+    },
+    {
+      title: "Good Friday",
+      date: "2023-04-07",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Easter Monday",
+      date: "2023-04-10",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Early May bank holiday",
+      date: "2023-05-01",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Bank holiday for the coronation of King Charles III",
+      date: "2023-05-08",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Spring bank holiday",
+      date: "2023-05-29",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Summer bank holiday",
+      date: "2023-08-28",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Christmas Day",
+      date: "2023-12-25",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Boxing Day",
+      date: "2023-12-26",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "New Year's Day",
+      date: "2024-01-01",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Good Friday",
+      date: "2024-03-29",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Easter Monday",
+      date: "2024-04-01",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Early May bank holiday",
+      date: "2024-05-06",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Spring bank holiday",
+      date: "2024-05-27",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Summer bank holiday",
+      date: "2024-08-26",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Christmas Day",
+      date: "2024-12-25",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Boxing Day",
+      date: "2024-12-26",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "New Year's Day",
+      date: "2025-01-01",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Good Friday",
+      date: "2025-04-18",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Easter Monday",
+      date: "2025-04-21",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Early May bank holiday",
+      date: "2025-05-05",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Spring bank holiday",
+      date: "2025-05-26",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Summer bank holiday",
+      date: "2025-08-25",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Christmas Day",
+      date: "2025-12-25",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Boxing Day",
+      date: "2025-12-26",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "New Year's Day",
+      date: "2026-01-01",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Good Friday",
+      date: "2026-04-03",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Easter Monday",
+      date: "2026-04-06",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Early May bank holiday",
+      date: "2026-05-04",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Spring bank holiday",
+      date: "2026-05-25",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Summer bank holiday",
+      date: "2026-08-31",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Christmas Day",
+      date: "2026-12-25",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Boxing Day",
+      date: "2026-12-28",
+      notes: "Substitute day",
+      bunting: true,
+    },
+    {
+      title: "New Year's Day",
+      date: "2027-01-01",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Good Friday",
+      date: "2027-03-26",
+      notes: "",
+      bunting: false,
+    },
+    {
+      title: "Easter Monday",
+      date: "2027-03-29",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Early May bank holiday",
+      date: "2027-05-03",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Spring bank holiday",
+      date: "2027-05-31",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Summer bank holiday",
+      date: "2027-08-30",
+      notes: "",
+      bunting: true,
+    },
+    {
+      title: "Christmas Day",
+      date: "2027-12-27",
+      notes: "Substitute day",
+      bunting: true,
+    },
+    {
+      title: "Boxing Day",
+      date: "2027-12-28",
+      notes: "Substitute day",
+      bunting: true,
+    },
+  ],
+};

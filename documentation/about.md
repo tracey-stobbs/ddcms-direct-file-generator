@@ -1,6 +1,6 @@
 #### DDCMS Direct File Creator
 
-### A simple API with a single endpoint that .csv files in a predifined format with randomly generated data.  These files are then saved them to a given location on the file system.
+### A simple API with a single endpoint that .csv files in a predifined format with randomly generated data.  These files are then saved to a given location on the file system.
 
 ## Technologies:
 nodejs, typescript, express, vitest
@@ -33,6 +33,7 @@ Where:
 ## Contributing
 must following best practice rules regarding linting of typescript files and structure of nodejs apis.
 must contain unit tests
+-  tests must live alongside the file it is testing with a format such as {filename.test.ts}
 
 ## Endpoints
 1. Generate 
@@ -68,6 +69,8 @@ The specification for these files are listed in the following files:
 
 
 ### Data Generation
+- Use faker.js to generate random data
+- Use luxon for anything related to date/time.
 - All non-header rows should include randomly generated field data following the [Field-Level Validation Rules](../field-level-validation.md) .
 
 - if the request body includes: `{    "hasInvalidRows": true    }`
