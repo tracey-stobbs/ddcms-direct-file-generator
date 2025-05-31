@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDCMS File Builder Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-group input {
+            width: auto;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>DDCMS File Builder API Test</h1>
+    
+    <div class="form-group">
+        <label for="fileType">File Type:</label>
+        <select id="fileType">
+            <option value="SDDirect">SDDirect</option>
+            <option value="Bacs18PaymentLines" disabled>Bacs18PaymentLines (Not Yet Implemented)</option>
+            <option value="Bacs18StandardFile" disabled>Bacs18StandardFile (Not Yet Implemented)</option>
+        </select>
+    </div>
+    
+    <div class="form-group checkbox-group">
+        <input type="checkbox" id="includeHeaders" checked>
+        <label for="includeHeaders">Include Headers</label>
+    </div>
+    
+    <div class="form-group checkbox-group">
+        <input type="checkbox" id="includeOptionalFields">
+        <label for="includeOptionalFields">Include Optional Fields</label>
+    </div>
+    
+    <div class="form-group">
+        <label for="numberOfRows">Number of Rows:</label>
+        <input type="number" id="numberOfRows" value="100" min="1" max="1000">
+    </div>
+    
+    <div class="form-group checkbox-group">
+        <input type="checkbox" id="hasInvalidRows">
+        <label for="hasInvalidRows">Include Invalid Rows</label>
+    </div>
+    
+    <button id="generateButton">Generate File</button>
+    
+    <div class="result" id="resultContainer" style="display: none;">
+        <h2>API Response:</h2>
+        <pre id="apiResult"></pre>
+    </div>
+
+    <script>
+        document.getElementById('generateButton').addEventListener('click', async () => {
+            const fileType = document.getElementById('fileType').value;
+            const includeHeaders = document.getElementById('includeHeaders').checked;
+            const includeOptionalFields = document.getElementById('includeOptionalFields').checked;
+            const numberOfRows = parseInt(document.getElementById('numberOfRows').value);
+            const hasInvalidRows = document.getElementById('hasInvalidRows').checked;
+            
+            const payload = {
+                fileType,
+                includeHeaders,
+                includeOptionalFields,
+                numberOfRows,
+                hasInvalidRows
+            };
+            
+            try {
+                document.getElementById('generateButton').disabled = true;
+                document.getElementById('generateButton').textContent = 'Generating...';
+                
+                const response = await fetch('http://localhost:3001/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('apiResult').textContent = JSON.stringify(data, null, 2);
+                document.getElementById('resultContainer').style.display = 'block';
+            } catch (error) {
+                document.getElementById('apiResult').textContent = 'Error: ' + error.message;
+                document.getElementById('resultContainer').style.display = 'block';
+            } finally {
+                document.getElementById('generateButton').disabled = false;
+                document.getElementById('generateButton').textContent = 'Generate File';
+            }
+        });
+    </script>
+</body>
+</html>
