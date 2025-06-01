@@ -12,7 +12,8 @@ Must be  numeric and exactly 8 digits,
 
 Payment Reference:
 Must be more than 6 and less than 18 characters and must only contain allowed characters.
-It must not start with "DDIC" or a space.  It cannot contain all the same characters.
+Must start with a word character (letter or number).
+It must not start with "DDIC" or a space. It cannot contain all the same characters.
 
 
 Amount:
