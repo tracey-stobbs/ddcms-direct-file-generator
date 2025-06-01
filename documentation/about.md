@@ -1,6 +1,6 @@
 #### DDCMS Direct File Creator
 
-### A simple API with a single endpoint that .csv files in a predifined format with randomly generated data.  These files are then saved to a given location on the file system.
+### A simple API with a single endpoint that generates files in a predifined format with randomly generated data.  These files are then saved to a given location on the file system.
 
 ## Technologies:
 nodejs, typescript, express, vitest
@@ -15,7 +15,7 @@ Example: `$env:PORT=3005; npm start`
 ## File Naming Convention
 Generated files follow this naming pattern:
 ```
-SDDirect_[COLUMNCOUNT]_[HEADERS]_[VALIDITY]_[TIMESTAMP].csv
+SDDirect_[COLUMNCOUNT]_[HEADERS]_[VALIDITY]_[TIMESTAMP].[extension]
 ```
 
 Where:
@@ -29,6 +29,7 @@ Where:
   - `V`: All rows are valid
   - `I`: Contains invalid rows
 - `[TIMESTAMP]`: Date and time in format YYYYMMDD_HHMMSS (e.g., 20250530_142548)
+- `[extension]`: the file extension as specified in the file format spec
 
 ## Contributing
 must following best practice rules regarding linting of typescript files and structure of nodejs apis.
