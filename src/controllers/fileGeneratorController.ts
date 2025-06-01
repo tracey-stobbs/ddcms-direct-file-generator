@@ -76,17 +76,17 @@ function isValidRequest(request: FileGenerationRequest): boolean {
   
   // Check that boolean fields are actually booleans if provided
   if (request.includeHeaders !== undefined && typeof request.includeHeaders !== 'boolean') {
-    logger.error(`Invalid includeHeaders: ${request.includeHeaders}`);
+    logger.error(`Invalid includeHeaders: ${request.includeHeaders as string}`);
     return false;
   }
   
   if (request.includeOptionalFields !== undefined && typeof request.includeOptionalFields !== 'boolean') {
-    logger.error(`Invalid includeOptionalFields: ${request.includeOptionalFields}`);
+    logger.error(`Invalid includeOptionalFields: ${request.includeOptionalFields as string}`);
     return false;
   }
   
   if (request.hasInvalidRows !== undefined && typeof request.hasInvalidRows !== 'boolean') {
-    logger.error(`Invalid hasInvalidRows: ${request.hasInvalidRows}`);
+    logger.error(`Invalid hasInvalidRows: ${request.hasInvalidRows as string}`);
     return false;
   }
   
