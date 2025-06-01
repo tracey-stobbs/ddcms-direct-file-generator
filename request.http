@@ -11,7 +11,21 @@ Accept: */*
 
 ####
 
-POST http://localhost:5173/api/generate
+
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": true,
+    "numberOfRows": 100
+}
+
+####
+
+POST http://localhost:3001/api/generate
 Content-Type: application/json
 Accept: */*
 
@@ -31,8 +45,22 @@ Accept: */*
 {
     "fileType": "SDDirect",
     "includeHeaders": true,
-    "includeOptionalFields": true,
+    "includeOptionalFields": false,
     "numberOfRows": 100
+}
+
+####
+
+
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": true,
+    "numberOfRows": 100,    "hasInvalidRows": true  
 }
 
 ####
@@ -42,7 +70,38 @@ Accept: */*
 
 {
     "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": false,
+    "numberOfRows": 100,    "hasInvalidRows": true  
+}
+
+
+####
+
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": false,
+    "includeOptionalFields": false,
+    "numberOfRows": 100,    "hasInvalidRows": true  
+}
+
+####
+
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
     "includeHeaders": false,
     "includeOptionalFields": true,
-    "numberOfRows": 100
+    "numberOfRows": 100,    "hasInvalidRows": true  
 }
+
+
+SDDirect_11_H__I_20250601_180546.csv
+ SDDirect_11_NH_I_20250601_180538
