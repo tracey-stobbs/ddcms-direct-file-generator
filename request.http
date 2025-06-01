@@ -1,0 +1,48 @@
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": false,
+    "numberOfRows": 100
+}
+
+####
+
+POST http://localhost:5173/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": false,
+    "includeOptionalFields": false,
+    "numberOfRows": 100
+}
+
+####
+
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": true,
+    "numberOfRows": 100
+}
+
+####
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": false,
+    "includeOptionalFields": true,
+    "numberOfRows": 100
+}

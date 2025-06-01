@@ -4,13 +4,12 @@
 import { FileFormat } from "../models/file-formats/FileFormat";
 import { SDDirectFileFormat } from "../models/file-formats/SDDirectFileFormat";
 
-
 /**
  * Get the appropriate file format based on the fileType
  * @param fileType The type of file to generate
  * @returns The file format implementation
  */
-export function getFileFormat(fileType: string): FileFormat {
+export function getFileFormat(fileType: string) {
   switch (fileType) {
     case "SDDirect":
       return SDDirectFileFormat;

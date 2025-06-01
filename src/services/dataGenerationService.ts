@@ -5,214 +5,273 @@ import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
 import { IsBankHoliday } from '../utils/uk-bank-holidays';
 import logger from '../utils/logger';
+import { ALLOWED_TRANSACTION_CODES,  RowData, TransactionCode, ZERO_AMOUNT_TRANSACTION_CODES } from '@models/RowData';
 
-const ALLOWED_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,&/-';
-const TRANSACTION_CODES = ['01', '17', '18', '99', '0C', '0N', '0S'];
-const ZERO_AMOUNT_TRANSACTION_CODES = ['0C', '0N', '0S'];
 
-/**
- * Generate an account name that adheres to validation rules
- * @param forceInvalid Flag to forcefully generate an invalid value
- * @returns A valid or invalid account name
- */
-export function generateAccountName(forceInvalid = false): string {
-  if (forceInvalid) {
-    // Generate an invalid account name (more than 18 characters)
-    return faker.company.name().padEnd(19, 'X').slice(0, 25);
+
+const ALLOWED_CHARACTERS =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .&/-";
+
+// Function to generate a random string of specified length using allowed characters
+export function generateRandomString(
+  length: number,
+  allowedChars: string = ALLOWED_CHARACTERS
+): string {
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += allowedChars.charAt(
+      Math.floor(Math.random() * allowedChars.length)
+    );
   }
+  return result;
+}
+
+// Generate random account name (up to 18 characters)
+export function generateAccountName(): string {
+  // Generate a company or person name and limit to 18 chars
+  let name = Math.random() > 0.5 ? 
+    faker.company.name() : 
+    faker.person.fullName();
   
-  // Generate a valid account name (18 characters or less)
-  let name = faker.company.name().slice(0, 18);  // Sanitize to only include allowed characters
+  // Filter out any non-allowed characters
   name = name.split('')
-    .filter((char: string) => ALLOWED_CHARACTERS.includes(char))
+    .filter(char => ALLOWED_CHARACTERS.includes(char))
     .join('');
     
-  return name || 'Valid Account';
+  // Ensure we have at least 3 characters after filtering
+  while (name.length < 3) {
+    name += generateRandomString(3 - name.length);
+  }
+  
+  return name.substring(0, 18);
 }
 
-/**
- * Generate a sort code that adheres to validation rules
- * @param forceInvalid Flag to forcefully generate an invalid value
- * @returns A valid or invalid sort code
- */
-export function generateSortCode(forceInvalid = false): string {
-  if (forceInvalid) {
-    // Generate an invalid sort code (not 6 digits or includes non-numeric)
-    const options = [
-      faker.string.numeric(5), // Too short
-      faker.string.numeric(7), // Too long
-      faker.string.alphanumeric(6) // Contains non-numeric
-    ];
-    return options[Math.floor(Math.random() * options.length)];
-  }
-  
-  // Generate a valid sort code (exactly 6 digits)
-  return faker.string.numeric(6);
+// Generate random sort code (exactly 6 digits)
+export function generateSortCode(): string {
+  return Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join('');
 }
 
-/**
- * Generate an account number that adheres to validation rules
- * @param forceInvalid Flag to forcefully generate an invalid value
- * @returns A valid or invalid account number
- */
-export function generateAccount(forceInvalid = false): string {
-  if (forceInvalid) {
-    // Generate an invalid account number (not 8 digits or includes non-numeric)
-    const options = [
-      faker.string.numeric(7), // Too short
-      faker.string.numeric(9), // Too long
-      faker.string.alphanumeric(8) // Contains non-numeric
-    ];
-    return options[Math.floor(Math.random() * options.length)];
-  }
-  
-  // Generate a valid account number (exactly 8 digits)
-  return faker.string.numeric(8);
+// Generate random account number (exactly 8 digits)
+export function generateAccountNumber(): string {
+  return Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join('');
 }
 
-/**
- * Generate a payment reference that adheres to validation rules
- * @param forceInvalid Flag to forcefully generate an invalid value
- * @returns A valid or invalid payment reference
- */
-export function generatePaymentReference(forceInvalid = false): string {
-  if (forceInvalid) {
-    // Generate an invalid payment reference
-    const options = [
-      'DDIC' + faker.string.alphanumeric(5), // Starts with DDIC
-      ' ' + faker.string.alphanumeric(7), // Starts with space
-      faker.string.alphanumeric(5), // Too short
-      faker.string.alphanumeric(20), // Too long
-      'AAAAAAAA', // All the same character
-      '.' + faker.string.alphanumeric(7), // Doesn't start with word character
-      '&' + faker.string.alphanumeric(7) // Doesn't start with word character
-    ];
-    return options[Math.floor(Math.random() * options.length)];
+// Generate valid payment reference
+export function generatePaymentReference(): string {
+  const length = Math.floor(Math.random() * 11) + 7; // Between 7 and 17 characters
+  
+  let reference = generateRandomString(length);
+  
+  // Ensure it doesn't start with "DDIC" or any non-word character
+  while (reference.startsWith('DDIC') || /^\W/.test(reference)) {
+    reference = generateRandomString(length);
   }
   
-  // Generate a valid payment reference (more than 6, less than 18 chars)
-  const length = Math.floor(Math.random() * 11) + 7; // 7 to 17 characters
-  let ref = faker.string.alphanumeric(1); // Ensure it starts with a word character
-  
-  // Fill the rest with allowed characters
-  for (let i = 1; i < length; i++) {
-    ref += ALLOWED_CHARACTERS.charAt(Math.floor(Math.random() * ALLOWED_CHARACTERS.length));
+  // Ensure it doesn't contain all the same characters
+  const uniqueChars = new Set(reference.split(''));
+  if (uniqueChars.size === 1) {
+    return generatePaymentReference(); // Retry generation
   }
   
-  return ref;
+  return reference;
 }
 
-/**
- * Generate an amount that adheres to validation rules
- * @param transactionCode The transaction code associated with the amount
- * @param forceInvalid Flag to forcefully generate an invalid value
- * @returns A valid or invalid amount
- */
-export function generateAmount(transactionCode: string, forceInvalid = false): string {
-  if (forceInvalid) {
-    // Generate an invalid amount
-    if (ZERO_AMOUNT_TRANSACTION_CODES.includes(transactionCode)) {
-      // For zero amount transaction codes, any non-zero amount is invalid
-      return (Math.random() * 1000).toFixed(2);
-    } else {
-      // For other transaction codes, add separator characters (invalid)
-      return (Math.random() * 1000).toLocaleString('en-US', { minimumFractionDigits: 2 });
-    }
-  }
-  
-  // Generate a valid amount
+// Generate random amount
+export function generateAmount(transactionCode: TransactionCode): string {
   if (ZERO_AMOUNT_TRANSACTION_CODES.includes(transactionCode)) {
     return '0.00';
+  }
+  
+  // Generate a random amount between 0.01 and 10000.00
+  const amount = (Math.random() * 10000).toFixed(2);
+  return amount;
+}
+
+// Generate random transaction code
+export function generateTransactionCode(): TransactionCode {
+  const index = Math.floor(Math.random() * ALLOWED_TRANSACTION_CODES.length);
+  return ALLOWED_TRANSACTION_CODES[index];
+}
+
+// Generate valid pay date (2-30 days in future, not weekend or bank holiday)
+export function generatePayDate(): string {
+  let date = DateTime.now().plus({ days: 2 });
+  
+  // Ensure it's not more than 30 days in the future
+  const maxDate = DateTime.now().plus({ days: 30 });
+  
+  // Find a valid date (not weekend, not bank holiday)
+  while (
+    date < maxDate && 
+    (date.weekday > 5 || IsBankHoliday(date))
+  ) {
+    date = date.plus({ days: 1 });
+  }
+  
+  // Format as YYYYMMDD
+  return date.toFormat('yyyyMMdd');
+}
+
+// Generate random checksum that matches regex: /^[/]{1}[A-Za-z0-9.&/\-, ]{3}$)|(^0{4}$)|(^$)/
+export function generateRealtimeInformationChecksum(): string {
+  // Randomly choose between the allowed patterns:
+  // 1. /XXX where X is any allowed character
+  // 2. 0000
+  // 3. Empty string
+  const patternChoice = Math.random();
+  
+  if (patternChoice < 0.33) {
+    // Return 0000
+    return '0000';
+  } else if (patternChoice < 0.67) {
+    // Return /XXX where X is any allowed character
+    const allowedCharsForRest = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./&- ';
+    let result = '/';
+    for (let i = 0; i < 3; i++) {
+      result += allowedCharsForRest.charAt(Math.floor(Math.random() * allowedCharsForRest.length));
+    }
+    return result;
   } else {
-    // Random amount without separator characters
-    return (Math.random() * 1000).toFixed(2).replace('.', '');
+    // Return empty string
+    return '';
   }
 }
 
-/**
- * Generate a transaction code that adheres to validation rules
- * @param forceInvalid Flag to forcefully generate an invalid value
- * @returns A valid or invalid transaction code
- */
-export function generateTransactionCode(forceInvalid = false): string {
-  if (forceInvalid) {
-    // Generate an invalid transaction code (not in the allowed list)
-    const invalidOptions = ['00', '02', '03', '0A', '0B', 'XX', ''];
-    return invalidOptions[Math.floor(Math.random() * invalidOptions.length)];
+// Generate a valid row based on the specifications
+export function generateValidRow(includeOptionalFields: boolean) : RowData {
+  const transactionCode = generateTransactionCode();
+  
+  const row: RowData = {
+    destinationAccountName: generateAccountName(),
+    destinationSortCode: generateSortCode(),
+    destinationAccountNumber: generateAccountNumber(),
+    paymentReference: generatePaymentReference(),
+    amount: generateAmount(transactionCode),
+    transactionCode: transactionCode
+  };
+  
+  if (includeOptionalFields) {
+    row.realtimeInformationChecksum = generateRealtimeInformationChecksum();
+    row.payDate = generatePayDate();
+    row.originatingSortCode = generateSortCode();
+    row.originatingAccountNumber = generateAccountNumber();
+    row.originatingAccountName = generateAccountName();
   }
   
-  // Generate a valid transaction code
-  return TRANSACTION_CODES[Math.floor(Math.random() * TRANSACTION_CODES.length)];
+  return row;
 }
 
-/**
- * Generate a checksum that adheres to validation rules
- * @param forceInvalid Flag to forcefully generate an invalid value
- * @returns A valid or invalid checksum
- */
-export function generateChecksum(forceInvalid = false): string {
-  if (forceInvalid) {
-    // Generate an invalid checksum
-    const invalidOptions = [
-      '/XX', // Too few characters
-      '/XXXX', // Too many characters
-      '000', // Too few zeros
-      '00000', // Too many zeros
-      'ABC123' // Contains invalid characters
-    ];
-    return invalidOptions[Math.floor(Math.random() * invalidOptions.length)];
+// Function to make a field invalid based on field name
+function makeFieldInvalid(row: RowData, fieldName: keyof RowData): void {
+  switch (fieldName) {
+    case 'destinationAccountName':
+      // Make name too long (>18 chars) or include invalid chars
+      row.destinationAccountName = generateRandomString(20, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*^%$#@!');
+      break;
+    case 'destinationSortCode':
+      // Make sort code invalid (not 6 digits or include non-numeric)
+      row.destinationSortCode = Math.random() > 0.5 
+        ? generateRandomString(5, '0123456789') 
+        : generateRandomString(6, '0123456789ABC');
+      break;
+    case 'destinationAccountNumber':
+      // Make account number invalid (not 8 digits or include non-numeric)
+      row.destinationAccountNumber = Math.random() > 0.5
+        ? generateRandomString(7, '0123456789')
+        : generateRandomString(8, '0123456789XYZ');
+      break;
+    case 'paymentReference':
+      // Make payment reference invalid (too short, starts with DDIC, all same chars)
+      const invalidOptions = [
+        'DDIC' + generateRandomString(5),
+        ' ' + generateRandomString(5),
+        'AAA'
+      ];
+      row.paymentReference = invalidOptions[Math.floor(Math.random() * invalidOptions.length)];
+      break;
+    case 'transactionCode':
+      // Use an invalid transaction code
+      row.transactionCode = '0X';
+      break;    case 'payDate':
+      if (row.payDate) {
+        // Make an invalid date or weekend date
+        row.payDate = '20250101'; // Past date
+      }
+      break;    case 'realtimeInformationChecksum':
+      if (row.realtimeInformationChecksum) {
+        // Make checksum invalid according to regex /^[/]{1}[A-Za-z0-9.&/\-, ]{3}$)|(^0{4}$)|(^$)/
+        const invalidOptions = [
+          '123', // No leading slash
+          '/1234', // Too long
+          '/12', // Too short
+          '/$$%', // Invalid characters
+          'ABCD',  // No slash, wrong length
+          '0000X', // Wrong format for zeros
+          '00000'  // Too many zeros
+        ];
+        row.realtimeInformationChecksum = invalidOptions[Math.floor(Math.random() * invalidOptions.length)];
+      }
+      break;
+    case 'originatingSortCode':
+      if (row.originatingSortCode) {
+        // Make originating sort code invalid
+        row.originatingSortCode = 'ABC123';
+      }
+      break;
+    case 'originatingAccountNumber':
+      if (row.originatingAccountNumber) {
+        // Make originating account number invalid
+        row.originatingAccountNumber = 'X1234567';
+      }
+      break;
+    case 'originatingAccountName':
+      if (row.originatingAccountName) {
+        // Make originating account name invalid
+        row.originatingAccountName = generateRandomString(25); // Too long
+      }
+      break;
+    default:
+      break;
   }
+}
+
+// Generate an invalid row by corrupting 1-3 fields (except amount)
+export function generateInvalidRow(includeOptionalFields: boolean): RowData {
+  const row = generateValidRow(includeOptionalFields);
   
-  // Generate a valid checksum
-  const validOptions = [
-    '/' + faker.string.alphanumeric(3).toUpperCase(),
-    '0000',
-    '' // Empty is also valid
+  // Determine how many fields to make invalid (1-3)
+  const numInvalidFields = Math.floor(Math.random() * 3) + 1;
+  
+  // Get all possible field names excluding 'amount'
+  const possibleFields: (keyof RowData)[] = [
+    'destinationAccountName',
+    'destinationSortCode',
+    'destinationAccountNumber',
+    'paymentReference',
+    'transactionCode'
   ];
   
-  return validOptions[Math.floor(Math.random() * validOptions.length)];
-}
-
-/**
- * Generate a pay date that adheres to validation rules
- * @param forceInvalid Flag to forcefully generate an invalid value
- * @returns A valid or invalid pay date
- */
-export function generatePayDate(forceInvalid = false): string {
-  if (forceInvalid) {
-    // Generate an invalid pay date
-    const options = [
-      DateTime.now().plus({ days: 1 }).toFormat('yyyyMMdd'), // Only 1 day in future (too soon)
-      DateTime.now().plus({ days: 31 }).toFormat('yyyyMMdd'), // More than 30 days in future
-      DateTime.now().plus({ days: 5 }).toFormat('yyyy-MM-dd'), // Wrong format
-      'invalid-date' // Not a date
-    ];
-    return options[Math.floor(Math.random() * options.length)];
+  if (includeOptionalFields) {
+    possibleFields.push(
+      'realtimeInformationChecksum',
+      'processingDate',
+      'originatingSortCode',
+      'originatingAccountNumber',
+      'originatingAccountName'
+    );
   }
   
-  // Generate a valid pay date
-  // - Must be 2-30 days in future
-  // - Must not be a weekend or bank holiday
-  let daysToAdd = 2; // Start with 2 days in the future
-  let dateTime = DateTime.now().plus({ days: daysToAdd });
-  
-  // Try to find a valid date (not weekend or bank holiday)
-  while (
-    daysToAdd <= 30 && 
-    (dateTime.weekday > 5 || IsBankHoliday(dateTime))
-  ) {
-    daysToAdd++;
-    dateTime = DateTime.now().plus({ days: daysToAdd });
+  // Randomly select fields to make invalid
+  const fieldsToInvalidate = new Set<keyof RowData>();
+  while (fieldsToInvalidate.size < numInvalidFields) {
+    const randomIndex = Math.floor(Math.random() * possibleFields.length);
+    fieldsToInvalidate.add(possibleFields[randomIndex]);
   }
   
-  if (daysToAdd > 30) {
-    logger.warn('Could not find a valid pay date within 30 days. Defaulting to first available weekday.');
-    // Default to first available weekday
-    dateTime = DateTime.now().plus({ days: 2 });
-    while (dateTime.weekday > 5) {
-      dateTime = dateTime.plus({ days: 1 });
-    }
-  }
+  // Invalidate selected fields
+  fieldsToInvalidate.forEach(field => {
+    makeFieldInvalid(row, field);
+  });
   
-  return dateTime.toFormat('yyyyMMdd');
+  return row;
 }
