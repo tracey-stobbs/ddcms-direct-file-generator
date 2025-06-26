@@ -17,6 +17,7 @@ import {
 } from "./dataGenerationService";
 import {
   ALLOWED_TRANSACTION_CODES,
+  CREDIT_TRANSACTION_CODES,
   ZERO_AMOUNT_TRANSACTION_CODES,
 } from "@models/RowData";
 
@@ -83,15 +84,31 @@ describe("Data Generation Service", () => {
   });
 
   describe("generateRealtimeInformationChecksum", () => {
-    it("should generate valid checksum by default", () => {
-      const checksum = generateRealtimeInformationChecksum();
-      const isValid =
-        checksum === "" ||
-        checksum === "0000" ||
-        /^\/[A-Z0-9]{3}$/.test(checksum);
-      expect(isValid).toBeTruthy();
+    it("should generate valid checksum for credit transaction codes", () => {
+      const creditCodes = ALLOWED_TRANSACTION_CODES.filter((code) =>
+        CREDIT_TRANSACTION_CODES.includes(code)
+      );
+
+      creditCodes.forEach((code) => {
+        const checksum = generateRealtimeInformationChecksum(code);
+        const isValid =
+          checksum === "" ||
+          checksum === "0000" ||
+          /^\/[A-Z0-9]{3}$/.test(checksum);
+        expect(isValid).toBeTruthy();
+      });
     });
   });
+  it("should not generate a checksum if the transaction code is not credit", () => {
+    const nonCreditCodes = ALLOWED_TRANSACTION_CODES.filter(
+      (code) => !CREDIT_TRANSACTION_CODES.includes(code)
+    );
+
+    nonCreditCodes.forEach((code) => {
+      expect(generateRealtimeInformationChecksum(code)).toBe;
+    });
+  });
+
   describe("generatePayDate", () => {
     it("should generate valid pay date by default", () => {
       // Save the real implementation of DateTime.now

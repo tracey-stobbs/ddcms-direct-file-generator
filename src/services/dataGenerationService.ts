@@ -5,7 +5,7 @@ import { faker } from '@faker-js/faker';
 import { DateTime } from 'luxon';
 import { IsBankHoliday } from '../utils/uk-bank-holidays';
 import logger from '../utils/logger';
-import { ALLOWED_TRANSACTION_CODES,  RowData, TransactionCode, ZERO_AMOUNT_TRANSACTION_CODES } from '@models/RowData';
+import { ALLOWED_TRANSACTION_CODES,  CREDIT_TRANSACTION_CODES,  RowData, TransactionCode, ZERO_AMOUNT_TRANSACTION_CODES } from '@models/RowData';
 
 
 
@@ -113,7 +113,11 @@ export function generatePayDate(): string {
 }
 
 // Generate random checksum that matches regex: /^[/]{1}[A-Za-z0-9.&/\-, ]{3}$)|(^0{4}$)|(^$)/
-export function generateRealtimeInformationChecksum(): string {
+export function generateRealtimeInformationChecksum(code: TransactionCode): string {
+
+  if (!CREDIT_TRANSACTION_CODES.includes(code)) {
+    return "";
+  }
   // Randomly choose between the allowed patterns:
   // 1. /XXX where X is any allowed character
   // 2. 0000
@@ -151,7 +155,8 @@ export function generateValidRow(includeOptionalFields: boolean) : RowData {
   };
   
   if (includeOptionalFields) {
-    row.realtimeInformationChecksum = generateRealtimeInformationChecksum();
+    row.realtimeInformationChecksum =
+      generateRealtimeInformationChecksum(transactionCode);
     row.payDate = generatePayDate();
     row.originatingSortCode = generateSortCode();
     row.originatingAccountNumber = generateAccountNumber();

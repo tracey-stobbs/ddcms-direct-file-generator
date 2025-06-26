@@ -6,7 +6,7 @@ Accept: */*
     "fileType": "SDDirect",
     "includeHeaders": true,
     "includeOptionalFields": false,
-    "numberOfRows": 100
+    "numberOfRows": 200
 }
 
 ####
@@ -60,7 +60,8 @@ Accept: */*
     "fileType": "SDDirect",
     "includeHeaders": true,
     "includeOptionalFields": true,
-    "numberOfRows": 100,    "hasInvalidRows": true  
+    "numberOfRows": 30
+    ,    "hasInvalidRows": true  
 }
 
 ####

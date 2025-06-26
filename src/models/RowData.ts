@@ -16,6 +16,9 @@ export const ZERO_AMOUNT_TRANSACTION_CODES: TransactionCode[] = [
   "0S",
 ];
 
+export const CREDIT_TRANSACTION_CODES: TransactionCode[] = [
+  "99"]
+
 export interface RowData {
   destinationAccountName: string;
   destinationSortCode: string;
