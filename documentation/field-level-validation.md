@@ -19,7 +19,7 @@ It must not start with "DDIC" or a space. It cannot contain all the same charact
 Amount:
 Must be decimal or integer.
 Must not contain seperator characters.
-If the Transaction Code is one of 0C, 0N, or 0S, it must be zero
+If the Transaction Code is one of 0C, 0N, or 0S, it must be zero (represented as "0").
 
 
 Transaction Code:
@@ -36,10 +36,16 @@ Must match one of the following patterns:
 
 Pay Date 
 Must be a valid date in the format YYYYMMDD, 
-Must be at least two days in the future, but no more than 30 days.
-Must not be a Saturday, Sunday, or UK Bank Holiday
+Must be at least 3 working days in the future, but no more than 30 days.
+Must not be a Saturday, Sunday, or UK Bank Holiday.
+If the Transaction Code is one of 0N, 0C, or 0S, Pay Date MUST BE EXACTLY 3 working days in the future.
 
 Processing Date
+Must be a valid date in the format YYYYMMDD.
+Must be at least 2 working days in the future.
+Must not be a Saturday, Sunday, or UK Bank Holiday.
+If the Transaction Code is one of 0N, 0C, or 0S, Processing Date MUST BE EXACTLY 2 working days in the future.
+Note: Processing Date is not used in SDDirect file format, but will be used in future file types (Bacs18PaymentLines, Bacs18StandardFile).
 
 Originating Account Name:
 must be  18 characters or less and must only contain allowed characters

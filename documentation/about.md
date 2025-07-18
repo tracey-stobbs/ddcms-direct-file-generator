@@ -53,11 +53,12 @@ must contain unit tests
 export interface Request {
   fileType: "SDDirect" | "Bacs18PaymentLines" | "Bacs18StandardFile";
   canInlineEdit: boolean;
-  includeHeader?: boolean;
+  includeHeaders?: boolean;
   numberOfRows?: number;
   hasInvalidRows?: boolean;
   includeOptionalFields?: boolean | OptionalField[];
-  optionalFields?: OptionalFieldItem ;
+  optionalFields?: OptionalFieldItem;
+  outputPath?: string;
 }
 ```
 When values are not provided, use these values:
@@ -66,7 +67,7 @@ When values are not provided, use these values:
 export const defaultRequest: Request = {
   fileType: "SDDirect",
   canInlineEdit: true,
-  includeHeader: true,
+  includeHeaders: true,
   hasInvalidRows: false,
   numberOfRows: 15,
   includeOptionalFields: true,
@@ -83,11 +84,27 @@ export const defaultRequest: Request = {
 ```
 Some types are provided in `./types.ts` you must strive to use these types whenever possible, although you are allowed to created your own.
 
+### File Storage
+
+Generated files are saved to the file system using the following logic:
+- If `outputPath` is specified in the request, the file will be saved to that location
+- If `outputPath` is not provided, files will be saved to a default `./output` directory relative to the application root
+- The filename follows the naming convention specified above: `[FileType]_[COLUMNCOUNT]_x_[ROWS]_[HEADERS]_[VALIDITY]_[TIMESTAMP].[extension]`
+
+### API Response Format
+
+On successful file generation, the API should return:
+- The full path and filename of the generated file
+
+On error, the API should:
+- Log full details of the error for debugging purposes
+- Return a summary message to the client explaining what went wrong
+
 If IncludeOptionalFields is true, the generated file must include generated data for ALL optional fields.
 
 If IncludeOptionalFields is provided as an array, only the optional fields contained in that array should have data generated.
 
-If optionalFields is not undefined, and not an empty object, use the data that is specified, do not randomly generate.
+If optionalFields is not undefined, and not an empty object, use the data that is specified for ALL rows, do not randomly generate. If IncludeOptionalFields is an array which doesn't include a property that exists in OptionalFields, then it should be assumed that IncludeOptionalFields also includes the property/properties specified in OptionalFields.
 
 
 ### FileTypes and FileFormats
@@ -107,4 +124,6 @@ The specification for these files are listed in the following files:
 - All non-header rows should include randomly generated field data following the [Field-Level Validation Rules](../field-level-validation.md) .  The exception to this is when the data has been specified in the OptionalFields item in the request.
 
 - if the request body includes: `{    "hasInvalidRows": true    }`
-  - then 50% of the generated rows must have at least one, but no more than three, fields which do not adhere to [Field-Level Validation Rules](../field-level-validation.md).
+  - then approximately 50% of the generated rows must have at least one, but no more than three, fields which do not adhere to [Field-Level Validation Rules](../field-level-validation.md).
+  - The number of invalid rows should be rounded down to the nearest whole number.
+  - If `canInlineEdit` is true, there must be no more than 49 errored rows, regardless of the total row count.

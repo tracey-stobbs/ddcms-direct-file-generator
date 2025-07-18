@@ -5,11 +5,12 @@ export type Prettify<T> = {
 export interface Request {
   fileType: "SDDirect" | "Bacs18PaymentLines" | "Bacs18StandardFile";
   canInlineEdit: boolean;
-  includeHeader?: boolean;
+  includeHeaders?: boolean;
   numberOfRows?: number;
   hasInvalidRows?: boolean;
   includeOptionalFields?: boolean | OptionalField[];
-  optionalFields?: OptionalFieldItem ;
+  optionalFields?: OptionalFieldItem;
+  outputPath?: string;
 }
 
 interface OptionalFieldObject {
@@ -18,14 +19,14 @@ interface OptionalFieldObject {
   originatingAccountDetails?: OriginatingAccountDetails;
 }
 
-interface originatingAccountDetailOptions {
+interface OriginatingAccountDetailOptions {
   canBeInvalid: boolean;
-  SortCode?: string;
-  AccountNumber?: string;
-  AccountName?: string;
+  sortCode?: string;
+  accountNumber?: string;
+  accountName?: string;
 }
 
-type OriginatingAccountDetails = Prettify<originatingAccountDetailOptions>;
+type OriginatingAccountDetails = Prettify<OriginatingAccountDetailOptions>;
 
 export type OptionalFieldItem = Prettify<OptionalFieldObject>;
 
@@ -33,18 +34,31 @@ export type OptionalField = Prettify<
   keyof Record<keyof OptionalFieldItem, string>
 >;
 
+export interface SuccessResponse {
+  success: true;
+  filePath: string;
+}
+
+export interface ErrorResponse {
+  success: false;
+  error: string;
+}
+
+export type ApiResponse = SuccessResponse | ErrorResponse;
+
 export const defaultRequest: Request = {
   fileType: "SDDirect",
   canInlineEdit: true,
-  includeHeader: true,
+  includeHeaders: true,
   hasInvalidRows: false,
   numberOfRows: 15,
+  includeOptionalFields: true,
   optionalFields: {
     originatingAccountDetails: {
       canBeInvalid: true,
-      SortCode: "912291",
-      AccountNumber: "51491194",
-      AccountName: "Test Account"
+      sortCode: "912291",
+      accountNumber: "51491194",
+      accountName: "Test Account"
     }
   }
 } as const;
