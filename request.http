@@ -1,17 +1,9 @@
-POST http://localhost:3001/api/generate
-Content-Type: application/json
-Accept: */*
-
-{
-    "fileType": "SDDirect",
-    "includeHeaders": true,
-    "includeOptionalFields": false,
-    "numberOfRows": 200
-}
+@number_of_rows = 15 
+@include_optional_fields = true
+@include_headers = true
+@has_invalid_rows = false
 
 ####
-
-
 POST http://localhost:3001/api/generate
 Content-Type: application/json
 Accept: */*
@@ -19,8 +11,8 @@ Accept: */*
 {
     "fileType": "SDDirect",
     "includeHeaders": true,
-    "includeOptionalFields": true,
-    "numberOfRows": 100
+    "includeOptionalFields": {{include_optional_fields}},
+    "numberOfRows": {{number_of_rows}}
 }
 
 ####
@@ -32,12 +24,11 @@ Accept: */*
 {
     "fileType": "SDDirect",
     "includeHeaders": false,
-    "includeOptionalFields": false,
-    "numberOfRows": 100
+    "includeOptionalFields": {{include_optional_fields}},
+    "numberOfRows": {{number_of_rows}}
 }
 
-####
-
+###
 POST http://localhost:3001/api/generate
 Content-Type: application/json
 Accept: */*
@@ -45,49 +36,9 @@ Accept: */*
 {
     "fileType": "SDDirect",
     "includeHeaders": true,
-    "includeOptionalFields": false,
-    "numberOfRows": 100
-}
-
-####
-
-
-POST http://localhost:3001/api/generate
-Content-Type: application/json
-Accept: */*
-
-{
-    "fileType": "SDDirect",
-    "includeHeaders": true,
-    "includeOptionalFields": true,
-    "numberOfRows": 30
-    ,    "hasInvalidRows": true  
-}
-
-####
-POST http://localhost:3001/api/generate
-Content-Type: application/json
-Accept: */*
-
-{
-    "fileType": "SDDirect",
-    "includeHeaders": true,
-    "includeOptionalFields": false,
-    "numberOfRows": 100,    "hasInvalidRows": true  
-}
-
-
-####
-
-POST http://localhost:3001/api/generate
-Content-Type: application/json
-Accept: */*
-
-{
-    "fileType": "SDDirect",
-    "includeHeaders": false,
-    "includeOptionalFields": false,
-    "numberOfRows": 100,    "hasInvalidRows": true  
+    "includeOptionalFields": {{include_optional_fields}},
+    "numberOfRows": {{number_of_rows}},
+    "hasInvalidRows": true
 }
 
 ####
@@ -99,10 +50,7 @@ Accept: */*
 {
     "fileType": "SDDirect",
     "includeHeaders": false,
-    "includeOptionalFields": true,
-    "numberOfRows": 100,    "hasInvalidRows": true  
+    "includeOptionalFields": {{include_optional_fields}},
+    "numberOfRows": {{number_of_rows}},
+    "hasInvalidRows": true
 }
-
-
-SDDirect_11_H__I_20250601_180546.csv
- SDDirect_11_NH_I_20250601_180538

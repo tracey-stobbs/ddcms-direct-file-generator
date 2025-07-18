@@ -27,5 +27,7 @@ Contents:
 
    - The first line of the file must be exactly "Destination Account Name,Destination Sort Code,Destination Account Number,Payment Reference,Amount,Transaction code,Realtime Information Checksum,Pay-Date,Originating Sort Code,Originating Account Number,Originating Account Name"
 
+- When the request body includes `{"includeHeaders": false}` 
+  - The first line of the file must be valid
 
 
