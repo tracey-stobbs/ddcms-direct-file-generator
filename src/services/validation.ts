@@ -6,27 +6,7 @@
  */
 
 import { logger } from '../lib/logger';
-
-// SDDirect record interface matching SDDirect.md specification
-export interface SDDirectRecord {
-  // Required fields (exact order from SDDirect.md)
-  destinationAccountName: string;        // ≤18 chars, allowed chars only
-  destinationSortCode: string;           // Exactly 6 digits
-  destinationAccountNumber: string;      // Exactly 8 digits  
-  paymentReference: string;              // 6-18 chars, specific rules
-  amount: string;                        // Decimal as string, "0" for 0C/0N/0S codes
-  transactionCode: TransactionCode;      // 01,17,18,99,0C,0N,0S only
-  
-  // Optional fields (exact order from SDDirect.md)
-  realtimeInformationChecksum?: string;  // /XXX pattern, 0000, or empty
-  payDate?: string;                      // YYYYMMDD, working day rules
-  originatingSortCode?: string;          // Exactly 6 digits
-  originatingAccountNumber?: string;     // Exactly 8 digits
-  originatingAccountName?: string;       // ≤18 chars, allowed chars only
-}
-
-// Valid transaction codes from field-level-validation.md
-export type TransactionCode = '01' | '17' | '18' | '99' | '0C' | '0N' | '0S';
+import type { SDDirectRecord, TransactionCode } from '../types/sddirect.js';
 
 export interface ValidationResult {
   isValid: boolean;
