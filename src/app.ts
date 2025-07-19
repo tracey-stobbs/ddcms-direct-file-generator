@@ -1,39 +1,26 @@
 import express from 'express';
 import { config } from './lib/config';
 import { logger } from './lib/logger';
+import apiRoutes from './api/routes';
+import { 
+  requestLogger, 
+  errorHandler, 
+  notFoundHandler, 
+  securityHeaders, 
+  corsHeaders,
+  requestSizeLimit,
+  rateLimit 
+} from './api/middleware';
 
 const app = express();
 
-// Basic middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// CORS middleware for development
-if (config.devEnableCors && config.nodeEnv === 'development') {
-  app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    
-    if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-    } else {
-      next();
-    }
-  });
-}
-
-// Request logging middleware for development
-if (config.devLogRequests && config.nodeEnv === 'development') {
-  app.use((req, res, next) => {
-    logger.info(`${req.method} ${req.path}`, {
-      body: req.body,
-      query: req.query,
-      params: req.params
-    });
-    next();
-  });
-}
+// Apply middleware in correct order
+app.use(securityHeaders);
+app.use(corsHeaders);
+app.use(requestSizeLimit);
+app.use(rateLimit);
+app.use(express.json({ limit: '10kb' }));
+app.use(requestLogger);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -46,30 +33,13 @@ app.get('/health', (req, res) => {
 });
 
 // Basic API routes placeholder
-app.use('/api', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'API endpoint not implemented yet'
-  });
-});
+app.use('/api', apiRoutes);
 
 // Global error handler
-app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  logger.error('Unhandled error:', err);
-  
-  res.status(500).json({
-    success: false,
-    error: config.nodeEnv === 'development' ? err.message : 'Internal server error'
-  });
-});
+app.use(errorHandler);
 
 // 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Route not found'
-  });
-});
+app.use(notFoundHandler);
 
 // Start server
 const server = app.listen(config.port, () => {
