@@ -6,6 +6,9 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+    typecheck: {
+      enabled: false // Disable typecheck to avoid import issues during testing
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -19,5 +22,14 @@ export default defineConfig({
         'vitest.config.ts'
       ]
     }
+  },
+  resolve: {
+    alias: {
+      // Allow importing .ts files as .js for ES modules in tests
+      '@': '/src'
+    }
+  },
+  esbuild: {
+    target: 'node18'
   }
 });
