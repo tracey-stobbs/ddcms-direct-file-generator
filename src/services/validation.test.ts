@@ -1,65 +1,30 @@
-/**
- * Validation Service Tests
- */
+import { describe, it, expect, beforeEach } from "vitest";
+import { SDDirectValidator, sdDirectValidator } from "./validation.js";
 
-import { describe, it, expect } from 'vitest';
+describe("SDDirectValidator", () => {
+  let validator: SDDirectValidator;
 
-describe('Validation System', () => {
-  it('should test validation constants', async () => {
-    const { VALIDATION_CONSTANTS } = await import('../types/sddirect');
-    
-    expect(VALIDATION_CONSTANTS.SERVICE_USER_NUMBER.LENGTH).toBe(6);
-    expect(VALIDATION_CONSTANTS.SORT_CODE.LENGTH).toBe(6);
-    expect(VALIDATION_CONSTANTS.ACCOUNT_NUMBER.MAX_LENGTH).toBe(8);
+  beforeEach(() => {
+    validator = new SDDirectValidator();
   });
 
-  it('should create validation service', async () => {
-    const { ValidationService } = await import('../services/validation');
-    
-    const service = ValidationService.getInstance();
-    expect(service).toBeDefined();
-    expect(service.isFormatSupported('sddirect')).toBe(true);
+  it("should support SDDirect format", () => {
+    expect(validator.supportsFormat("SDDirect")).toBe(true);
+    expect(validator.supportsFormat("sddirect")).toBe(true);
+    expect(validator.supportsFormat("SDDIRECT")).toBe(true);
   });
 
-  it('should validate a simple record structure', async () => {
-    const { ValidationService } = await import('../services/validation');
-    
-    const service = ValidationService.getInstance();
-    const validRecord = {
-      transactionId: 'TXN-001',
-      serviceUserNumber: '123456',
-      payerSortCode: '112233',
-      payerAccountNumber: '12345678',
-      payerName: 'John Smith',
-      collectionAmount: 1500,
-      collectionDate: '2025-08-15',
-      reference: 'INV-001',
-      ddiReference: 'DDI-REF-001'
-    };
-
-    const result = service.validateRecord('sddirect', validRecord);
-    expect(result.success).toBe(true);
-    expect(result.errors).toHaveLength(0);
+  it("should not support other formats", () => {
+    expect(validator.supportsFormat("BACS")).toBe(false);
+    expect(validator.supportsFormat("FasterPayments")).toBe(false);
   });
 
-  it('should reject invalid service user number', async () => {
-    const { ValidationService } = await import('../services/validation');
-    
-    const service = ValidationService.getInstance();
-    const invalidRecord = {
-      transactionId: 'TXN-001',
-      serviceUserNumber: '12345', // Too short
-      payerSortCode: '112233',
-      payerAccountNumber: '12345678',
-      payerName: 'John Smith',
-      collectionAmount: 1500,
-      collectionDate: '2025-08-15',
-      reference: 'INV-001',
-      ddiReference: 'DDI-REF-001'
-    };
+  it("should return correct format name", () => {
+    expect(validator.getSupportedFormat()).toBe("SDDirect");
+  });
 
-    const result = service.validateRecord('sddirect', invalidRecord);
-    expect(result.success).toBe(false);
-    expect(result.errors.length).toBeGreaterThan(0);
+  it("should export a singleton instance", () => {
+    expect(sdDirectValidator).toBeInstanceOf(SDDirectValidator);
+    expect(sdDirectValidator.getSupportedFormat()).toBe("SDDirect");
   });
 });

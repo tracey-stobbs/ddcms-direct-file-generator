@@ -178,21 +178,26 @@ interface GenerateRequest {
   outputPath?: string;
 }
 
-// File Format Types
+// SDDirect File Format Types (matching SDDirect.md specification)
 interface SDDirectRecord {
-  destinationAccountName: string;
-  destinationSortCode: string;
-  destinationAccountNumber: string;
-  paymentReference: string;
-  amount: string;
-  transactionCode: TransactionCode;
-  // Optional fields
-  realtimeInformationChecksum?: string;
-  payDate?: string;
-  originatingSortCode?: string;
-  originatingAccountNumber?: string;
-  originatingAccountName?: string;
+  // Required fields (exact order from SDDirect.md)
+  destinationAccountName: string;        // ≤18 chars, allowed chars only
+  destinationSortCode: string;           // Exactly 6 digits
+  destinationAccountNumber: string;      // Exactly 8 digits  
+  paymentReference: string;              // 6-18 chars, specific rules
+  amount: string;                        // Decimal as string, "0" for 0C/0N/0S codes
+  transactionCode: TransactionCode;      // 01,17,18,99,0C,0N,0S only
+  
+  // Optional fields (exact order from SDDirect.md)
+  realtimeInformationChecksum?: string;  // /XXX pattern, 0000, or empty
+  payDate?: string;                      // YYYYMMDD, working day rules
+  originatingSortCode?: string;          // Exactly 6 digits
+  originatingAccountNumber?: string;     // Exactly 8 digits
+  originatingAccountName?: string;       // ≤18 chars, allowed chars only
 }
+
+// Valid transaction codes (from field-level-validation.md)
+type TransactionCode = '01' | '17' | '18' | '99' | '0C' | '0N' | '0S';
 ```
 
 #### 2.2 Field Validation Engine
@@ -212,23 +217,36 @@ interface SDDirectRecord {
 
 #### 3.1 Valid Data Generation
 **Tasks:**
-- [ ] Create Faker.js-based data generators
-- [ ] Implement field-specific generation logic
-- [ ] Add working day calculation for dates
-- [ ] Create transaction code-specific logic
+- [ ] Create Faker.js-based data generators with exact validation compliance
+- [ ] Implement field-specific generation logic following field-level-validation.md
+- [ ] Add working day calculation for dates using calendar service
+- [ ] Create transaction code-specific logic with amount constraints
 
 **Files to Create:**
 ```bash
 src/services/dataGenerator/DataGeneratorService.ts
 src/services/dataGenerator/FieldGenerators.ts
 src/services/dataGenerator/DateCalculator.ts
+src/services/dataGenerator/TransactionCodeHandler.ts
 ```
+
+**Critical Generation Rules:**
+- **Transaction Codes**: Only generate from: `01`, `17`, `18`, `99`, `0C`, `0N`, `0S`
+- **Amount Logic**: If transaction code is `0C`, `0N`, or `0S` → amount MUST be "0"
+- **Character Set**: All text fields use only `A-Za-z0-9.&/- ` (space included)
+- **Payment Reference**: 6-18 chars, start with word char, not "DDIC", not all same chars
+- **Account Names**: ≤18 characters with allowed character set only
+- **Sort Codes**: Exactly 6 digits (use realistic UK bank prefixes)
+- **Account Numbers**: Exactly 8 digits
+- **Pay Date**: 3-30 working days future, special 3-day rule for 0C/0N/0S codes
+- **Realtime Checksum**: Pattern `/XXX`, `0000`, or empty string only
 
 **Key Features:**
 - Generate realistic UK account names, sort codes, account numbers
-- Create valid payment references with allowed characters
-- Calculate proper pay dates respecting working days
-- Handle special transaction codes (0C, 0N, 0S)
+- Create valid payment references with allowed characters only
+- Calculate proper pay dates respecting working days and UK bank holidays
+- Handle special transaction codes with exact business rules
+- Ensure all generated data passes field validation
 
 #### 3.2 Invalid Data Generation
 **Tasks:**
@@ -321,11 +339,21 @@ src/api/server.ts
 
 #### 6.1 Unit Testing
 **Test Categories:**
-- **Calendar Service Tests:** Bank holiday detection, working day calculations
-- **Validation Engine Tests:** All field validation rules, edge cases
-- **Data Generation Tests:** Valid/invalid data generation, percentages
-- **File Generation Tests:** CSV formatting, file naming, storage
-- **API Tests:** Request/response handling, error scenarios
+- **Calendar Service Tests:** Bank holiday detection, working day calculations, 3/30 day rules
+- **Validation Engine Tests:** All 7 transaction codes, character set validation, field length limits
+- **Data Generation Tests:** Valid/invalid data generation, transaction code constraints, amount rules
+- **Field Validation Tests:** Payment reference rules, account name/number formats, date calculations
+- **File Generation Tests:** CSV formatting with exact SDDirect.md field order, file naming, storage
+- **API Tests:** Request/response handling, error scenarios, edge cases
+
+**Critical Test Scenarios:**
+- Transaction codes `0C`, `0N`, `0S` always generate amount "0"
+- Pay dates respect 3-working-day rule for special transaction codes
+- Payment references never start with "DDIC" or contain all same characters
+- All text fields only use allowed character set: `A-Za-z0-9.&/- `
+- Sort codes and account numbers are exactly 6 and 8 digits respectively
+- Realtime checksum follows `/XXX`, `0000`, or empty patterns only
+- Working day calculations exclude weekends and UK bank holidays
 
 **Coverage Requirements:**
 - 100% line coverage
@@ -399,9 +427,12 @@ tests/
 ```
 
 ### Test Data Management
-- **Fixtures:** Sample requests and expected outputs
-- **Mock Data:** Controlled test scenarios
-- **Real Data:** Actual bank holiday dates for validation
+- **Fixtures:** Sample requests and expected outputs matching exact SDDirect.md format
+- **Mock Data:** Controlled test scenarios for all 7 transaction codes
+- **Real Data:** Actual UK bank holiday dates for working day validation
+- **Edge Cases:** Weekend dates, bank holidays, year boundaries, special transaction codes
+- **Character Set Testing:** Validate allowed characters `A-Za-z0-9.&/- ` in all text fields
+- **Field Order Testing:** Ensure CSV output matches exact field order from SDDirect.md
 
 ### Continuous Testing
 - Run tests on every code change
@@ -464,7 +495,10 @@ OUTPUT_PATH=./output
 ### Technical Risks
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Complex date calculations | High | Comprehensive testing with edge cases |
+| Complex transaction code business rules | High | Comprehensive testing with all 7 codes and amount constraints |
+| Working day calculations with special cases | High | Step-by-step testing with UK bank holiday data |
+| Character set validation complexity | Medium | Regex validation and comprehensive character testing |
+| Field order compliance with SDDirect.md | High | Interface matching and CSV format validation |
 | File system permissions | Medium | Graceful error handling and validation |
 | Memory usage with large files | Medium | Streaming approach and monitoring |
 | Invalid data generation complexity | Medium | Step-by-step implementation and testing |
@@ -480,9 +514,13 @@ OUTPUT_PATH=./output
 
 ### Functional Metrics
 - [ ] All API endpoints functional
-- [ ] Correct file generation for all scenarios
-- [ ] Proper validation rule enforcement
-- [ ] Working day calculations accurate
+- [ ] Correct file generation matching exact SDDirect.md field order
+- [ ] All 7 transaction codes properly handled with business rules
+- [ ] Amount constraints enforced for 0C/0N/0S transaction codes
+- [ ] Character set validation for all text fields (`A-Za-z0-9.&/- `)
+- [ ] Working day calculations accurate with UK bank holidays
+- [ ] Payment reference validation (6-18 chars, no "DDIC", no all-same-chars)
+- [ ] Realtime checksum patterns correctly implemented
 
 ### Quality Metrics
 - [ ] 100% test coverage achieved
