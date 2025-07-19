@@ -6,19 +6,19 @@
  */
 
 import { z } from 'zod';
-import { logger } from '../lib/logger.js';
+import { logger } from '../lib/logger';
 import type { 
   ValidationResult, 
   ValidationError, 
   FieldValidationRule,
   SDDirectRecord,
   SDDirectFile
-} from '../types/sddirect.js';
+} from '../types/sddirect';
 import { 
   SDDirectRecordSchema, 
   SDDirectFileSchema,
   SDDIRECT_VALIDATION_RULES 
-} from '../types/sddirect.js';
+} from '../types/sddirect';
 
 // Abstract base class for validators (Strategy pattern)
 export abstract class FileFormatValidator {

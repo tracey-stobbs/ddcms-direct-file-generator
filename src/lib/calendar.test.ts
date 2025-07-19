@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DateTime } from 'luxon';
-import { IsBankHoliday, IsWorkingDay, AddWorkingDays } from '../lib/calendar.js';
+import { IsBankHoliday, IsWorkingDay, AddWorkingDays } from '../lib/calendar';
 
 describe('Calendar Service', () => {
   describe('IsBankHoliday', () => {
