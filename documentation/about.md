@@ -44,6 +44,8 @@ must contain unit tests
 
 - tests must live alongside the file it is testing with a format such as {filename.test.ts}
 
+- request.http is a file than can aide in user's manual testing.  It has no impact on the project, and must not become part of the application. It must also not be modified.
+
 ## Endpoints
 
 1. Generate  
