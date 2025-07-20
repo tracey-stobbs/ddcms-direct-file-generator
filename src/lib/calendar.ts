@@ -1,3 +1,29 @@
+import { DateTime } from "luxon";
+
+const UK_BANK_HOLIDAYS: string[] = [
+  // Example: "20250728", // Add real dates for 2019-2027
+];
+
+export function isBankHoliday(dt: DateTime): boolean {
+  return UK_BANK_HOLIDAYS.includes(dt.toFormat("yyyyLLdd"));
+}
+
+export function isWorkingDay(dt: DateTime): boolean {
+  const weekday = dt.weekday;
+  return weekday >= 1 && weekday <= 5 && !isBankHoliday(dt);
+}
+
+export function addWorkingDays(startDate: DateTime, workingDays: number): DateTime {
+  let date = startDate;
+  let added = 0;
+  while (added < workingDays) {
+    date = date.plus({ days: 1 });
+    if (isWorkingDay(date)) {
+      added++;
+    }
+  }
+  return date;
+}
 
 // import {get} from "./Http";
 

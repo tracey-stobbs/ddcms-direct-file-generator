@@ -272,10 +272,21 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 
 ## 🔧 Non-Functional Requirements
 
+
 ### NFR1: Performance
 - **Response Time:** < 2 seconds for file generation (up to 1000 rows)
 - **Memory Usage:** Efficient data streaming for large files
 - **Concurrency:** Support multiple simultaneous requests
+
+### NFR1.1: Logging & Observability
+- **Request Logging:** All incoming API requests must be logged with timestamp, endpoint, and request body (excluding sensitive data).
+- **Error Logging:** All errors must be logged with full stack trace and context for debugging.
+- **Response Logging:** All API responses (success and error) must be logged with status and summary.
+- **Log Format:** Logs must be structured and easy to parse for future analysis.
+
+### NFR1.2: Response Usefulness
+- **Useful Responses:** All API responses must provide clear, actionable information to the client.
+- **Error Responses:** Error messages must summarize the issue in plain language, with enough detail for the user to resolve or report the problem.
 
 ### NFR2: Reliability
 - **Error Handling:** Comprehensive error logging and graceful degradation

@@ -4,12 +4,28 @@
 
 ## Technologies:
 
-nodejs, typescript, express, vite, vitest
+nodejs, typescript, express, vitest
 
 ## Running the Application
 
+
 The application runs on port 3001 by default to avoid conflicts with other common applications.
 Do not use port 3000 as it is often used by other development servers.
+
+### Building and Running the Application
+
+1. **Install dependencies:**
+   ```
+   npm install
+   ```
+2. **Build the app:**
+   ```
+   npm run build
+   ```
+3. **Start the app:**
+   ```
+   npm start
+   ```
 
 To specify a custom port, set the PORT environment variable before starting the server.
 Example: `$env:PORT=3005; npm start`

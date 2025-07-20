@@ -1,5 +1,5 @@
 @number_of_rows = 15 
-@include_optional_fields = true
+@include_optional_fields = ["Pay Date"]
 @include_headers = true
 @has_invalid_rows = false
 @large_dataset = 1000
@@ -15,7 +15,7 @@ Accept: */*
     "fileType": "SDDirect",
     "includeHeaders": true,
     "includeOptionalFields": {{include_optional_fields}},
-    "numberOfRows": {{number_of_rows}}
+    "numberOfRows": {{number_of_rows}},
     "optionalFields": {
     "originatingAccountDetails": {
       "canBeInvalid": true,
@@ -23,7 +23,7 @@ Accept: */*
       "accountNumber": "51491194",
       "accountName": "Test Account"
     }
-  }
+  }}
 
 ####
 
