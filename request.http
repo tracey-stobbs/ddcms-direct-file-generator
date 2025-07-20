@@ -2,6 +2,9 @@
 @include_optional_fields = true
 @include_headers = true
 @has_invalid_rows = false
+@large_dataset = 1000
+@small_dataset = 1
+@max_dataset = 10000
 
 ####
 POST http://localhost:3001/api/generate
@@ -13,7 +16,14 @@ Accept: */*
     "includeHeaders": true,
     "includeOptionalFields": {{include_optional_fields}},
     "numberOfRows": {{number_of_rows}}
-}
+    "optionalFields": {
+    "originatingAccountDetails": {
+      "canBeInvalid": true,
+      "sortCode": "912291",
+      "accountNumber": "51491194",
+      "accountName": "Test Account"
+    }
+  }
 
 ####
 
@@ -38,7 +48,14 @@ Accept: */*
     "includeHeaders": true,
     "includeOptionalFields": {{include_optional_fields}},
     "numberOfRows": {{number_of_rows}},
-    "hasInvalidRows": true
+    "hasInvalidRows": true,
+    "optionalFields": {
+    "originatingAccountDetails": {
+      "canBeInvalid": true,
+      "sortCode": "912291",
+      "accountNumber": "51491194",
+      "accountName": "Test Account"
+    }}
 }
 
 ####
@@ -53,4 +70,291 @@ Accept: */*
     "includeOptionalFields": {{include_optional_fields}},
     "numberOfRows": {{number_of_rows}},
     "hasInvalidRows": true
+}
+
+### Edge Cases & Performance Testing
+
+# Minimum dataset (1 row)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": false,
+    "numberOfRows": {{small_dataset}},
+    "hasInvalidRows": false
+}
+
+###
+
+# Large dataset (1000 rows)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": true,
+    "numberOfRows": {{large_dataset}},
+    "hasInvalidRows": false
+}
+
+###
+
+# Maximum allowed dataset (10000 rows)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": true,
+    "numberOfRows": {{max_dataset}},
+    "hasInvalidRows": true
+}
+
+###
+
+# Minimal configuration (only required fields)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect"
+}
+
+###
+
+# All optional fields disabled
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": false,
+    "includeOptionalFields": false,
+    "numberOfRows": 10,
+    "hasInvalidRows": false,
+    "canInlineEdit": false
+}
+
+###
+
+# Custom output path
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": true,
+    "numberOfRows": 25,
+    "hasInvalidRows": false,
+    "outputPath": "./custom-output"
+}
+
+### Error Testing & Validation
+
+# Invalid file type
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "InvalidFileType",
+    "numberOfRows": 10
+}
+
+###
+
+# Negative number of rows
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "numberOfRows": -5
+}
+
+###
+
+# Zero rows
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "numberOfRows": 0
+}
+
+###
+
+# Exceeding maximum rows
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "numberOfRows": 100001
+}
+
+###
+
+# Invalid numberOfRows type (string)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "numberOfRows": "invalid"
+}
+
+###
+
+# Invalid numberOfRows type (float)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "numberOfRows": 15.5
+}
+
+###
+
+# Empty request body
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{}
+
+###
+
+# Missing Content-Type header
+POST http://localhost:3001/api/generate
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "numberOfRows": 10
+}
+
+###
+
+# Invalid JSON
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect"
+    "numberOfRows": 10
+}
+
+### Future File Types (Currently Unsupported)
+
+# Bacs18PaymentLines (should return error in current MVP)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "includeHeaders": true,
+    "numberOfRows": 10
+}
+
+###
+
+# Bacs18StandardFile (should return error in current MVP)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18StandardFile",
+    "includeHeaders": false,
+    "numberOfRows": 5
+}
+
+### API Information & Health Checks
+
+# Get API information
+GET http://localhost:3001/api/info
+Accept: application/json
+
+###
+
+# Health check (if implemented)
+GET http://localhost:3001/health
+Accept: application/json
+
+###
+
+# Test 404 for unknown endpoint
+GET http://localhost:3001/api/unknown
+Accept: application/json
+
+### Stress Testing Scenarios
+
+# Rapid fire requests (test rate limiting)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "numberOfRows": 5
+}
+
+###
+
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "numberOfRows": 5
+}
+
+###
+
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "numberOfRows": 5
+}
+
+###
+
+# Different combinations for comprehensive testing
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": false,
+    "numberOfRows": 50,
+    "hasInvalidRows": true,
+    "canInlineEdit": true,
+    "outputPath": "./test-scenarios"
 }
