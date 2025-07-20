@@ -95,7 +95,17 @@ describe("API Routes", () => {
         }
       });
 
-      expect(mockGenerateFile).toHaveBeenCalledWith(validRequest);
+      expect(mockGenerateFile).toHaveBeenCalledWith({
+        ...validRequest,
+        optionalFields: {
+          originatingAccountDetails: {
+            canBeInvalid: true,
+            sortCode: "912291",
+            accountNumber: "51491194",
+            accountName: "Test Account"
+          }
+        }
+      });
     });
 
     it("should handle file generation errors", async () => {
@@ -116,6 +126,22 @@ describe("API Routes", () => {
     });
 
     describe("Request validation", () => {
+      it("should reject missing fileType when other fields are provided", async () => {
+        const requestWithoutFileType = {
+          numberOfRows: 10,
+          includeHeaders: true
+        };
+
+        const response = await request(app)
+          .post('/api/generate')
+          .send(requestWithoutFileType)
+          .expect(400);
+
+        expect(response.body.success).toBe(false);
+        expect(response.body.error).toBe('Validation failed');
+        expect(response.body.details).toContain('fileType is required when other fields are provided');
+      });
+
       it("should reject invalid fileType", async () => {
         const invalidRequest = {
           ...validRequest,
@@ -190,10 +216,11 @@ describe("API Routes", () => {
         const response = await request(app)
           .post('/api/generate')
           .send(bacsRequest)
-          .expect(200);
+          .expect(422);
 
-        expect(response.body.success).toBe(true);
-        expect(mockGenerateFile).toHaveBeenCalledWith(bacsRequest);
+        expect(response.body.success).toBe(false);
+        expect(response.body.error).toBe('File generation failed');
+        expect(response.body.details).toContain('SDDirect file type is currently supported');
       });
 
       it("should accept valid Bacs18StandardFile request", async () => {
@@ -222,10 +249,11 @@ describe("API Routes", () => {
         const response = await request(app)
           .post('/api/generate')
           .send(bacsStandardRequest)
-          .expect(200);
+          .expect(422);
 
-        expect(response.body.success).toBe(true);
-        expect(mockGenerateFile).toHaveBeenCalledWith(bacsStandardRequest);
+        expect(response.body.success).toBe(false);
+        expect(response.body.error).toBe('File generation failed');
+        expect(response.body.details).toContain('SDDirect file type is currently supported');
       });
     });
 
@@ -322,28 +350,49 @@ describe("API Routes", () => {
           numberOfRows: 15,
           hasInvalidRows: false,
           includeOptionalFields: true,
+          optionalFields: {
+            originatingAccountDetails: {
+              canBeInvalid: true,
+              sortCode: "912291",
+              accountNumber: "51491194",
+              accountName: "Test Account"
+            }
+          },
           outputPath: './output'
         });
       });
 
       it("should handle empty request body", async () => {
+        mockGenerateFile.mockReturnValue({
+          content: 'Default CSV content...',
+          filename: 'SDDirect_default.csv',
+          metadata: {
+            recordCount: 15,
+            validRecords: 15,
+            invalidRecords: 0,
+            columnCount: 11,
+            hasHeaders: true
+          }
+        });
+
         const response = await request(app)
           .post('/api/generate')
           .send({})
-          .expect(400);
+          .expect(200);
 
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toBe('Validation failed');
-        expect(response.body.details).toContain('fileType is required');
+        expect(response.body.success).toBe(true);
+        expect(response.body.message).toBe('File generated successfully');
+        expect(mockGenerateFile).toHaveBeenCalledWith(fileGenerator.DEFAULT_REQUEST);
       });
 
       it("should handle non-JSON content type", async () => {
         const response = await request(app)
           .post('/api/generate')
           .send('not json')
-          .expect(400);
+          .expect(500);
 
         expect(response.body.success).toBe(false);
+        expect(response.body.error).toBe('File generation failed');
       });
     });
   });

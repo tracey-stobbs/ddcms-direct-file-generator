@@ -2,18 +2,12 @@
  * Tests for the file storage service
  * Validates file operations, security, and error handling
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { join } from 'path';
-import {
-  saveFile,
-  fileExists,
-  getFileStats,
-  listFiles,
-  deleteFile,
-  getDirectorySize
-} from "./fileStorage";
 
-// Mock fs module
+// Mock fs/promises with factory function to avoid hoisting issues
 vi.mock('fs', () => ({
   promises: {
     access: vi.fn(),
@@ -26,34 +20,29 @@ vi.mock('fs', () => ({
   }
 }));
 
-describe("File Storage Service", () => {
-  // Get the mocked fs module
-  const mockAccess = vi.fn();
-  const mockMkdir = vi.fn();
-  const mockWriteFile = vi.fn();
-  const mockRename = vi.fn();
-  const mockStat = vi.fn();
-  const mockReaddir = vi.fn();
-  const mockUnlink = vi.fn();
+// Import after mocking
+import {
+  saveFile,
+  fileExists,
+  getFileStats,
+  listFiles,
+  deleteFile,
+  getDirectorySize
+} from "./fileStorage";
 
+// Get references to the mocked functions
+import { promises as fs } from 'fs';
+const mockAccess = vi.mocked(fs.access);
+const mockMkdir = vi.mocked(fs.mkdir);
+const mockWriteFile = vi.mocked(fs.writeFile);
+const mockRename = vi.mocked(fs.rename);
+const mockStat = vi.mocked(fs.stat);
+const mockReaddir = vi.mocked(fs.readdir);
+const mockUnlink = vi.mocked(fs.unlink);
+
+describe("File Storage Service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Set up the mocks
-    vi.doMock('fs', () => ({
-      promises: {
-        access: mockAccess,
-        mkdir: mockMkdir,
-        writeFile: mockWriteFile,
-        rename: mockRename,
-        stat: mockStat,
-        readdir: mockReaddir,
-        unlink: mockUnlink
-      }
-    }));
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
   });
 
   describe("saveFile", () => {
@@ -94,9 +83,9 @@ describe("File Storage Service", () => {
 
       await saveFile('../dangerous/../../path', 'bad<>file*.csv', 'content');
       
-      // Should remove dangerous characters
+      // Should remove dangerous characters - use more flexible regex for Windows/Unix paths
       expect(mockWriteFile).toHaveBeenCalledWith(
-        expect.stringMatching(/dangerous\/path\/badfile\.csv\.tmp$/),
+        expect.stringMatching(/[\\//]?dangerous[\\//]path[\\//]badfile\.csv\.tmp$/),
         'content',
         'utf8'
       );

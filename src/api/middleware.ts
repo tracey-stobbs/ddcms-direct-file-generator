@@ -50,12 +50,7 @@ export function notFoundHandler(req: Request, res: Response): void {
   
   res.status(404).json({
     success: false,
-    error: 'Endpoint not found',
-    availableEndpoints: [
-      'POST /api/generate',
-      'GET /api/info',
-      'GET /health'
-    ]
+    error: 'Route not found'
   });
 }
 

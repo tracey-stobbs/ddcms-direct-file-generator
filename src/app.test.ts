@@ -27,14 +27,37 @@ describe('Health Endpoint', () => {
     });
   });
 
-  it('should return 404 for unimplemented API routes', async () => {
+  it('should return 200 for empty API requests using defaults', async () => {
     const response = await request(app)
       .post('/api/generate')
-      .expect(404);
+      .expect(200);
+
+    expect(response.body).toEqual({
+      success: true,
+      message: 'File generated successfully',
+      data: expect.objectContaining({
+        filename: expect.stringMatching(/^SDDirect_11_x_15_H_V_\d{8}_\d{6}\.csv$/),
+        metadata: expect.objectContaining({
+          recordCount: 15,
+          validRecords: 15,
+          invalidRecords: 0,
+          columnCount: 11,
+          hasHeaders: true
+        })
+      })
+    });
+  });
+
+  it('should return 400 when fields provided without fileType', async () => {
+    const response = await request(app)
+      .post('/api/generate')
+      .send({ numberOfRows: 10, includeHeaders: true })
+      .expect(400);
 
     expect(response.body).toEqual({
       success: false,
-      error: 'API endpoint not implemented yet'
+      error: 'Validation failed',
+      details: 'fileType is required when other fields are provided'
     });
   });
 });

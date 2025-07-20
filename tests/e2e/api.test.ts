@@ -27,7 +27,7 @@ describe("Phase 4 E2E API Tests", () => {
 
       if (serverProcess.stdout) {
         serverProcess.stdout.on('data', (data) => {
-          if (data.toString().includes('Server running on port 3000')) {
+          if (data.toString().includes('DDCMS Direct File Creator started on port 3000')) {
             clearTimeout(timer);
             resolve(undefined);
           }

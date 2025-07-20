@@ -17,6 +17,22 @@ const TRANSACTION_CODES = VALIDATION_CONSTANTS.TRANSACTION_CODES;
 const ALLOWED_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.&/- ';
 const ZERO_AMOUNT_TRANSACTION_CODES: TransactionCode[] = ['0C', '0N', '0S'];
 
+// Import types for optional fields
+export type OptionalField = 'realtimeInformationChecksum' | 'payDate' | 'originatingAccountDetails';
+
+export interface OptionalFieldItem {
+  realtimeInformationChecksum?: string;
+  payDate?: string;
+  originatingAccountDetails?: {
+    canBeInvalid: boolean;
+    sortCode?: string;
+    accountNumber?: string;
+    accountName?: string;
+  };
+}
+
+export type OptionalFieldsConfig = boolean | OptionalField[];
+
 /**
  * Generate random string using only allowed characters
  */
@@ -166,7 +182,10 @@ export function generateRealtimeInformationChecksum(transactionCode: Transaction
 /**
  * Generate a complete valid SDDirect record
  */
-export function generateValidRecord(includeOptionalFields: boolean): SDDirectRecord {
+export function generateValidRecord(
+  includeOptionalFields: OptionalFieldsConfig, 
+  optionalFields?: OptionalFieldItem
+): SDDirectRecord {
   const transactionCode = generateTransactionCode();
   
   const record: SDDirectRecord = {
@@ -178,12 +197,46 @@ export function generateValidRecord(includeOptionalFields: boolean): SDDirectRec
     transactionCode: transactionCode
   };
   
-  if (includeOptionalFields) {
-    record.realtimeInformationChecksum = generateRealtimeInformationChecksum(transactionCode);
-    record.payDate = generatePayDate(transactionCode);
-    record.originatingSortCode = generateSortCode();
-    record.originatingAccountNumber = generateAccountNumber();
-    record.originatingAccountName = generateAccountName();
+  // Handle optional fields based on configuration
+  if (includeOptionalFields === true) {
+    // Include all optional fields with random data or provided values
+    record.realtimeInformationChecksum = optionalFields?.realtimeInformationChecksum || 
+      generateRealtimeInformationChecksum(transactionCode);
+    record.payDate = optionalFields?.payDate || generatePayDate(transactionCode);
+    
+    if (optionalFields?.originatingAccountDetails) {
+      record.originatingSortCode = optionalFields.originatingAccountDetails.sortCode || generateSortCode();
+      record.originatingAccountNumber = optionalFields.originatingAccountDetails.accountNumber || generateAccountNumber();
+      record.originatingAccountName = optionalFields.originatingAccountDetails.accountName || generateAccountName();
+    } else {
+      record.originatingSortCode = generateSortCode();
+      record.originatingAccountNumber = generateAccountNumber();
+      record.originatingAccountName = generateAccountName();
+    }
+  } else if (Array.isArray(includeOptionalFields)) {
+    // Include only specified optional fields
+    for (const fieldKey of includeOptionalFields) {
+      switch (fieldKey) {
+        case 'realtimeInformationChecksum':
+          record.realtimeInformationChecksum = optionalFields?.realtimeInformationChecksum || 
+            generateRealtimeInformationChecksum(transactionCode);
+          break;
+        case 'payDate':
+          record.payDate = optionalFields?.payDate || generatePayDate(transactionCode);
+          break;
+        case 'originatingAccountDetails':
+          if (optionalFields?.originatingAccountDetails) {
+            record.originatingSortCode = optionalFields.originatingAccountDetails.sortCode || generateSortCode();
+            record.originatingAccountNumber = optionalFields.originatingAccountDetails.accountNumber || generateAccountNumber();
+            record.originatingAccountName = optionalFields.originatingAccountDetails.accountName || generateAccountName();
+          } else {
+            record.originatingSortCode = generateSortCode();
+            record.originatingAccountNumber = generateAccountNumber();
+            record.originatingAccountName = generateAccountName();
+          }
+          break;
+      }
+    }
   }
   
   return record;
@@ -273,10 +326,13 @@ function makeFieldInvalid(record: SDDirectRecord, fieldName: keyof SDDirectRecor
 }
 
 /**
- * Generate an invalid record by corrupting 1-3 fields
+ * Generate a record with some invalid fields for testing
  */
-export function generateInvalidRecord(includeOptionalFields: boolean): SDDirectRecord {
-  const record = generateValidRecord(includeOptionalFields);
+export function generateInvalidRecord(
+  includeOptionalFields: OptionalFieldsConfig, 
+  optionalFields?: OptionalFieldItem
+): SDDirectRecord {
+  const record = generateValidRecord(includeOptionalFields, optionalFields);
   
   // Determine how many fields to make invalid (1-3)
   const numInvalidFields = Math.floor(Math.random() * 3) + 1;
@@ -290,7 +346,8 @@ export function generateInvalidRecord(includeOptionalFields: boolean): SDDirectR
     'transactionCode'
   ];
   
-  if (includeOptionalFields) {
+  // Add optional fields if they should be included
+  if (includeOptionalFields === true || Array.isArray(includeOptionalFields)) {
     possibleFields.push(
       'realtimeInformationChecksum',
       'payDate',
@@ -324,15 +381,16 @@ export function generateInvalidRecord(includeOptionalFields: boolean): SDDirectR
 export function generateRecords(
   numberOfRows: number,
   hasInvalidRows: boolean,
-  includeOptionalFields: boolean,
-  canInlineEdit: boolean = true
+  includeOptionalFields: OptionalFieldsConfig,
+  canInlineEdit: boolean = true,
+  optionalFields?: OptionalFieldItem
 ): SDDirectRecord[] {
   const records: SDDirectRecord[] = [];
   
   if (!hasInvalidRows) {
     // Generate all valid records
     for (let i = 0; i < numberOfRows; i++) {
-      records.push(generateValidRecord(includeOptionalFields));
+      records.push(generateValidRecord(includeOptionalFields, optionalFields));
     }
   } else {
     // Calculate number of invalid rows (50% rounded down, max 49 if canInlineEdit)
@@ -347,12 +405,12 @@ export function generateRecords(
     
     // Generate valid records
     for (let i = 0; i < validRowCount; i++) {
-      records.push(generateValidRecord(includeOptionalFields));
+      records.push(generateValidRecord(includeOptionalFields, optionalFields));
     }
     
     // Generate invalid records
     for (let i = 0; i < invalidRowCount; i++) {
-      records.push(generateInvalidRecord(includeOptionalFields));
+      records.push(generateInvalidRecord(includeOptionalFields, optionalFields));
     }
     
     // Shuffle to mix valid and invalid records

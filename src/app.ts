@@ -1,4 +1,5 @@
 import express from 'express';
+import { Server } from 'http';
 import { config } from './lib/config';
 import { logger } from './lib/logger';
 import apiRoutes from './api/routes';
@@ -41,28 +42,39 @@ app.use(errorHandler);
 // 404 handler
 app.use(notFoundHandler);
 
-// Start server
-const server = app.listen(config.port, () => {
-  logger.info(`DDCMS Direct File Creator started on port ${config.port}`);
-  logger.info(`Environment: ${config.nodeEnv}`);
-  logger.info(`Output directory: ${config.outputPath}`);
-});
+// Start server only if not in test environment
+let server: Server | null = null;
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(config.port, () => {
+    logger.info(`DDCMS Direct File Creator started on port ${config.port}`);
+    logger.info(`Environment: ${config.nodeEnv}`);
+    logger.info(`Output directory: ${config.outputPath}`);
+  });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    logger.info('Server closed');
+  if (server) {
+    server.close(() => {
+      logger.info('Server closed');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 });
 
 process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    logger.info('Server closed');
+  if (server) {
+    server.close(() => {
+      logger.info('Server closed');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 });
 
 export default app;

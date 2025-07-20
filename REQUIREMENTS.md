@@ -7,13 +7,13 @@
 
 ## 📋 Executive Summary
 
-The DDCMS Direct File Creator is a Node.js API application that generates financial data files in predefined formats with randomly generated data. The primary purpose is to create test files for financial systems, supporting multiple file formats with comprehensive data validation and configurable output options.
+The DDCMS Direct File Creator is a Node.js API application that generates DDCMS Direct files in predefined formats with randomly generated data. The primary purpose is to create test files for DDCMS Direct, supporting multiple file formats with comprehensive data validation and configurable output options.
 
 ## 🎯 Project Objectives
 
-- **Primary Goal:** Generate standardized financial data files with random but valid data
+- **Primary Goal:** Generate standardized DDCMS Direct files with random but valid data
 - **MVP Scope:** Support SDDirect file format (.csv)
-- **Future Scope:** Extensible architecture for Bacs18PaymentLines (.txt) and Bacs18StandardFile (.bacs)
+- **Future Scope:** Extensible architecture for Bacs18PaymentLines (.txt), Bacs18StandardFile (.bacs) and EaziPasy (.csv)
 - **Quality:** Production-ready code with comprehensive testing and validation
 
 ## 🛠 Technology Stack
@@ -319,7 +319,7 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 - **Real Bank Holidays:** Use actual UK bank holiday data
 - **Edge Cases:** Weekend dates, bank holidays, year boundaries
 - **Invalid Data:** Test all validation rule violations
-- **Large Files:** Performance testing with 1000+ rows
+- **Large Files:** Performance testing with 10000+ rows
 
 ## 🚀 Deployment Requirements
 

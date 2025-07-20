@@ -11,6 +11,7 @@ import {
   calculateMetadata,
   generateFile,
   DEFAULT_REQUEST,
+  DEFAULT_REQUEST_BASE,
   type FileGenerationRequest
 } from "./fileGenerator";
 import { SDDirectRecord } from "../types/sddirect";
@@ -235,7 +236,7 @@ describe("File Generator Service", () => {
 
   describe("generateFile", () => {
     it("should generate file with default settings", () => {
-      const result = generateFile({});
+      const result = generateFile(DEFAULT_REQUEST_BASE);
       
       expect(result.filename).toMatch(/^SDDirect_11_x_15_H_V_\d{8}_\d{6}\.csv$/);
       expect(result.content).toContain("Destination Account Name"); // Has headers
@@ -343,6 +344,14 @@ describe("File Generator Service", () => {
         numberOfRows: 15,
         hasInvalidRows: false,
         includeOptionalFields: true,
+        optionalFields: {
+          originatingAccountDetails: {
+            canBeInvalid: true,
+            sortCode: "912291",
+            accountNumber: "51491194",
+            accountName: "Test Account"
+          }
+        },
         outputPath: './output'
       });
     });

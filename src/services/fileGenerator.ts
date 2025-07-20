@@ -4,7 +4,11 @@
  */
 import { SDDirectRecord } from '../types/sddirect';
 import { logger } from '../lib/logger';
-import { generateRecords } from './dataGeneration';
+import { 
+  generateRecords, 
+  OptionalFieldItem, 
+  OptionalFieldsConfig 
+} from './dataGeneration';
 
 /**
  * Request interface for file generation
@@ -15,7 +19,8 @@ export interface FileGenerationRequest {
   includeHeaders?: boolean;
   numberOfRows?: number;
   hasInvalidRows?: boolean;
-  includeOptionalFields?: boolean;
+  includeOptionalFields?: OptionalFieldsConfig;
+  optionalFields?: OptionalFieldItem;
   outputPath?: string;
 }
 
@@ -45,6 +50,27 @@ export const DEFAULT_REQUEST: Required<FileGenerationRequest> = {
   numberOfRows: 15,
   hasInvalidRows: false,
   includeOptionalFields: true,
+  optionalFields: {
+    originatingAccountDetails: {
+      canBeInvalid: true,
+      sortCode: "912291",
+      accountNumber: "51491194",
+      accountName: "Test Account"
+    }
+  },
+  outputPath: './output'
+};
+
+/**
+ * Default request values without optionalFields for tests
+ */
+export const DEFAULT_REQUEST_BASE: Omit<Required<FileGenerationRequest>, 'optionalFields'> = {
+  fileType: 'SDDirect',
+  canInlineEdit: true,
+  includeHeaders: true,
+  numberOfRows: 15,
+  hasInvalidRows: false,
+  includeOptionalFields: true,
   outputPath: './output'
 };
 
@@ -53,12 +79,33 @@ export const DEFAULT_REQUEST: Required<FileGenerationRequest> = {
  */
 export function generateFileName(
   fileType: string,
-  includeOptionalFields: boolean,
+  includeOptionalFields: OptionalFieldsConfig,
   numberOfRows: number,
   includeHeaders: boolean,
   hasInvalidRows: boolean
 ): string {
-  const columnCount = includeOptionalFields ? '11' : '06';
+  // Calculate column count based on optional fields configuration
+  let columnCount: string;
+  if (includeOptionalFields === true) {
+    columnCount = '11'; // All optional fields included
+  } else if (Array.isArray(includeOptionalFields)) {
+    // Calculate based on specific fields
+    let count = 6; // Base fields
+    for (const fieldKey of includeOptionalFields) {
+      switch (fieldKey) {
+        case 'realtimeInformationChecksum':
+        case 'payDate':
+          count += 1;
+          break;
+        case 'originatingAccountDetails':
+          count += 3; // sort code, account number, account name
+          break;
+      }
+    }
+    columnCount = count.toString().padStart(2, '0');
+  } else {
+    columnCount = '06'; // No optional fields
+  }
   const headers = includeHeaders ? 'H' : 'NH';
   const validity = hasInvalidRows ? 'I' : 'V';
   const timestamp = new Date().toISOString()
@@ -72,7 +119,7 @@ export function generateFileName(
 /**
  * Convert SDDirectRecord to CSV row
  */
-export function recordToCsvRow(record: SDDirectRecord, includeOptionalFields: boolean): string {
+export function recordToCsvRow(record: SDDirectRecord, includeOptionalFields: OptionalFieldsConfig): string {
   const fields: string[] = [
     record.destinationAccountName,
     record.destinationSortCode,
@@ -82,7 +129,9 @@ export function recordToCsvRow(record: SDDirectRecord, includeOptionalFields: bo
     record.transactionCode
   ];
 
-  if (includeOptionalFields) {
+  // Handle optional fields based on configuration
+  if (includeOptionalFields === true) {
+    // Include all optional fields
     fields.push(
       record.realtimeInformationChecksum || '',
       record.payDate || '',
@@ -90,6 +139,25 @@ export function recordToCsvRow(record: SDDirectRecord, includeOptionalFields: bo
       record.originatingAccountNumber || '',
       record.originatingAccountName || ''
     );
+  } else if (Array.isArray(includeOptionalFields)) {
+    // Include only specified optional fields
+    for (const fieldKey of includeOptionalFields) {
+      switch (fieldKey) {
+        case 'realtimeInformationChecksum':
+          fields.push(record.realtimeInformationChecksum || '');
+          break;
+        case 'payDate':
+          fields.push(record.payDate || '');
+          break;
+        case 'originatingAccountDetails':
+          fields.push(
+            record.originatingSortCode || '',
+            record.originatingAccountNumber || '',
+            record.originatingAccountName || ''
+          );
+          break;
+      }
+    }
   }
 
   // Escape fields that contain commas, quotes, or newlines
@@ -106,7 +174,7 @@ export function recordToCsvRow(record: SDDirectRecord, includeOptionalFields: bo
 /**
  * Generate CSV header row
  */
-export function generateCsvHeader(includeOptionalFields: boolean): string {
+export function generateCsvHeader(includeOptionalFields: OptionalFieldsConfig): string {
   const headers = [
     'Destination Account Name',
     'Destination Sort Code',
@@ -116,7 +184,9 @@ export function generateCsvHeader(includeOptionalFields: boolean): string {
     'Transaction code'
   ];
 
-  if (includeOptionalFields) {
+  // Handle optional fields based on configuration
+  if (includeOptionalFields === true) {
+    // Include all optional fields
     headers.push(
       'Realtime Information Checksum',
       'Pay Date',
@@ -124,6 +194,25 @@ export function generateCsvHeader(includeOptionalFields: boolean): string {
       'Originating Account Number',
       'Originating Account Name'
     );
+  } else if (Array.isArray(includeOptionalFields)) {
+    // Include only specified optional fields
+    for (const fieldKey of includeOptionalFields) {
+      switch (fieldKey) {
+        case 'realtimeInformationChecksum':
+          headers.push('Realtime Information Checksum');
+          break;
+        case 'payDate':
+          headers.push('Pay Date');
+          break;
+        case 'originatingAccountDetails':
+          headers.push(
+            'Originating Sort Code',
+            'Originating Account Number',
+            'Originating Account Name'
+          );
+          break;
+      }
+    }
   }
 
   return headers.join(',');
@@ -135,7 +224,7 @@ export function generateCsvHeader(includeOptionalFields: boolean): string {
 export function generateCsvContent(
   records: SDDirectRecord[],
   includeHeaders: boolean,
-  includeOptionalFields: boolean
+  includeOptionalFields: OptionalFieldsConfig
 ): string {
   const lines: string[] = [];
 
@@ -158,7 +247,7 @@ export function generateCsvContent(
 export function calculateMetadata(
   records: SDDirectRecord[],
   hasInvalidRows: boolean,
-  includeOptionalFields: boolean,
+  includeOptionalFields: OptionalFieldsConfig,
   includeHeaders: boolean,
   canInlineEdit: boolean = true
 ): NonNullable<FileGenerationResponse['metadata']> {
@@ -176,11 +265,33 @@ export function calculateMetadata(
   
   const validRecords = records.length - invalidRecords;
 
+  // Calculate column count based on optional fields configuration
+  let columnCount: number;
+  if (includeOptionalFields === true) {
+    columnCount = 11; // All optional fields included
+  } else if (Array.isArray(includeOptionalFields)) {
+    // Calculate based on specific fields
+    columnCount = 6; // Base fields
+    for (const fieldKey of includeOptionalFields) {
+      switch (fieldKey) {
+        case 'realtimeInformationChecksum':
+        case 'payDate':
+          columnCount += 1;
+          break;
+        case 'originatingAccountDetails':
+          columnCount += 3; // sort code, account number, account name
+          break;
+      }
+    }
+  } else {
+    columnCount = 6; // No optional fields
+  }
+
   return {
     recordCount: records.length,
     validRecords,
     invalidRecords,
-    columnCount: includeOptionalFields ? 11 : 6,
+    columnCount,
     hasHeaders: includeHeaders
   };
 }
@@ -215,7 +326,8 @@ export function generateFile(request: Partial<FileGenerationRequest>): {
     fullRequest.numberOfRows,
     fullRequest.hasInvalidRows,
     fullRequest.includeOptionalFields,
-    fullRequest.canInlineEdit
+    fullRequest.canInlineEdit,
+    fullRequest.optionalFields
   );
 
   // Generate CSV content

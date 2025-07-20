@@ -16,33 +16,71 @@ function validateGenerateRequest(req: Request, res: Response, next: Function): v
   try {
     const body = req.body || {};
     
-    // Validate fileType
+    // If body has properties but no fileType, that's an error
+    if (Object.keys(body).length > 0 && !body.fileType) {
+      res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: 'fileType is required when other fields are provided'
+      });
+      return;
+    }
+    
+    // Validate fileType only if provided (empty body uses defaults)
     if (body.fileType && !['SDDirect', 'Bacs18PaymentLines', 'Bacs18StandardFile'].includes(body.fileType)) {
       res.status(400).json({
         success: false,
-        error: `Invalid fileType. Must be one of: SDDirect, Bacs18PaymentLines, Bacs18StandardFile`
+        error: 'Validation failed',
+        details: 'fileType must be one of: SDDirect, Bacs18PaymentLines, Bacs18StandardFile'
       });
       return;
     }
     
     // Validate numberOfRows
     if (body.numberOfRows !== undefined) {
-      if (!Number.isInteger(body.numberOfRows) || body.numberOfRows <= 0 || body.numberOfRows > 10000) {
+      if (!Number.isInteger(body.numberOfRows) || body.numberOfRows <= 0) {
         res.status(400).json({
           success: false,
-          error: 'numberOfRows must be a positive integer between 1 and 10000'
+          error: 'Validation failed',
+          details: 'numberOfRows must be at least 1'
+        });
+        return;
+      }
+      if (body.numberOfRows > 100000) {
+        res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: 'numberOfRows must be at most 100000'
         });
         return;
       }
     }
     
     // Validate boolean fields
-    const booleanFields = ['canInlineEdit', 'includeHeaders', 'hasInvalidRows', 'includeOptionalFields'];
+    const booleanFields = ['canInlineEdit', 'includeHeaders', 'hasInvalidRows'];
     for (const field of booleanFields) {
       if (body[field] !== undefined && typeof body[field] !== 'boolean') {
         res.status(400).json({
           success: false,
           error: `${field} must be a boolean value`
+        });
+        return;
+      }
+    }
+    
+    // Validate includeOptionalFields (boolean or array)
+    if (body.includeOptionalFields !== undefined) {
+      const isValidBoolean = typeof body.includeOptionalFields === 'boolean';
+      const isValidArray = Array.isArray(body.includeOptionalFields) && 
+        body.includeOptionalFields.every((item: unknown) => 
+          typeof item === 'string' && 
+          ['realtimeInformationChecksum', 'payDate', 'originatingAccountDetails'].includes(item)
+        );
+      
+      if (!isValidBoolean && !isValidArray) {
+        res.status(400).json({
+          success: false,
+          error: 'includeOptionalFields must be a boolean or an array of valid field names (realtimeInformationChecksum, payDate, originatingAccountDetails)'
         });
         return;
       }
@@ -98,7 +136,8 @@ router.post('/generate', validateGenerateRequest, async (req: Request, res: Resp
     if (request.fileType !== 'SDDirect') {
       res.status(422).json({
         success: false,
-        error: 'Only SDDirect file type is currently supported in MVP'
+        error: 'File generation failed',
+        details: 'Only SDDirect file type is currently supported in MVP'
       });
       return;
     }
@@ -108,25 +147,23 @@ router.post('/generate', validateGenerateRequest, async (req: Request, res: Resp
     
     // Save file to disk
     const outputPath = request.outputPath || './output';
-    const fullPath = await saveFile(outputPath, generatedFile.filename, generatedFile.content);
+    await saveFile(outputPath, generatedFile.filename, generatedFile.content);
     
     const duration = Date.now() - startTime;
     
     // Success response
     res.status(200).json({
       success: true,
-      filePath: fullPath,
-      metadata: {
-        ...generatedFile.metadata,
-        generationTimeMs: duration,
-        fileSize: generatedFile.content.length,
-        request: {
-          fileType: request.fileType,
-          numberOfRows: request.numberOfRows,
-          includeHeaders: request.includeHeaders,
-          hasInvalidRows: request.hasInvalidRows,
-          includeOptionalFields: request.includeOptionalFields,
-          canInlineEdit: request.canInlineEdit
+      message: 'File generated successfully',
+      data: {
+        filename: generatedFile.filename,
+        content: generatedFile.content,
+        metadata: {
+          recordCount: generatedFile.metadata.recordCount,
+          validRecords: generatedFile.metadata.validRecords,
+          invalidRecords: generatedFile.metadata.invalidRecords,
+          columnCount: generatedFile.metadata.columnCount,
+          hasHeaders: generatedFile.metadata.hasHeaders
         }
       }
     });
@@ -157,7 +194,8 @@ router.post('/generate', validateGenerateRequest, async (req: Request, res: Resp
       } else {
         res.status(500).json({
           success: false,
-          error: 'Internal server error during file generation'
+          error: 'File generation failed',
+          message: 'Invalid payment data'
         });
       }
     } else {
@@ -174,9 +212,10 @@ router.post('/generate', validateGenerateRequest, async (req: Request, res: Resp
  */
 router.get('/info', (req: Request, res: Response): void => {
   res.status(200).json({
-    name: 'DDCMS Direct File Creator API',
+    name: 'Banking File Generation API',
     version: '1.0.0',
-    supportedFileTypes: ['SDDirect'],
+    status: 'operational',
+    supportedFormats: ['SDDirect', 'Bacs18PaymentLines', 'Bacs18StandardFile'],
     endpoints: {
       generate: 'POST /api/generate',
       health: 'GET /health',

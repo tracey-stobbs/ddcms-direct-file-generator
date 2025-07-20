@@ -6,15 +6,18 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { logger } from '../lib/logger';
 
+// Export fs for testing
+export const fsPromises = fs;
+
 /**
  * Ensure directory exists, creating it if necessary
  */
 async function ensureDirectoryExists(dirPath: string): Promise<void> {
   try {
-    await fs.access(dirPath);
+    await fsPromises.access(dirPath);
   } catch {
     // Directory doesn't exist, create it
-    await fs.mkdir(dirPath, { recursive: true });
+    await fsPromises.mkdir(dirPath, { recursive: true });
     logger.info(`Created directory: ${dirPath}`);
   }
 }
@@ -49,8 +52,8 @@ export async function saveFile(
     
     // Write file atomically (write to temp file, then rename)
     const tempPath = fullPath + '.tmp';
-    await fs.writeFile(tempPath, content, 'utf8');
-    await fs.rename(tempPath, fullPath);
+    await fsPromises.writeFile(tempPath, content, 'utf8');
+    await fsPromises.rename(tempPath, fullPath);
     
     logger.info(`File saved successfully: ${fullPath}`);
     return fullPath;
@@ -66,7 +69,7 @@ export async function saveFile(
  */
 export async function fileExists(filePath: string): Promise<boolean> {
   try {
-    await fs.access(filePath);
+    await fsPromises.access(filePath);
     return true;
   } catch {
     return false;
@@ -82,7 +85,7 @@ export async function getFileStats(filePath: string): Promise<{
   modified: Date;
 }> {
   try {
-    const stats = await fs.stat(filePath);
+    const stats = await fsPromises.stat(filePath);
     return {
       size: stats.size,
       created: stats.birthtime,
@@ -98,7 +101,7 @@ export async function getFileStats(filePath: string): Promise<{
  */
 export async function listFiles(dirPath: string, extension?: string): Promise<string[]> {
   try {
-    const files = await fs.readdir(dirPath);
+    const files = await fsPromises.readdir(dirPath);
     
     if (extension) {
       return files.filter(file => file.endsWith(extension));
@@ -116,7 +119,7 @@ export async function listFiles(dirPath: string, extension?: string): Promise<st
  */
 export async function deleteFile(filePath: string): Promise<void> {
   try {
-    await fs.unlink(filePath);
+    await fsPromises.unlink(filePath);
     logger.info(`File deleted: ${filePath}`);
   } catch (error) {
     throw new Error(`Failed to delete file: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -128,13 +131,18 @@ export async function deleteFile(filePath: string): Promise<void> {
  */
 export async function getDirectorySize(dirPath: string): Promise<number> {
   try {
-    const files = await fs.readdir(dirPath, { withFileTypes: true });
+    const files = await fsPromises.readdir(dirPath, { withFileTypes: true });
     let totalSize = 0;
     
     for (const file of files) {
       if (file.isFile()) {
-        const stats = await fs.stat(join(dirPath, file.name));
-        totalSize += stats.size;
+        try {
+          const stats = await fsPromises.stat(join(dirPath, file.name));
+          totalSize += stats.size;
+        } catch (fileError) {
+          // Skip files that can't be accessed, but continue processing others
+          logger.warn(`Failed to get stats for ${file.name}: ${fileError}`);
+        }
       }
     }
     

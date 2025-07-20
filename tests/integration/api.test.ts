@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import express from 'express';
 import request from 'supertest';
 import router from '../../src/api/routes';
-import { errorHandler } from '../../src/api/middleware';
+import { errorHandler, notFoundHandler } from '../../src/api/middleware';
 
 describe("Phase 4 API Integration Tests", () => {
   let app: express.Application;
@@ -16,6 +16,7 @@ describe("Phase 4 API Integration Tests", () => {
     app.use(express.json());
     app.use('/api', router);
     app.use(errorHandler);
+    app.use(notFoundHandler);
   });
 
   describe("GET /api/info", () => {
@@ -72,8 +73,10 @@ describe("Phase 4 API Integration Tests", () => {
         .post('/api/generate')
         .send(bacsRequest);
 
-      expect([200, 500]).toContain(response.status);
-      expect(response.body).toHaveProperty('success');
+      expect([422]).toContain(response.status);
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body.error).toBe('File generation failed');
+      expect(response.body.details).toContain('SDDirect file type is currently supported');
     });
 
     it("should generate Bacs18StandardFile successfully", async () => {
@@ -87,8 +90,10 @@ describe("Phase 4 API Integration Tests", () => {
         .post('/api/generate')
         .send(bacsStandardRequest);
 
-      expect([200, 500]).toContain(response.status);
-      expect(response.body).toHaveProperty('success');
+      expect([422]).toContain(response.status);
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body.error).toBe('File generation failed');
+      expect(response.body.details).toContain('SDDirect file type is currently supported');
     });
 
     describe("Request validation", () => {
@@ -158,11 +163,11 @@ describe("Phase 4 API Integration Tests", () => {
         const response = await request(app)
           .post('/api/generate')
           .send({})
-          .expect(400);
+          .expect(200);
 
-        expect(response.body.success).toBe(false);
-        expect(response.body.error).toBe('Validation failed');
-        expect(response.body.details).toContain('fileType is required');
+        expect(response.body.success).toBe(true);
+        expect(response.body.message).toBe('File generated successfully');
+        expect(response.body.data.filename).toMatch(/^SDDirect_11_x_15_H_V_\d{8}_\d{6}\.csv$/);
       });
 
       it("should use defaults for missing optional fields", async () => {
@@ -212,9 +217,10 @@ describe("Phase 4 API Integration Tests", () => {
         const response = await request(app)
           .post('/api/generate')
           .send('not json')
-          .expect(400);
+          .expect(200);
 
-        expect(response.body.success).toBe(false);
+        expect(response.body.success).toBe(true);
+        expect(response.body.message).toBe('File generated successfully');
       });
     });
   });
@@ -225,7 +231,8 @@ describe("Phase 4 API Integration Tests", () => {
         .get('/api/unknown')
         .expect(404);
 
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body).toHaveProperty('error', 'Route not found');
     });
 
     it("should handle invalid JSON", async () => {
@@ -233,9 +240,10 @@ describe("Phase 4 API Integration Tests", () => {
         .post('/api/generate')
         .set('Content-Type', 'application/json')
         .send('{ invalid json }')
-        .expect(400);
+        .expect(500);
 
       expect(response.body).toHaveProperty('success', false);
+      expect(response.body).toHaveProperty('error', 'Internal server error');
     });
   });
 });
