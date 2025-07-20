@@ -79,7 +79,7 @@ function validateGenerateRequest(req: Request, res: Response, next: Function): v
 }
 
 /**
- * POST /api/generate - Generate financial data file
+ * POST /generate - Generate financial data file
  */
 router.post('/generate', validateGenerateRequest, async (req: Request, res: Response): Promise<void> => {
   const startTime = Date.now();

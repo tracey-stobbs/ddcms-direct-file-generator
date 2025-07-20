@@ -16,7 +16,14 @@ Accept: */*
     "includeHeaders": true,
     "includeOptionalFields": {{include_optional_fields}},
     "numberOfRows": {{number_of_rows}}
-}
+    "optionalFields": {
+    "originatingAccountDetails": {
+      "canBeInvalid": true,
+      "sortCode": "912291",
+      "accountNumber": "51491194",
+      "accountName": "Test Account"
+    }
+  }
 
 ####
 
@@ -41,7 +48,14 @@ Accept: */*
     "includeHeaders": true,
     "includeOptionalFields": {{include_optional_fields}},
     "numberOfRows": {{number_of_rows}},
-    "hasInvalidRows": true
+    "hasInvalidRows": true,
+    "optionalFields": {
+    "originatingAccountDetails": {
+      "canBeInvalid": true,
+      "sortCode": "912291",
+      "accountNumber": "51491194",
+      "accountName": "Test Account"
+    }}
 }
 
 ####
