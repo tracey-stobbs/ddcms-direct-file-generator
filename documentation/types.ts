@@ -1,16 +1,39 @@
 export type Prettify<T> = {
   [K in keyof T]: T[K];
-} & {};
+};
+
+// EaziPay-specific types
+export type EaziPayDateFormat = "YYYY-MM-DD" | "DD-MMM-YYYY" | "DD/MM/YYYY";
+export type EaziPayTrailerFormat = "quoted" | "unquoted";
+
+export interface EaziPaySpecificFields {
+  transactionCode: string;
+  originatingSortCode: string;
+  originatingAccountNumber: string;
+  destinationSortCode: string;
+  destinationAccountNumber: string;
+  destinationAccountName: string;
+  paymentReference: string;
+  amount: number;
+  fixedZero: 0;
+  processingDate: string;
+  empty: undefined;
+  sunName: string;
+  bacsReference: string;
+  sunNumber?: string;
+  eaziPayTrailer: string;
+}
 
 export interface Request {
-  fileType: "SDDirect" | "Bacs18PaymentLines" | "Bacs18StandardFile";
+  fileType: "SDDirect" | "Bacs18PaymentLines" | "Bacs18StandardFile" | "EaziPay";
   canInlineEdit: boolean;
   includeHeaders?: boolean;
   numberOfRows?: number;
   hasInvalidRows?: boolean;
   includeOptionalFields?: boolean | OptionalField[];
-  defaultFields?: OptionalFieldItem;
+  defaultValues?: OptionalFieldItem;
   outputPath?: string;
+  dateFormat?: EaziPayDateFormat; // EaziPay only
 }
 
 interface OptionalFieldObject {
@@ -53,7 +76,7 @@ export const defaultRequest: Request = {
   hasInvalidRows: false,
   numberOfRows: 15,
   includeOptionalFields: true,
-  defaultFields: {
+  defaultValues: {
     originatingAccountDetails: {
       canBeInvalid: true,
       sortCode: "912291",

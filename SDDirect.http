@@ -6,6 +6,8 @@
 @small_dataset = 1
 @max_dataset = 10000
 
+# SDDirect File Type Testing
+
 ####
 POST http://localhost:3001/api/generate
 Content-Type: application/json
@@ -16,7 +18,7 @@ Accept: */*
     "includeHeaders": true,
     "includeOptionalFields": {{include_optional_fields}},
     "numberOfRows": {{number_of_rows}},
-    "defaultFields": {
+    "defaultValues": {
     "originatingAccountDetails": {
       "canBeInvalid": true,
       "sortCode": "912291",
@@ -49,7 +51,7 @@ Accept: */*
     "includeOptionalFields": ["payDate"],
     "numberOfRows": {{number_of_rows}},
     "hasInvalidRows": true,
-    "defaultFields": {
+    "defaultValues": {
     "originatingAccountDetails": {
       "canBeInvalid": true,
       "sortCode": "912291",

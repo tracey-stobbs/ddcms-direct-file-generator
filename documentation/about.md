@@ -75,7 +75,7 @@ export interface Request {
   numberOfRows?: number;
   hasInvalidRows?: boolean;
   includeOptionalFields?: boolean | OptionalField[];
-  defaultFields?: OptionalFieldItem;
+  defaultValues?: OptionalFieldItem;
   outputPath?: string;
 }
 ```
@@ -89,7 +89,7 @@ export const defaultRequest: Request = {
   hasInvalidRows: false,
   numberOfRows: 15,
   includeOptionalFields: true,
-  defaultFields: {
+  defaultValues: {
     originatingAccountDetails: {
       canBeInvalid: true,
       sortCode: "912291",
@@ -122,7 +122,7 @@ If IncludeOptionalFields is true, the generated file must include generated data
 
 If IncludeOptionalFields is provided as an array, only the optional fields contained in that array should have data generated.
 
-If defaultFields is not undefined, and not an empty object, use the data that is specified for ALL rows, do not randomly generate. If IncludeOptionalFields is an array which doesn't include a property that exists in OptionalFields, then it should be assumed that IncludeOptionalFields also includes the property/properties specified in OptionalFields.
+If defaultValues is not undefined, and not an empty object, use the data that is specified for ALL rows, do not randomly generate. If IncludeOptionalFields is an array which doesn't include a property that exists in OptionalFields, then it should be assumed that IncludeOptionalFields also includes the property/properties specified in OptionalFields.
 
 
 ### FileTypes and FileFormats

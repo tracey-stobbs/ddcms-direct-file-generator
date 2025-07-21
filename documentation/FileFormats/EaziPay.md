@@ -16,7 +16,6 @@ Contents:
 - Destination Account Number
 - Destination Account Name
 - Payment Reference
-- Amount (decimal)
 - Fixed zero
 - Amount (integer)
 - Processing Date 

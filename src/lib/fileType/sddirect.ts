@@ -19,7 +19,7 @@ function generatePayDate(): string {
 }
 
 function getOriginatingDetails(request: Request) {
-  const details = request.defaultFields?.originatingAccountDetails;
+  const details = request.defaultValues?.originatingAccountDetails;
   return {
     "Originating Sort Code": details?.sortCode || faker.finance.routingNumber(),
     "Originating Account Number": details?.accountNumber || faker.finance.account(8),
@@ -72,7 +72,7 @@ export function generateInvalidSDDirectRow(request: Request): Record<string, unk
     row[field] = generateInvalidValue(field);
   }
   // If canBeInvalid is true, force at least one originating field to be invalid
-  if (request.defaultFields?.originatingAccountDetails?.canBeInvalid) {
+  if (request.defaultValues?.originatingAccountDetails?.canBeInvalid) {
     const origFields = ["Originating Sort Code", "Originating Account Number", "Originating Account Name"];
     const field = faker.helpers.arrayElement(origFields);
     row[field] = generateInvalidValue(field);

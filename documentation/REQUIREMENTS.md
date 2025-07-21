@@ -1,9 +1,9 @@
 # DDCMS Direct File Creator - Requirements Document
 
 **Project:** DDCMS Direct File Creator  
-**Version:** 1.0.0  
-**Date:** July 19, 2025  
-**Status:** Ready for Implementation  
+**Version:** 1.1.0  
+**Date:** July 21, 2025  
+**Status:** Updated - EaziPay Support Added  
 
 ## 📋 Executive Summary
 
@@ -13,7 +13,8 @@ The DDCMS Direct File Creator is a Node.js API application that generates DDCMS 
 
 - **Primary Goal:** Generate standardized DDCMS Direct files with random but valid data
 - **MVP Scope:** Support SDDirect file format (.csv)
-- **Future Scope:** Extensible architecture for Bacs18PaymentLines (.txt), Bacs18StandardFile (.bacs) and EaziPasy (.csv)
+- **Current Scope:** Support for EaziPay file format (.csv/.txt)
+- **Future Scope:** Extensible architecture for Bacs18PaymentLines (.txt) and Bacs18StandardFile (.bacs)
 - **Quality:** Production-ready code with comprehensive testing and validation
 
 ## 🛠 Technology Stack
@@ -77,7 +78,89 @@ interface Request {
   numberOfRows?: number;
   hasInvalidRows?: boolean;
   includeOptionalFields?: boolean | OptionalField[];
-  defaultFields?: OptionalFieldItem;
+  defaultValues?: OptionalFieldItem;
+  outputPath?: string;
+  dateFormat?: "YYYY-MM-DD" | "DD-MMM-YYYY" | "DD/MM/YYYY"; // EaziPay only
+}
+```e Creator  
+**Version:** 1.0.0  
+**Date:** July 19, 2025  
+**Status:** Ready for Implementation  
+
+## 📋 Executive Summary
+
+The DDCMS Direct File Creator is a Node.js API application that generates DDCMS Direct files in predefined formats with randomly generated data. The primary purpose is to create test files for DDCMS Direct, supporting multiple file formats with comprehensive data validation and configurable output options.
+
+## 🎯 Project Objectives
+
+- **Primary Goal:** Generate standardized DDCMS Direct files with random but valid data
+- **MVP Scope:** Support SDDirect file format (.csv)
+- **Current Scope:** Support for EaziPay file format (.csv/.txt)
+- **Future Scope:** Extensible architecture for Bacs18PaymentLines (.txt) and Bacs18StandardFile (.bacs)
+- **Quality:** Production-ready code with comprehensive testing and validation
+
+## 🛠 Technology Stack
+
+| Component | Technology | Version |
+|-----------|------------|---------|
+| Runtime | Node.js | Latest LTS |
+| Language | TypeScript | Latest |
+| Framework | Express.js | Latest |
+| Build Tool | Vite | Latest |
+| Testing | Vitest | Latest |
+| Data Generation | Faker.js | Latest |
+| Date/Time | Luxon | Latest |
+| Linting | ESLint + TypeScript | Latest |
+
+## 🏗 System Architecture
+
+### High-Level Architecture
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   HTTP Client   │───▶│  Express API    │───▶│ File Generator  │
+│                 │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │                        │
+                                ▼                        ▼
+                       ┌─────────────────┐    ┌─────────────────┐
+                       │   Validation    │    │  File System    │
+                       │    Engine       │    │                 │
+                       └─────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌─────────────────┐
+                       │  UK Bank        │
+                       │  Holidays       │
+                       └─────────────────┘
+```
+
+### Core Modules
+
+1. **API Layer** - Express.js REST endpoints
+2. **Validation Engine** - Field-level data validation
+3. **Data Generator** - Faker.js powered random data generation
+4. **File Generator** - Format-specific file creation
+5. **Calendar Service** - Working day and bank holiday calculations
+6. **File System Service** - File storage and naming
+
+## 📊 Functional Requirements
+
+### FR1: API Endpoint - Generate File
+
+**Endpoint:** `POST /api/generate`  
+**Content-Type:** `application/json`  
+**Body:** Optional JSON (defaults applied if empty)
+
+#### Request Interface
+```typescript
+interface Request {
+  fileType: "SDDirect" | "Bacs18PaymentLines" | "Bacs18StandardFile" | "EaziPay";
+  canInlineEdit: boolean;
+  includeHeaders?: boolean;
+  numberOfRows?: number;
+  hasInvalidRows?: boolean;
+  includeOptionalFields?: boolean | OptionalField[];
+  defaultValues?: OptionalFieldItem;
   outputPath?: string;
 }
 ```
@@ -91,7 +174,7 @@ const defaultRequest: Request = {
   hasInvalidRows: false,
   numberOfRows: 15,
   includeOptionalFields: true,
-  defaultFields: {
+  defaultValues: {
     originatingAccountDetails: {
       canBeInvalid: true,
       sortCode: "912291",
@@ -123,15 +206,19 @@ interface ErrorResponse {
 ```
 
 **Components:**
-- `[FileType]`: SDDirect, Bacs18PaymentLines, or Bacs18StandardFile
-- `[COLUMNCOUNT]`: 06 (required only) or 11 (with optional fields)
+- `[FileType]`: SDDirect, Bacs18PaymentLines, Bacs18StandardFile, or EaziPay
+- `[COLUMNCOUNT]`: 
+  - SDDirect: 06 (required only) or 11 (with optional fields)
+  - EaziPay: 15 (quoted trailer) or 23 (unquoted trailer)
+  - Other formats: TBD
 - `[ROWS]`: Number of data rows (default: 15)
 - `[HEADERS]`: _H (headers included) or NH (no headers)
 - `[VALIDITY]`: V (all valid) or I (contains invalid rows)
 - `[TIMESTAMP]`: YYYYMMDD_HHMMSS format
 - `[extension]`: .csv, .txt, or .bacs
 
-**Example:** `SDDirect_11_x_15_H_V_20250719_143022.csv`
+**Example:** `SDDirect_11_x_15_H_V_20250719_143022.csv`  
+**EaziPay Example:** `EaziPay_15_x_15_NH_V_20250721_094500.txt`
 
 #### File Storage
 - **Default Location:** `./output` directory relative to application root
@@ -158,8 +245,8 @@ When `hasInvalidRows: true`:
 #### Optional Fields Logic
 - `includeOptionalFields: true` → Include ALL optional fields
 - `includeOptionalFields: [array]` → Include only specified fields
-- `defaultFields` provided → Use specified data for ALL rows, don't generate randomly
-- Auto-include fields: If `defaultFields` contains a field not in `includeOptionalFields` array, automatically include it
+- `defaultValues` provided → Use specified data for ALL rows, don't generate randomly
+- Auto-include fields: If `defaultValues` contains a field not in `includeOptionalFields` array, automatically include it
 
 ### FR4: SDDirect File Format (MVP)
 
@@ -194,6 +281,52 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 ```csv
 Destination Account Name,Destination Sort Code,Destination Account Number,Payment Reference,Amount,Transaction code,Realtime Information Checksum,Pay Date,Originating Sort Code,Originating Account Number,Originating Account Name
 ```
+
+### FR4.1: EaziPay File Format
+
+**File Extension:** `.csv` or `.txt` (randomly selected)  
+**Headers:** Never included (always NH in filename)  
+**Field Order:** Exact sequence required  
+**Date Format:** User-specified or randomly selected from available formats  
+
+#### All Fields (16 total, always present)
+1. Transaction Code
+2. Originating Sort Code  
+3. Originating Account Number
+4. Destination Sort Code
+5. Destination Account Number
+6. Destination Account Name
+7. Payment Reference
+8. Amount (integer)
+9. Fixed zero
+10. Processing Date
+11. Empty (always undefined)
+12. SUN Name
+13. BACS Reference
+14. SUN Number
+15. EaziPayTrailer (9 columns)
+
+#### Column Count Logic
+- **15 columns:** When EaziPayTrailer is quoted (e.g., `",,,,,,,,"`)
+- **23 columns:** When EaziPayTrailer is unquoted (e.g., `,,,,,,,,,`)
+
+#### Date Format Options
+User can specify `dateFormat` in request:
+- `"YYYY-MM-DD"` → 2025-07-21
+- `"DD-MMM-YYYY"` → 21-JUL-2025  
+- `"DD/MM/YYYY"` → 21/07/2025
+
+If not specified, system randomly selects one format for entire file.
+
+#### Example Row
+```csv
+17,912291,51491194,123456,12345678,Test Company,DDREF01,15540,0,21-JUL-2025,,Test Company,DDREF01,,,,,,,,,
+```
+
+#### Header Validation
+- `includeHeaders: true` is ignored for EaziPay files
+- Files always generated without headers
+- Filename always uses `NH` designation
 
 ### FR5: Field-Level Validation Rules
 
@@ -250,10 +383,53 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 - **Originating Sort Code:** Exactly 6 numeric digits
 - **Originating Account Number:** Exactly 8 numeric digits
 
+#### EaziPay-Specific Field Validation
+
+#### Fixed Zero (EaziPay)
+- **Value:** Always exactly `0` (number zero)
+- **Required:** Must not be null
+
+#### Empty Field (EaziPay)
+- **Value:** Always undefined (no value, not even empty string)
+- **Output:** Results in empty column in CSV
+
+#### SUN Number (EaziPay)
+- **Conditional Requirement:** If Transaction Code is NOT 0C, 0N, or 0S → must be null/undefined
+- **Optional:** Can be null/undefined even if Transaction Code is 0C, 0N, or 0S
+- **Format:** When present, follows standard validation rules
+
+#### EaziPayTrailer (EaziPay)
+- **Quoted Format:** `",,,,,,,,"` (9 commas within quotes) → Results in 15 total columns
+- **Unquoted Format:** `,,,,,,,,,` (9 consecutive commas) → Results in 23 total columns
+- **Selection:** Randomly choose quoted or unquoted format per file
+- **Required:** Must be exactly one of these two formats
+
+#### Processing Date Format (EaziPay)
+- **Date Calculation Rules:** Same as existing Processing Date rules (2+ working days)
+- **Format Override:** Use EaziPay-specific date format instead of YYYYMMDD:
+  - `"YYYY-MM-DD"` → 2025-07-23
+  - `"DD-MMM-YYYY"` → 23-JUL-2025
+  - `"DD/MM/YYYY"` → 23/07/2025
+- **Consistency:** All dates in file must use same format
+
 #### Allowed Character Set
 - **Alpha:** A–Z, a–z
 - **Numeric:** 0–9
 - **Symbols:** . (full stop), & (ampersand), / (slash), - (hyphen), (space)
+
+### FR5.1: Header Validation Rules
+
+#### File Type Header Support
+- **SDDirect:** Headers supported (`includeHeaders: true/false`)
+- **Bacs18StandardFile:** Headers supported (`includeHeaders: true/false`)  
+- **EaziPay:** Headers never included (ignore `includeHeaders` if true)
+- **Bacs18PaymentLines:** Headers never included (ignore `includeHeaders` if true)
+
+#### Request Validation
+When `includeHeaders: true` is specified:
+- **Allowed:** SDDirect, Bacs18StandardFile
+- **Ignored:** EaziPay, Bacs18PaymentLines (silently use `false`)
+- **Filename:** Always reflects actual header presence (H/NH)
 
 ### FR6: Working Day Calculations
 
@@ -387,7 +563,7 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 **Acceptance Criteria:**
 - Can include all optional fields with `includeOptionalFields: true`
 - Can include specific fields with array specification
-- Can provide custom data via `defaultFields`
+- Can provide custom data via `defaultValues`
 - Column count in filename reflects actual columns (06/11)
 
 ### US4: Working Day Validation
@@ -399,6 +575,19 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 - Pay dates are never weekends or UK bank holidays
 - Special transaction codes have exact working day requirements
 - Date calculations account for year boundaries and holiday periods
+
+### US5: EaziPay File Generation
+**As a** payment system tester  
+**I want to** generate EaziPay files with custom date formats  
+**So that** I can test various date format scenarios in my payment processing system
+
+**Acceptance Criteria:**
+- Can specify `dateFormat` in request for EaziPay files
+- All dates in file use consistent format when specified
+- Random date format selection when not specified
+- Headers are never included regardless of `includeHeaders` setting
+- EaziPayTrailer field correctly generates quoted/unquoted format
+- Column count in filename reflects actual structure (15/23)
 
 ## 📅 Implementation Timeline
 
@@ -414,6 +603,12 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 - [ ] SDDirect file format generator
 - [ ] File naming and storage logic
 
+### Phase 2.1: EaziPay Implementation (Week 2.5)
+- [ ] EaziPay file format generator
+- [ ] Date format selection logic
+- [ ] EaziPayTrailer field handling
+- [ ] Header validation override logic
+
 ### Phase 3: Advanced Features (Week 3)
 - [ ] Invalid data generation logic
 - [ ] Optional fields handling
@@ -428,7 +623,7 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 
 ## 🏆 Success Criteria
 
-1. **✅ Functional Completeness:** All SDDirect requirements implemented
+1. **✅ Functional Completeness:** All SDDirect and EaziPay requirements implemented
 2. **✅ Quality Standards:** 100% test coverage, zero linting errors
 3. **✅ Performance:** Sub-2-second response times for typical requests
 4. **✅ Extensibility:** Clean architecture ready for future file formats
@@ -442,6 +637,7 @@ See `request.http` file for comprehensive API usage examples.
 
 ### Appendix B: File Format Specifications
 - [SDDirect Format](documentation/FileFormats/SDDirect.md)
+- [EaziPay Format](documentation/FileFormats/EaziPay.md)
 - [Bacs18PaymentLines Format](documentation/FileFormats/Bacs18PaymentLines.md) (Future)
 - [Bacs18StandardFile Format](documentation/FileFormats/Bacs18StandardFile.md) (Future)
 
