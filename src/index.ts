@@ -4,7 +4,7 @@ import type { Request as FileRequest, SuccessResponse, ErrorResponse } from "./l
 import express from "express";
 import { logRequest, logError, logResponse } from "./lib/utils/logger";
 import { getFileGenerator } from "./lib/fileType/factory";
-import { nodeFs } from "./lib/output/fsWrapper";
+import { nodeFs } from "./lib/fileWriter/fsWrapper";
 
 const app = express();
 app.use(express.json());

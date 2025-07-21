@@ -46,7 +46,7 @@ Accept: */*
 {
     "fileType": "SDDirect",
     "includeHeaders": true,
-    "includeOptionalFields": {{include_optional_fields}},
+    "includeOptionalFields": ["payDate"],
     "numberOfRows": {{number_of_rows}},
     "hasInvalidRows": true,
     "optionalFields": {
@@ -57,6 +57,20 @@ Accept: */*
       "accountName": "Test Account"
     }}
 }
+###
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "SDDirect",
+    "includeHeaders": true,
+    "includeOptionalFields": {{include_optional_fields}},
+    "numberOfRows": {{number_of_rows}},
+    "hasInvalidRows": true
+}
+
+####
 
 ####
 

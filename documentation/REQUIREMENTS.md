@@ -163,6 +163,9 @@ When `hasInvalidRows: true`:
 
 ### FR4: SDDirect File Format (MVP)
 
+**Strict Optional Field Output Requirement:**
+If any optional field is requested (i.e., `includeOptionalFields` is true or an array), the output file must include all optional columns (total 11 columns for SDDirect), but only the requested optional fields are populated; all other optional fields must be present in the file as blank values for every row.
+
 **File Extension:** `.csv`  
 **Field Order:** Exact sequence required
 

@@ -80,7 +80,7 @@ export function generateInvalidSDDirectRow(request: Request): Record<string, unk
   return row;
 }
 import { Request } from "../types";
-import { generateFileWithFs } from "../output/fileWriter";
+import { generateFileWithFs } from "../fileWriter/fileWriter";
 export async function generateSDDirectFile(request: Request, fs: any): Promise<string> {
   // Delegate to the tested fileWriter logic
   return generateFileWithFs(request, fs);
