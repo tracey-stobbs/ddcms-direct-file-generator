@@ -9,7 +9,7 @@ export interface Request {
   numberOfRows?: number;
   hasInvalidRows?: boolean;
   includeOptionalFields?: boolean | OptionalField[];
-  optionalFields?: OptionalFieldItem;
+  defaultFields?: OptionalFieldItem;
   outputPath?: string;
 }
 
@@ -53,7 +53,7 @@ export const defaultRequest: Request = {
   hasInvalidRows: false,
   numberOfRows: 15,
   includeOptionalFields: true,
-  optionalFields: {
+  defaultFields: {
     originatingAccountDetails: {
       canBeInvalid: true,
       sortCode: "912291",

@@ -46,7 +46,7 @@
 - If `hasInvalidRows` is true:
   - ~50% of rows must have 1–3 invalid fields (rounded down).
   - If `canInlineEdit` is true, max 49 errored rows.
-- If `includeOptionalFields` is true, include all optional fields. If array, only those fields. If `optionalFields` is provided, use its data for all rows.
+- If `includeOptionalFields` is true, include all optional fields. If array, only those fields. If `defaultFields` is provided, use its data for all rows.
 
 ---
 

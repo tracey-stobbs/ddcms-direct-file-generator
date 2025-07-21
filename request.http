@@ -16,7 +16,7 @@ Accept: */*
     "includeHeaders": true,
     "includeOptionalFields": {{include_optional_fields}},
     "numberOfRows": {{number_of_rows}},
-    "optionalFields": {
+    "defaultFields": {
     "originatingAccountDetails": {
       "canBeInvalid": true,
       "sortCode": "912291",
@@ -49,7 +49,7 @@ Accept: */*
     "includeOptionalFields": ["payDate"],
     "numberOfRows": {{number_of_rows}},
     "hasInvalidRows": true,
-    "optionalFields": {
+    "defaultFields": {
     "originatingAccountDetails": {
       "canBeInvalid": true,
       "sortCode": "912291",

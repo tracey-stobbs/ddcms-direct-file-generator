@@ -77,7 +77,7 @@ interface Request {
   numberOfRows?: number;
   hasInvalidRows?: boolean;
   includeOptionalFields?: boolean | OptionalField[];
-  optionalFields?: OptionalFieldItem;
+  defaultFields?: OptionalFieldItem;
   outputPath?: string;
 }
 ```
@@ -91,7 +91,7 @@ const defaultRequest: Request = {
   hasInvalidRows: false,
   numberOfRows: 15,
   includeOptionalFields: true,
-  optionalFields: {
+  defaultFields: {
     originatingAccountDetails: {
       canBeInvalid: true,
       sortCode: "912291",
@@ -158,8 +158,8 @@ When `hasInvalidRows: true`:
 #### Optional Fields Logic
 - `includeOptionalFields: true` → Include ALL optional fields
 - `includeOptionalFields: [array]` → Include only specified fields
-- `optionalFields` provided → Use specified data for ALL rows, don't generate randomly
-- Auto-include fields: If `optionalFields` contains a field not in `includeOptionalFields` array, automatically include it
+- `defaultFields` provided → Use specified data for ALL rows, don't generate randomly
+- Auto-include fields: If `defaultFields` contains a field not in `includeOptionalFields` array, automatically include it
 
 ### FR4: SDDirect File Format (MVP)
 
@@ -387,7 +387,7 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 **Acceptance Criteria:**
 - Can include all optional fields with `includeOptionalFields: true`
 - Can include specific fields with array specification
-- Can provide custom data via `optionalFields`
+- Can provide custom data via `defaultFields`
 - Column count in filename reflects actual columns (06/11)
 
 ### US4: Working Day Validation
