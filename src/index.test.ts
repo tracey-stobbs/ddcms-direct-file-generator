@@ -1,9 +1,9 @@
-import { describe, it, expect, vi } from "vitest";
 import request from "supertest";
-import { logRequest, logError, logResponse } from "./lib/utils/logger.js";
+import { describe, expect, it, vi } from "vitest";
+import { logError, logRequest, logResponse } from "./lib/utils/logger.js";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const app = require("./index.js");
+import app from "./index.js";
 
 // Mock logger to avoid noisy output
 vi.mock("./lib/utils/logger", () => ({

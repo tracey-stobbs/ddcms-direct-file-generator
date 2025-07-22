@@ -1,9 +1,9 @@
 import { faker } from "@faker-js/faker";
 import { DateTime } from "luxon";
 import { AddWorkingDays } from "../calendar";
+import type { EaziPayDateFormat, EaziPaySpecificFields, EaziPayTrailerFormat, Request } from "../types";
 import { DateFormatter } from "../utils/dateFormatter";
 import { EaziPayValidator } from "../validators/eazipayValidator";
-import type { Request, EaziPayDateFormat, EaziPayTrailerFormat, EaziPaySpecificFields } from "../types";
 
 /**
  * Generate valid EaziPay row data
@@ -27,13 +27,12 @@ export function generateValidEaziPayRow(
     destinationSortCode: faker.finance.routingNumber().slice(0, 6),
     destinationAccountNumber: faker.finance.account(8),
     destinationAccountName: faker.company.name().slice(0, 18),
-    paymentReference: generatePaymentReference(),
-    amount: generateAmount(transactionCode),
     fixedZero: 0,
+    amount: generateAmount(transactionCode),
     processingDate: generateProcessingDate(transactionCode, dateFormat),
     empty: undefined,
     sunName: faker.company.name().slice(0, 18),
-    bacsReference: generateBacsReference(),
+    paymentReference: generatePaymentReference(),
     sunNumber: generateSunNumber(transactionCode),
     eaziPayTrailer: EaziPayValidator.generateValidTrailer(trailerFormat)
   };
@@ -62,7 +61,7 @@ export function generateInvalidEaziPayRow(
     'destinationSortCode',
     'destinationAccountNumber',
     'destinationAccountName',
-    'paymentReference',
+    'bacsReference',
     'amount',
     'fixedZero',
     'sunNumber',
@@ -94,7 +93,7 @@ export function generateInvalidEaziPayRow(
       case 'destinationAccountName':
         row.destinationAccountName = generateInvalidFieldValue(fieldName, row.transactionCode) as string;
         break;
-      case 'paymentReference':
+      case 'bacsReference':
         row.paymentReference = generateInvalidFieldValue(fieldName, row.transactionCode) as string;
         break;
       case 'amount':
@@ -178,13 +177,6 @@ function generateProcessingDate(transactionCode: string, dateFormat: EaziPayDate
 }
 
 /**
- * Generate BACS reference
- */
-function generateBacsReference(): string {
-  return faker.random.alphaNumeric(faker.datatype.number({ min: 6, max: 18 }));
-}
-
-/**
  * Generate SUN Number based on transaction code rules
  */
 function generateSunNumber(transactionCode: string): string | undefined {
@@ -220,7 +212,7 @@ function generateInvalidFieldValue(fieldName: string, transactionCode: string): 
     case 'destinationAccountName':
       return faker.random.alpha({ count: 25 }); // Too long (>18 chars)
       
-    case 'paymentReference':
+    case 'bacsReference':
       return 'DDIC' + faker.random.alphaNumeric(5); // Starts with DDIC (invalid)
       
     case 'amount':
@@ -256,13 +248,12 @@ export function formatEaziPayRowAsArray(fields: EaziPaySpecificFields): string[]
     fields.destinationSortCode,
     fields.destinationAccountNumber,
     fields.destinationAccountName,
-    fields.paymentReference,
-    fields.amount.toString(),
     fields.fixedZero.toString(),
+    fields.amount.toString(),
     fields.processingDate,
     fields.empty === undefined ? '' : String(fields.empty),
     fields.sunName,
-    fields.bacsReference,
+    fields.paymentReference,
     fields.sunNumber || '',
     fields.eaziPayTrailer
   ];
@@ -279,13 +270,11 @@ export function getEaziPayHeaders(): string[] {
     'Destination Sort Code',
     'Destination Account Number',
     'Destination Account Name',
-    'Payment Reference',
-    'Amount',
-    'Fixed Zero',
+    'Fixed Zero',    'Amount',
     'Processing Date',
     'Empty',
     'SUN Name',
-    'BACS Reference',
+    'Payment Reference',
     'SUN Number',
     'EaziPayTrailer'
   ];

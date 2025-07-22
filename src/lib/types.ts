@@ -13,13 +13,12 @@ export interface EaziPaySpecificFields {
   destinationSortCode: string;
   destinationAccountNumber: string;
   destinationAccountName: string;
-  paymentReference: string;
-  amount: number;
   fixedZero: 0;
+  amount: number;
   processingDate: string;
   empty: undefined;
   sunName: string;
-  bacsReference: string;
+  paymentReference: string;
   sunNumber?: string;
   eaziPayTrailer: string;
 }

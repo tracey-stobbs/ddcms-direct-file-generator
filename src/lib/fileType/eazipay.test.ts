@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { 
-  generateValidEaziPayRow, 
-  generateInvalidEaziPayRow,
+import { beforeEach, describe, expect, it } from 'vitest';
+import type { EaziPayDateFormat, Request } from '../types';
+import { EaziPayValidator } from '../validators/eazipayValidator';
+import {
   formatEaziPayRowAsArray,
+  generateInvalidEaziPayRow,
+  generateValidEaziPayRow,
   getEaziPayHeaders
 } from './eazipay';
-import { EaziPayValidator } from '../validators/eazipayValidator';
-import type { Request, EaziPayDateFormat } from '../types';
 
 describe('EaziPay Generator', () => {
   let mockRequest: Request;
@@ -45,7 +45,7 @@ describe('EaziPay Generator', () => {
       expect(row).toHaveProperty('processingDate');
       expect(row).toHaveProperty('empty');
       expect(row).toHaveProperty('sunName');
-      expect(row).toHaveProperty('bacsReference');
+      expect(row).toHaveProperty('paymentReference');
       expect(row).toHaveProperty('sunNumber');
       expect(row).toHaveProperty('eaziPayTrailer');
     });
@@ -186,7 +186,7 @@ describe('EaziPay Generator', () => {
       const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
       const array = formatEaziPayRowAsArray(row);
       
-      expect(array).toHaveLength(15);
+      expect(array).toHaveLength(14);
       expect(Array.isArray(array)).toBe(true);
     });
 
@@ -200,15 +200,14 @@ describe('EaziPay Generator', () => {
       expect(array[3]).toBe(row.destinationSortCode);
       expect(array[4]).toBe(row.destinationAccountNumber);
       expect(array[5]).toBe(row.destinationAccountName);
-      expect(array[6]).toBe(row.paymentReference);
+     expect(array[6]).toBe('0'); // Fixed zero as string
       expect(array[7]).toBe(row.amount.toString());
-      expect(array[8]).toBe('0'); // Fixed zero as string
-      expect(array[9]).toBe(row.processingDate);
-      expect(array[10]).toBe(''); // Empty field
-      expect(array[11]).toBe(row.sunName);
-      expect(array[12]).toBe(row.bacsReference);
-      expect(array[13]).toBe(row.sunNumber || '');
-      expect(array[14]).toBe(row.eaziPayTrailer);
+       expect(array[8]).toBe(row.processingDate);
+      expect(array[9]).toBe(''); // Empty field
+      expect(array[10]).toBe(row.sunName);
+      expect(array[11]).toBe(row.paymentReference);
+      expect(array[12]).toBe(row.sunNumber || '');
+      expect(array[13]).toBe(row.eaziPayTrailer);
     });
 
     it('should handle empty and undefined fields correctly', () => {
@@ -216,13 +215,13 @@ describe('EaziPay Generator', () => {
       const array = formatEaziPayRowAsArray(row);
       
       // Empty field should be empty string
-      expect(array[10]).toBe('');
+      expect(array[9]).toBe('');
       
       // SUN number might be undefined, should become empty string
       if (row.sunNumber === undefined) {
-        expect(array[13]).toBe('');
+        expect(array[12]).toBe('');
       } else {
-        expect(array[13]).toBe(row.sunNumber);
+        expect(array[12]).toBe(row.sunNumber);
       }
     });
   });
@@ -231,11 +230,11 @@ describe('EaziPay Generator', () => {
     it('should return all 15 header names', () => {
       const headers = getEaziPayHeaders();
       
-      expect(headers).toHaveLength(15);
+      expect(headers).toHaveLength(14);
       expect(headers[0]).toBe('Transaction Code');
-      expect(headers[8]).toBe('Fixed Zero');
-      expect(headers[10]).toBe('Empty');
-      expect(headers[14]).toBe('EaziPayTrailer');
+      expect(headers[6]).toBe('Fixed Zero');
+      expect(headers[9]).toBe('Empty');
+      expect(headers[13]).toBe('EaziPayTrailer');
     });
 
     it('should return consistent headers', () => {
