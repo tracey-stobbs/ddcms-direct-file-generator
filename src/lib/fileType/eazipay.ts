@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { DateTime } from "luxon";
 import { AddWorkingDays } from "../calendar";
+import type { FileSystem } from "../fileWriter/fsWrapper";
 import type { EaziPayDateFormat, EaziPaySpecificFields, EaziPayTrailerFormat, Request } from "../types";
 import { DateFormatter } from "../utils/dateFormatter";
 import { EaziPayValidator } from "../validators/eazipayValidator";
@@ -34,7 +35,7 @@ export function generateValidEaziPayRow(
     sunName: faker.company.name().slice(0, 18),
     paymentReference: generatePaymentReference(),
     sunNumber: generateSunNumber(transactionCode),
-    eaziPayTrailer: EaziPayValidator.generateValidTrailer(trailerFormat)
+    eaziPayTrailer: EaziPayValidator.generateValidTrailer("unquoted")
   };
 }
 
@@ -260,6 +261,18 @@ export function formatEaziPayRowAsArray(fields: EaziPaySpecificFields): string[]
 }
 
 /**
+ * Generate EaziPay file using the main file writer
+ * @param request - The request configuration
+ * @param fs - The file system wrapper
+ * @returns Promise resolving to the generated file path
+ */
+export async function generateEaziPayFile(request: Request, fs: FileSystem): Promise<string> {
+  // Import here to avoid circular dependency
+  const { generateFileWithFs } = await import("../fileWriter/fileWriter");
+  return generateFileWithFs(request, fs);
+}
+
+/**
  * Get the field headers for EaziPay (never used since EaziPay has no headers)
  */
 export function getEaziPayHeaders(): string[] {
@@ -270,7 +283,8 @@ export function getEaziPayHeaders(): string[] {
     'Destination Sort Code',
     'Destination Account Number',
     'Destination Account Name',
-    'Fixed Zero',    'Amount',
+    'Fixed Zero',
+    'Amount',
     'Processing Date',
     'Empty',
     'SUN Name',

@@ -3,6 +3,7 @@
 FileType: EaziPay
 FileExtensions: .csv or .txt
 HasHeader: false
+HasFooter: false
 DateFormats: `['YYYY-MM-DD', 'DD-MMM-YYYY', 'DD/MM/YYYY']`
 Contents:
 
@@ -15,7 +16,6 @@ Contents:
 - Destination Sort Code
 - Destination Account Number
 - Destination Account Name
-- Payment Reference
 - Fixed zero
 - Amount (integer)
 - Processing Date 
@@ -33,7 +33,7 @@ Contents:
   - It is an optional field, so can be null or undefined, even if Transaction Code is one of 0C, 0N, 0S
 
 - EaziPayTrailer
- - Must be exactly ,,,,,,,, or ",,,,,,,,"
+ - Must be exactly ,,,,,,,, or if and only if Sun Number is undefined,  ",,,,,,,,"
 ​
 ###### Default Values for incoming request
 ```typescript

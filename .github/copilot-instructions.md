@@ -74,7 +74,7 @@ Typescript
 
 Always generate a README.md file
 
-    Always generate a README.md file for the code you write. This file should include a description of the code, how to use it, and any other relevant information. This is important for understanding the code and for future maintenance.
+    Always generate a README.md file for the code you write. This file should include a description of the code, how to use it, and any other relevant information. This is important for understanding the code and for future maintenance.  Be sure to keeps the README.md file up to date with any changes you make to the code.
 
 Unit Tests
 
@@ -86,4 +86,4 @@ Unit Tests
 - If you are unable to fix the test, inform the user and explain why you are unable to fix it. Do not leave tests failing without explanation.
 - If you are unable to write a test for a specific piece of code, inform the user and explain why you are unable to write the test. Do not leave code without tests without explanation.
 - Always priortize fixing tests over writing new code. If you have tests that are failing, fix them before writing new code.
--Always prioritize fixing tests over correcting linting errors. If you have tests that are failing, fix them before correcting linting errors.
+- Always prioritize fixing tests over correcting linting errors. If you have tests that are failing, fix them before correcting linting errors.

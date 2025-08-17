@@ -1,4 +1,10 @@
 ## Field-Level Validation Rules:
+
+## 1. Purpose
+This document defines the validation rules when generating DDCMS-Direct output files.
+## 2. Scope
+- The validation rules apply to all filetypes.
+
 Destination Account Name:
 must be  18 characters or less and must only contain allowed characters
 

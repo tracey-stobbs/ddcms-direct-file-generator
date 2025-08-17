@@ -1,16 +1,16 @@
-import { Request } from "../types";
-import { generateValidSDDirectRow, generateInvalidSDDirectRow } from "../fileType/sddirect";
-import { 
-  generateValidEaziPayRow, 
-  generateInvalidEaziPayRow, 
-  formatEaziPayRowAsArray
+import { DateTime } from "luxon";
+import path from "path";
+import {
+  formatEaziPayRowAsArray,
+  generateInvalidEaziPayRow,
+  generateValidEaziPayRow
 } from "../fileType/eazipay";
+import { generateInvalidSDDirectRow, generateValidSDDirectRow } from "../fileType/sddirect";
+import { Request } from "../types";
 import { DateFormatter } from "../utils/dateFormatter";
 import { EaziPayValidator } from "../validators/eazipayValidator";
 import { validateAndNormalizeHeaders } from "../validators/requestValidator";
-import { DateTime } from "luxon";
-import { nodeFs, FileSystem } from "./fsWrapper";
-import path from "path";
+import { FileSystem, nodeFs } from "./fsWrapper";
 
 export async function generateFile(request: Request): Promise<string> {
   return generateFileWithFs(request, nodeFs);
@@ -145,7 +145,7 @@ async function generateEaziPayFile(
 
   for (let i = 0; i < numberOfRows; i++) {
     let rowData;
-    if (hasInvalidRows && i < invalidRows) {
+    if (hasInvalidRows && i >1 && i < invalidRows) {
       rowData = generateInvalidEaziPayRow(request, dateFormat, trailerFormat);
     } else {
       rowData = generateValidEaziPayRow(request, dateFormat, trailerFormat);
