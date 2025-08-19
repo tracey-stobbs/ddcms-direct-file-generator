@@ -40,9 +40,9 @@ Accept: */*
 
 {
     "fileType": "EaziPay",
-    "numberOfRows": 25,
+    "numberOfRows": 5,
     "dateFormat": "DD-MMM-YYYY",
-    "hasInvalidRows": true
+    "hasInvalidRows": false
 }
 
 ###

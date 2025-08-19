@@ -1,0 +1,219 @@
+@number_of_rows = 15
+@large_dataset = 1000
+@small_dataset = 1
+@max_dataset = 10000
+
+# Bacs18PaymentLines File Type Testing
+
+### Basic Bacs18PaymentLines Request
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": {{number_of_rows}},
+    "canInlineEdit": true
+}
+
+###
+
+### Bacs18PaymentLines with Invalid Rows
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 25,
+    "hasInvalidRows": true,
+    "canInlineEdit": true
+}
+
+###
+
+### Bacs18PaymentLines Large Dataset
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": {{large_dataset}},
+    "hasInvalidRows": false
+}
+
+###
+
+### Bacs18PaymentLines Small Dataset (1 row)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": {{small_dataset}},
+    "hasInvalidRows": false
+}
+
+###
+
+### Bacs18PaymentLines Maximum Dataset
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": {{max_dataset}},
+    "hasInvalidRows": true,
+    "canInlineEdit": true
+}
+
+###
+
+### Bacs18PaymentLines with Custom Output Path
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 30,
+    "hasInvalidRows": false,
+    "outputPath": "./custom-bacs18-output",
+    "canInlineEdit": true
+}
+
+###
+
+### Bacs18PaymentLines with Default Values
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 10,
+    "hasInvalidRows": false,
+    "defaultValues": {
+       "originatingAccountDetails": {
+            "canBeInvalid": true,
+            "sortCode": "912291",
+            "accountNumber": "51491194",
+            "accountName": "Test Account"
+        }
+    }
+}
+
+###
+
+### Bacs18PaymentLines Mixed Valid/Invalid with Custom Settings
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 100,
+    "hasInvalidRows": true,
+    "canInlineEdit": false,
+    "outputPath": "./test-scenarios"
+}
+
+###
+
+### Bacs18PaymentLines Edge Case - Zero Rows (Should Error)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 0
+}
+
+###
+
+### Bacs18PaymentLines Edge Case - Negative Rows (Should Error)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": -5
+}
+
+###
+
+### Bacs18PaymentLines Minimal Configuration
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines"
+}
+
+###
+
+### Bacs18PaymentLines with Headers (Should be Ignored - Always Headerless)
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 5,
+    "includeHeaders": true,
+    "canInlineEdit": true
+}
+
+###
+
+### Bacs18PaymentLines Stress Test - Rapid Fire Requests
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 5
+}
+
+###
+
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 5
+}
+
+###
+
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 5
+}
+
+###
+
+### Bacs18PaymentLines Performance Test
+POST http://localhost:3001/api/generate
+Content-Type: application/json
+Accept: */*
+
+{
+    "fileType": "Bacs18PaymentLines",
+    "numberOfRows": 5000,
+    "hasInvalidRows": true,
+    "canInlineEdit": false
+}
