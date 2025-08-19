@@ -4,7 +4,6 @@ export type Prettify<T> = {
 
 // EaziPay-specific types
 export type EaziPayDateFormat = "YYYY-MM-DD" | "DD-MMM-YYYY" | "DD/MM/YYYY";
-export type EaziPayTrailerFormat = "quoted" | "unquoted";
 
 export interface EaziPaySpecificFields {
   transactionCode: string;
@@ -19,8 +18,9 @@ export interface EaziPaySpecificFields {
   empty: undefined;
   sunName: string;
   paymentReference: string;
+  // Alias used in some tests/validators; maps to paymentReference
+  bacsReference?: string;
   sunNumber?: string;
-  eaziPayTrailer: string;
 }
 
 export interface Request {
@@ -88,3 +88,29 @@ export const defaultRequest: Request = {
     },
   },
 } as const;
+
+// MCP: Temporary SUN configuration stub (until auth/config integration)
+export const SUN_STUB = {
+  sortCode: "912291",
+  accountNumber: "51491194",
+  accountName: "Test Account",
+  sun: "797154",
+  sunName: "SUN-C-0QZ5A",
+} as const;
+
+// MCP: Generate request (body) shape for new endpoints (no fileType in body)
+export interface McpGenerateRequest {
+  forInlineEditing?: boolean;
+  includeHeaders?: boolean;
+  hasInvalidRows?: boolean;
+  outputPath?: string;
+  processingDate?: string; // optional; not yet enforced across generators
+  numberOfRows?: number; // optional override
+  dateFormat?: EaziPayDateFormat; // for EaziPay only
+}
+
+export type FileTypeLiteral =
+  | "SDDirect"
+  | "Bacs18PaymentLines"
+  | "Bacs18StandardFile"
+  | "EaziPay";

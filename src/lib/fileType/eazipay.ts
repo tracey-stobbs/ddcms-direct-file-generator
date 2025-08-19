@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import { DateTime } from "luxon";
 import { AddWorkingDays } from "../calendar";
 import type { FileSystem } from "../fileWriter/fsWrapper";
-import type { EaziPayDateFormat, EaziPaySpecificFields, EaziPayTrailerFormat, Request } from "../types";
+import type { EaziPayDateFormat, EaziPaySpecificFields, Request } from "../types";
 import { DateFormatter } from "../utils/dateFormatter";
 import { EaziPayValidator } from "../validators/eazipayValidator";
 
@@ -15,8 +15,7 @@ import { EaziPayValidator } from "../validators/eazipayValidator";
  */
 export function generateValidEaziPayRow(
   request: Request, 
-  dateFormat: EaziPayDateFormat,
-  trailerFormat: EaziPayTrailerFormat
+  dateFormat: EaziPayDateFormat
 ): EaziPaySpecificFields {
   const originatingDetails = getOriginatingDetails(request);
   const transactionCode = faker.helpers.arrayElement(["01", "17", "18", "99", "0C", "0N", "0S"]);
@@ -33,9 +32,8 @@ export function generateValidEaziPayRow(
     processingDate: generateProcessingDate(transactionCode, dateFormat),
     empty: undefined,
     sunName: faker.company.name().slice(0, 18),
-    paymentReference: generatePaymentReference(),
-    sunNumber: generateSunNumber(transactionCode),
-    eaziPayTrailer: EaziPayValidator.generateValidTrailer("unquoted")
+  paymentReference: generatePaymentReference(),
+  sunNumber: generateSunNumber(transactionCode)
   };
 }
 
@@ -48,11 +46,10 @@ export function generateValidEaziPayRow(
  */
 export function generateInvalidEaziPayRow(
   request: Request,
-  dateFormat: EaziPayDateFormat,
-  trailerFormat: EaziPayTrailerFormat
+  dateFormat: EaziPayDateFormat
 ): EaziPaySpecificFields {
   // Start with a valid row
-  const row = generateValidEaziPayRow(request, dateFormat, trailerFormat);
+  const row = generateValidEaziPayRow(request, dateFormat);
   
   // List of fields that can be invalidated
   const invalidatableFields = [
@@ -65,8 +62,7 @@ export function generateInvalidEaziPayRow(
     'bacsReference',
     'amount',
     'fixedZero',
-    'sunNumber',
-    'eaziPayTrailer'
+  'sunNumber'
   ];
   
   // Randomly pick 1-3 fields to invalidate
@@ -105,9 +101,6 @@ export function generateInvalidEaziPayRow(
         break;
       case 'sunNumber':
         row.sunNumber = generateInvalidFieldValue(fieldName, row.transactionCode) as string | undefined;
-        break;
-      case 'eaziPayTrailer':
-        row.eaziPayTrailer = generateInvalidFieldValue(fieldName, row.transactionCode) as string;
         break;
     }
   }
@@ -230,9 +223,6 @@ function generateInvalidFieldValue(fieldName: string, transactionCode: string): 
       // If allowed, return valid value (this shouldn't make it invalid, but we need some invalid value)
       return faker.random.alpha({ count: 50 }); // Too long
       
-    case 'eaziPayTrailer':
-      return faker.helpers.arrayElement([',,,,,,,,', ',,,,,,,,,,', 'invalid']); // Wrong comma count or invalid
-      
     default:
       return 'INVALID';
   }
@@ -255,8 +245,9 @@ export function formatEaziPayRowAsArray(fields: EaziPaySpecificFields): string[]
     fields.empty === undefined ? '' : String(fields.empty),
     fields.sunName,
     fields.paymentReference,
-    fields.sunNumber || '',
-    fields.eaziPayTrailer
+  fields.sunNumber || '',
+  '', // Trailer 1 (empty)
+  ''  // Trailer 2 (empty)
   ];
 }
 
@@ -290,6 +281,7 @@ export function getEaziPayHeaders(): string[] {
     'SUN Name',
     'Payment Reference',
     'SUN Number',
-    'EaziPayTrailer'
+  'Trailer 1',
+  'Trailer 2'
   ];
 }

@@ -209,7 +209,7 @@ interface ErrorResponse {
 - `[FileType]`: SDDirect, Bacs18PaymentLines, Bacs18StandardFile, or EaziPay
 - `[COLUMNCOUNT]`: 
   - SDDirect: 06 (required only) or 11 (with optional fields)
-  - EaziPay: 15 (quoted trailer) or 23 (unquoted trailer)
+  - EaziPay: 15 (two trailing empty columns)
   - Other formats: TBD
 - `[ROWS]`: Number of data rows (default: 15)
 - `[HEADERS]`: _H (headers included) or NH (no headers)
@@ -304,11 +304,11 @@ Destination Account Name,Destination Sort Code,Destination Account Number,Paymen
 12. SUN Name
 13. BACS Reference
 14. SUN Number
-15. EaziPayTrailer (9 columns)
+15. Trailer 1 (empty)
+16. Trailer 2 (empty)
 
 #### Column Count Logic
-- **15 columns:** When EaziPayTrailer is quoted (e.g., `",,,,,,,,"`)
-- **23 columns:** When EaziPayTrailer is unquoted (e.g., `,,,,,,,,,`)
+EaziPay no longer uses a trailer string. Instead, two empty columns are emitted at the end of each row.
 
 #### Date Format Options
 User can specify `dateFormat` in request:
@@ -398,7 +398,7 @@ If not specified, system randomly selects one format for entire file.
 - **Optional:** Can be null/undefined even if Transaction Code is 0C, 0N, or 0S
 - **Format:** When present, follows standard validation rules
 
-#### EaziPayTrailer (EaziPay)
+#### Trailer columns (EaziPay)
 - **Quoted Format:** `",,,,,,,,"` (9 commas within quotes) → Results in 15 total columns
 - **Unquoted Format:** `,,,,,,,,,` (9 consecutive commas) → Results in 23 total columns
 - **Selection:** Randomly choose quoted or unquoted format per file
@@ -586,7 +586,7 @@ When `includeHeaders: true` is specified:
 - All dates in file use consistent format when specified
 - Random date format selection when not specified
 - Headers are never included regardless of `includeHeaders` setting
-- EaziPayTrailer field correctly generates quoted/unquoted format
+- Two trailing empty columns are present
 - Column count in filename reflects actual structure (15/23)
 
 ## 📅 Implementation Timeline
@@ -606,7 +606,7 @@ When `includeHeaders: true` is specified:
 ### Phase 2.1: EaziPay Implementation (Week 2.5)
 - [ ] EaziPay file format generator
 - [ ] Date format selection logic
-- [ ] EaziPayTrailer field handling
+- [ ] EaziPay trailing columns handling
 - [ ] Header validation override logic
 
 ### Phase 3: Advanced Features (Week 3)

@@ -4,7 +4,6 @@ export type Prettify<T> = {
 
 // EaziPay-specific types
 export type EaziPayDateFormat = "YYYY-MM-DD" | "DD-MMM-YYYY" | "DD/MM/YYYY";
-export type EaziPayTrailerFormat = "quoted" | "unquoted";
 
 export interface EaziPaySpecificFields {
   transactionCode: string;
@@ -20,7 +19,6 @@ export interface EaziPaySpecificFields {
   sunName: string;
   bacsReference: string;
   sunNumber?: string;
-  eaziPayTrailer: string;
 }
 
 export interface Request {

@@ -23,7 +23,8 @@ Contents:
 - SUN Name 
 - BACS Reference
 - SUN Number 
-- EaziPayTrailer
+- Trailer 1 (empty)
+- Trailer 2 (empty)
 
 
 ## Additional Field-Level Validation Rules:
@@ -32,7 +33,8 @@ Contents:
   - If the Transaction Code is none of 0C, 0N, or 0S, it must be null or undefined. 
   - It is an optional field, so can be null or undefined, even if Transaction Code is one of 0C, 0N, 0S
 
-- EaziPayTrailer
+- Trailer 1 (empty)
+- Trailer 2 (empty)
  - Must be exactly ,,,,,,,, or if and only if Sun Number is undefined,  ",,,,,,,,"
 ​
 ###### Default Values for incoming request

@@ -1,45 +1,43 @@
+@sun = 797154
 @number_of_rows = 15 
 @large_dataset = 1000
 @small_dataset = 1
 @max_dataset = 10000
 
-# EaziPay File Type Testing
+# EaziPay File Type Testing (MCP endpoints)
 
-### Basic EaziPay Request
-POST http://localhost:3001/api/generate
+### Basic EaziPay Generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": {{number_of_rows}},
-    "canInlineEdit": true
+    "forInlineEditing": true
 }
 
 ###
 
 ### EaziPay with Specific Date Format (YYYY-MM-DD)
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 20,
     "dateFormat": "YYYY-MM-DD",
     "hasInvalidRows": true,
-    "canInlineEdit": true
+    "forInlineEditing": true
 }
 
 ###
 
 ### EaziPay with DD-MMM-YYYY Date Format
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 5,
     "dateFormat": "DD-MMM-YYYY",
     "hasInvalidRows": false
@@ -48,56 +46,52 @@ Accept: */*
 ###
 
 ### EaziPay with DD/MM/YYYY Date Format
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 20,
     "dateFormat": "DD/MM/YYYY",
     "hasInvalidRows": true,
-    "canInlineEdit": true
+    "forInlineEditing": true
 }
 
 ###
 
-### EaziPay with Headers (Should be Ignored - Always Headerless)
-POST http://localhost:3001/api/generate
+### EaziPay with Headers (Ignored for EaziPay)
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 5,
     "includeHeaders": true,
-    "canInlineEdit": true
+    "forInlineEditing": true
 }
 
 ###
 
 ### EaziPay Large Dataset
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": {{large_dataset}},
     "hasInvalidRows": true,
-    "canInlineEdit": true,
+    "forInlineEditing": true,
     "outputPath": "./test-scenarios"
 }
 
 ###
 
 ### EaziPay Small Dataset (1 row)
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": {{small_dataset}},
     "hasInvalidRows": false
 }
@@ -105,26 +99,24 @@ Accept: */*
 ###
 
 ### EaziPay Maximum Dataset
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": {{max_dataset}},
     "hasInvalidRows": true,
-    "canInlineEdit": true
+    "forInlineEditing": true
 }
 
 ###
 
 ### EaziPay with Custom Output Path
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 30,
     "dateFormat": "DD-MMM-YYYY",
     "hasInvalidRows": false,
@@ -134,26 +126,24 @@ Accept: */*
 ###
 
 ### EaziPay Invalid Rows Testing
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 50,
     "hasInvalidRows": true,
-    "canInlineEdit": true
+    "forInlineEditing": true
 }
 
 ###
 
 ### EaziPay Valid Rows Only
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 40,
     "hasInvalidRows": false,
     "dateFormat": "YYYY-MM-DD"
@@ -162,51 +152,61 @@ Accept: */*
 ###
 
 ### EaziPay Stress Test - Rapid Fire Requests
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 5,
     "dateFormat": "DD/MM/YYYY"
 }
 
 ###
 
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 5,
     "dateFormat": "DD-MMM-YYYY"
 }
 
 ###
 
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 5,
     "dateFormat": "YYYY-MM-DD"
 }
 
 ###
 
+### EaziPay Row Samples
+
+# One valid row (default)
+GET http://localhost:3001/api/eazipay/{{sun}}/valid-row
+Accept: application/json
+
+###
+
+# 5 invalid rows
+GET http://localhost:3001/api/eazipay/{{sun}}/invalid-row?rowCount=5
+Accept: application/json
+
+###
+
 ### EaziPay Error Testing
 
 # Invalid date format
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 10,
     "dateFormat": "INVALID-FORMAT"
 }
@@ -214,35 +214,32 @@ Accept: */*
 ###
 
 # Negative number of rows
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": -5
 }
 
 ###
 
 # Zero rows
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 0
 }
 
 ###
 
 # Exceeding maximum rows
-POST http://localhost:3001/api/generate
+POST http://localhost:3001/api/eazipay/{{sun}}/generate
 Content-Type: application/json
 Accept: */*
 
 {
-    "fileType": "EaziPay",
     "numberOfRows": 100001
 }

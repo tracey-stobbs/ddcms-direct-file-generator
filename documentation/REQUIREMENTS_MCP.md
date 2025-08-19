@@ -19,6 +19,15 @@
   - Bacs18StandardFile
   - EaziPay
 
+### Temporary SUN configuration (stub)
+Until authentication/config integration, use the following originating account details for all requests:
+
+- sortCode: "912291"
+- accountNumber: "51491194"
+- accountName: "Test Account"
+- sun: "797154"
+- sunName: "SUN-C-0QZ5A"
+
 ## Endpoints
 
 Endpoints are exposed per file type with static roots. Base paths by file type:
@@ -72,6 +81,9 @@ Response:
 - Path: `{base}/invalid-row`
 - Behavior: Returns an object representing an invalid row for the specified SUN and file type.
 
+Query parameters:
+- `rowCount` (optional number, default `1`): number of rows to return. If omitted, a single row is returned.
+
 Response (200 OK):
 - headers: Array<{ name: string; order: number }>
 - rows: Array<{ fields: Array<{ value: string | number | boolean; order: number }> }>
@@ -82,6 +94,9 @@ Response (200 OK):
 - Method: GET
 - Path: `{base}/valid-row`
 - Behavior: Returns an object representing a valid row for the specified SUN and file type.
+
+Query parameters:
+- `rowCount` (optional number, default `1`): number of rows to return. If omitted, a single row is returned.
 
 Response (200 OK):
 - headers: Array<{ name: string; order: number }>
@@ -109,8 +124,8 @@ Removed/renamed fields:
 
 - headers: Array of column descriptors.
   - name: string — canonical column/field name for the file type.
-  - order: number — column position (0- or 1-based; remain consistent per file type).
-- rows: Array of row objects (these endpoints typically return a single row, but the array shape allows future extension).
+  - order: number — column position (1-based; fixed and consistent across all file types).
+- rows: Array of row objects (default single row unless `rowCount` query param is provided).
   - fields: Array of ordered values.
     - value: string | number | boolean — representative value (valid or invalid depending on endpoint).
     - order: number — position matching the headers’ order.
@@ -167,15 +182,18 @@ GET api/bacs18paymentlines/123456/invalid-row
   }
 }
 
+Example (multiple rows): GET api/bacs18paymentlines/123456/invalid-row?rowCount=3
+
 ## Processing date rules
 
 - Optional in requests; defaults to the next business day when omitted.
 - Must align with each file type’s formatting rules (e.g., EaziPay date formats). Invalid formats yield 400 with a message indicating the expected format(s).
+- EaziPay: Accepts three formats (YYYY-MM-DD, DD-MMM-YYYY, DD/MM/YYYY) and returns the `processingDate` in the selected file output format in responses.
 
 ## Output path rules
 
 - Default: `output/{filetype}/{sun}`.
-- If `outputPath` is provided in the generate request body, it overrides the default. The resolved path must exist or be creatable and writable by the service. On failure, return 400 with details.
+- If `outputPath` is provided in the generate request body, it overrides the default. The service will automatically create the directory path if it does not exist. If directory creation fails (permissions, invalid path), return 400 with details.
 
 ## Error model (common)
 
@@ -196,6 +214,10 @@ Possible codes: `VALIDATION_ERROR`, `NOT_FOUND`, `GENERATION_FAILED`.
 - Existing clients must migrate from `api/{sun}/{filetype}/...` to the per-file-type routes: `api/sddirect/{sun}/...`, `api/bacs18paymentlines/{sun}/...`, `api/bacs18standardfile/{sun}/...`, `api/eazipay/{sun}/...`.
 - Clients that send `fileType` and `canInlineEdit` must remove `fileType` from the body and use `forInlineEditing` (optional, default true).
 - `includeHeaders` behavior remains consistent with current validator logic: ignored (with a warning) for unsupported types based on the endpoint used.
+
+### Legacy endpoint deprecation
+- `/api/generate` (legacy) may be temporarily retained for internal testing but will be marked deprecated.
+- Responses MUST include a deprecation header: `Deprecation: true` and optionally a `Link` header to this document.
 
 ## Open items (TBD)
 

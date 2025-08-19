@@ -1,14 +1,13 @@
 import { DateTime } from "luxon";
 import path from "path";
 import {
-  formatEaziPayRowAsArray,
-  generateInvalidEaziPayRow,
-  generateValidEaziPayRow
+    formatEaziPayRowAsArray,
+    generateInvalidEaziPayRow,
+    generateValidEaziPayRow
 } from "../fileType/eazipay";
 import { generateInvalidSDDirectRow, generateValidSDDirectRow } from "../fileType/sddirect";
 import { Request } from "../types";
 import { DateFormatter } from "../utils/dateFormatter";
-import { EaziPayValidator } from "../validators/eazipayValidator";
 import { validateAndNormalizeHeaders } from "../validators/requestValidator";
 import { FileSystem, nodeFs } from "./fsWrapper";
 
@@ -132,9 +131,9 @@ async function generateEaziPayFile(
   
   // EaziPay-specific logic
   const dateFormat = request.dateFormat || DateFormatter.getRandomDateFormat();
-  const trailerFormat = Math.random() < 0.5 ? 'quoted' : 'unquoted';
   const extension = getFileExtension(fileType);
-  const columnCount = EaziPayValidator.getColumnCount(trailerFormat).toString().padStart(2, "0");
+  // Always 15 columns; last two trailer columns are empty by design
+  const columnCount = (15).toString().padStart(2, "0");
 
   // Generate rows
   const rows: string[][] = [];
@@ -144,13 +143,9 @@ async function generateEaziPayFile(
   }
 
   for (let i = 0; i < numberOfRows; i++) {
-    let rowData;
-    if (hasInvalidRows && i >1 && i < invalidRows) {
-      rowData = generateInvalidEaziPayRow(request, dateFormat, trailerFormat);
-    } else {
-      rowData = generateValidEaziPayRow(request, dateFormat, trailerFormat);
-    }
-    
+    const rowData = (hasInvalidRows && i > 1 && i < invalidRows)
+      ? generateInvalidEaziPayRow(request, dateFormat)
+      : generateValidEaziPayRow(request, dateFormat);
     const rowArray = formatEaziPayRowAsArray(rowData);
     rows.push(rowArray);
   }
