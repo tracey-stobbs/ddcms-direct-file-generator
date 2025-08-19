@@ -1,6 +1,6 @@
 #### DDCMS Direct File Creator
 
-### A simple API with a single endpoint that generates files in a predifined format with randomly generated data. These files are then saved to a given location on the file system.
+### A simple API with a single endpoint that generates files in a predefined format with randomly generated data. These files are then saved to a given location on the file system.
 
 ## Technologies:
 
@@ -132,6 +132,7 @@ Code structure must allow for additional file structures in the future
 
 The specification for these files are listed in the following files:
 [SDDirect:](FileFormats/SDDirect.md)
+[SDDirect:](FileFormats/Eazipay.md)
 [Bacs18PaymentLines](FileFormats/Bacs18PaymentLines.md)
 [Bacs18StandardFile](FileFormats/Bacs18StandardFile.md)
 

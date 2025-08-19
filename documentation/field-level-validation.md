@@ -21,7 +21,7 @@ It must not start with "DDIC" or a space. It cannot contain all the same charact
 
 Amount:
 Must be decimal or integer.
-Must not contain seperator characters.
+Must not contain separator characters.
 If the Transaction Code is one of 0C, 0N, or 0S, it must be zero (represented as "0").
 
 Transaction Code:

@@ -2,6 +2,8 @@
 
 A Node.js API for generating DDCMS Direct files in predefined formats with random, valid, or intentionally invalid data for testing purposes.
 
+Note: For the new MCP endpoints and payload changes, see `documentation/REQUIREMENTS_MCP.md`.
+
 ## Features
 - Single `/api/generate` endpoint (JSON, body optional)
 - **Multiple File Formats:**
