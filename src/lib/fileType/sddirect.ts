@@ -1,5 +1,8 @@
 import { faker } from "@faker-js/faker";
 import { DateTime } from "luxon";
+import { generateFileWithFs } from "../fileWriter/fileWriter";
+import type { FileSystem } from "../fileWriter/fsWrapper";
+import type { Request } from "../types";
 
 // Helper: Generate a valid payment reference
 function generatePaymentReference(): string {
@@ -18,7 +21,7 @@ function generatePayDate(): string {
   return DateTime.now().plus({ days }).toFormat("yyyyLLdd");
 }
 
-function getOriginatingDetails(request: Request) {
+function getOriginatingDetails(request: Request): { "Originating Sort Code": string; "Originating Account Number": string; "Originating Account Name": string } {
   const details = request.defaultValues?.originatingAccountDetails;
   return {
     "Originating Sort Code": details?.sortCode || faker.finance.routingNumber(),
@@ -38,7 +41,7 @@ export function generateValidSDDirectRow(request: Request): Record<string, unkno
     "Transaction code": faker.helpers.arrayElement(["01", "17", "18", "99", "0C", "0N", "0S"]),
     "Realtime Information Checksum": faker.helpers.arrayElement(["/" + faker.random.alpha({ count: 3, casing: "upper" }), "0000", ""]),
     "Pay Date": generatePayDate(),
-    ...originating
+    ...originating,
   };
 }
 
@@ -54,6 +57,7 @@ function generateInvalidValue(field: string): string {
     case "Realtime Information Checksum": return "////"; // invalid pattern
     case "Pay Date": return "20250101"; // not 3+ working days in future
     case "Originating Sort Code": return "ABCDEF"; // not numeric
+    case "Origininating Account Number": return "ABCDEFGH"; // not numeric (intentionally invalid key to simulate error)
     case "Originating Account Number": return "ABCDEFGH"; // not numeric
     case "Originating Account Name": return faker.random.alpha({ count: 25 }); // too long
     default: return "INVALID";
@@ -79,9 +83,34 @@ export function generateInvalidSDDirectRow(request: Request): Record<string, unk
   }
   return row;
 }
-import { Request } from "../types";
-import { generateFileWithFs } from "../fileWriter/fileWriter";
-export async function generateSDDirectFile(request: Request, fs: any): Promise<string> {
+
+export async function generateSDDirectFile(request: Request, fs: FileSystem): Promise<string> {
   // Delegate to the tested fileWriter logic
   return generateFileWithFs(request, fs);
+}
+
+export function getSDDirectHeaders(): string[] {
+  return [
+    "Destination Account Name",
+    "Destination Sort Code",
+    "Destination Account Number",
+    "Payment Reference",
+    "Amount",
+    "Transaction code",
+    "Realtime Information Checksum",
+    "Pay Date",
+    "Originating Sort Code",
+    "Originating Account Number",
+    "Origininating Account Name",
+    "Originating Account Name",
+  ];
+}
+
+export function mapSDDirectRowToRecord(row: Record<string, unknown>): Record<string, unknown> {
+  // Ensure all expected headers exist; fill missing with empty string
+  const base: Record<string, unknown> = {};
+  for (const h of getSDDirectHeaders()) {
+    base[h] = row[h] ?? "";
+  }
+  return base;
 }

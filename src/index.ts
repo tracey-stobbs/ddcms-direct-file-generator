@@ -2,15 +2,16 @@
 import type { NextFunction, Request, Response } from "express";
 import express from "express";
 import path from "path";
-import { generateInvalidEaziPayRow, generateValidEaziPayRow } from "./lib/fileType/eazipay";
+import { generateInvalidEaziPayRow, generateValidEaziPayRow, getEaziPayHeaders, mapEaziPayFieldsToRecord } from "./lib/fileType/eazipay";
 import { getFileGenerator } from "./lib/fileType/factory";
-import { generateInvalidSDDirectRow, generateValidSDDirectRow } from "./lib/fileType/sddirect";
+import { generateInvalidSDDirectRow, generateValidSDDirectRow, getSDDirectHeaders, mapSDDirectRowToRecord } from "./lib/fileType/sddirect";
 import { nodeFs } from "./lib/fileWriter/fsWrapper";
 import type { Request as FileRequest, FileTypeLiteral, McpGenerateRequest } from "./lib/types";
 import { SUN_STUB } from "./lib/types";
 import { DateFormatter } from "./lib/utils/dateFormatter";
 import { logError, logRequest, logResponse } from "./lib/utils/logger";
 import { validateAndNormalizeMcpRequest } from "./lib/validators/requestValidator";
+import { isValidSun } from "./lib/validators/sunValidator";
 
 const app = express();
 app.use(express.json());
@@ -36,9 +37,6 @@ app.post("/api/generate", async (req: Request, res: Response) => {
   }
 });
 
-function isValidSun(s: string): boolean {
-  return /^\d{6}$/.test(s);
-}
 
 type RowHeader = { name: string; order: number };
 type RowField = { value: string | number | boolean | ""; order: number };
@@ -107,37 +105,9 @@ function createMcpRouter(fileType: FileTypeLiteral): express.Router {
   function buildHeaders(fileType: FileTypeLiteral): RowHeader[] {
     switch (fileType) {
       case "SDDirect":
-        return [
-          { name: "Destination Account Name", order: 1 },
-          { name: "Destination Sort Code", order: 2 },
-          { name: "Destination Account Number", order: 3 },
-          { name: "Payment Reference", order: 4 },
-          { name: "Amount", order: 5 },
-          { name: "Transaction code", order: 6 },
-          { name: "Realtime Information Checksum", order: 7 },
-          { name: "Pay Date", order: 8 },
-          { name: "Originating Sort Code", order: 9 },
-          { name: "Originating Account Number", order: 10 },
-          { name: "Originating Account Name", order: 11 },
-        ];
+        return getSDDirectHeaders().map((h, i) => ({ name: h, order: i + 1 }));
       case "EaziPay":
-        return [
-          { name: 'Transaction Code', order: 1 },
-          { name: 'Originating Sort Code', order: 2 },
-          { name: 'Originating Account Number', order: 3 },
-          { name: 'Destination Sort Code', order: 4 },
-          { name: 'Destination Account Number', order: 5 },
-          { name: 'Destination Account Name', order: 6 },
-          { name: 'Fixed Zero', order: 7 },
-          { name: 'Amount', order: 8 },
-          { name: 'Processing Date', order: 9 },
-          { name: 'Empty', order: 10 },
-          { name: 'SUN Name', order: 11 },
-          { name: 'Payment Reference', order: 12 },
-          { name: 'SUN Number', order: 13 },
-          { name: 'Trailer 1', order: 14 },
-          { name: 'Trailer 2', order: 15 },
-        ];
+        return getEaziPayHeaders().map((h, i) => ({ name: h, order: i + 1 }));
       default:
         return [];
     }
@@ -162,34 +132,16 @@ function createMcpRouter(fileType: FileTypeLiteral): express.Router {
   const rows: RowRow[] = [];
     for (let i = 0; i < rowCount; i++) {
       if (fileType === 'SDDirect') {
-  const fields = generateValidSDDirectRow({
+        const fields = generateValidSDDirectRow({
           fileType: 'SDDirect',
           canInlineEdit: true,
           defaultValues: { originatingAccountDetails: { canBeInvalid: false, sortCode: SUN_STUB.sortCode, accountNumber: SUN_STUB.accountNumber, accountName: SUN_STUB.accountName } }
-  } as FileRequest);
-        rows.push(toRow(fields, headers));
+        } as FileRequest);
+        rows.push(toRow(mapSDDirectRowToRecord(fields), headers));
       } else if (fileType === 'EaziPay') {
-  const df = DateFormatter.getRandomDateFormat();
-  const fields = generateValidEaziPayRow({ fileType: 'EaziPay', canInlineEdit: true } as FileRequest, df);
-        // Convert to name->value map for row output
-        const mapped: Record<string, unknown> = {
-          'Transaction Code': fields.transactionCode,
-          'Originating Sort Code': fields.originatingSortCode,
-          'Originating Account Number': fields.originatingAccountNumber,
-          'Destination Sort Code': fields.destinationSortCode,
-          'Destination Account Number': fields.destinationAccountNumber,
-          'Destination Account Name': fields.destinationAccountName,
-          'Fixed Zero': fields.fixedZero,
-          'Amount': fields.amount,
-          'Processing Date': fields.processingDate,
-          'Empty': '',
-          'SUN Name': fields.sunName,
-          'Payment Reference': fields.paymentReference,
-          'SUN Number': fields.sunNumber ?? '',
-          'Trailer 1': '',
-          'Trailer 2': '',
-        };
-        rows.push(toRow(mapped, headers));
+        const df = DateFormatter.getRandomDateFormat();
+        const fields = generateValidEaziPayRow({ fileType: 'EaziPay', canInlineEdit: true } as FileRequest, df);
+        rows.push(toRow(mapEaziPayFieldsToRecord(fields), headers));
       } else {
         // Stubs for other types until implemented
         rows.push({ fields: headers.map(h => ({ value: '', order: h.order })) });
@@ -209,33 +161,16 @@ function createMcpRouter(fileType: FileTypeLiteral): express.Router {
   const rows: RowRow[] = [];
     for (let i = 0; i < rowCount; i++) {
       if (fileType === 'SDDirect') {
-  const fields = generateInvalidSDDirectRow({
+        const fields = generateInvalidSDDirectRow({
           fileType: 'SDDirect',
           canInlineEdit: true,
           defaultValues: { originatingAccountDetails: { canBeInvalid: true, sortCode: SUN_STUB.sortCode, accountNumber: SUN_STUB.accountNumber, accountName: SUN_STUB.accountName } }
-  } as FileRequest);
-        rows.push(toRow(fields, headers));
+        } as FileRequest);
+        rows.push(toRow(mapSDDirectRowToRecord(fields), headers));
       } else if (fileType === 'EaziPay') {
-  const df = DateFormatter.getRandomDateFormat();
-  const fields = generateInvalidEaziPayRow({ fileType: 'EaziPay', canInlineEdit: true } as FileRequest, df);
-        const mapped: Record<string, unknown> = {
-          'Transaction Code': fields.transactionCode,
-          'Originating Sort Code': fields.originatingSortCode,
-          'Originating Account Number': fields.originatingAccountNumber,
-          'Destination Sort Code': fields.destinationSortCode,
-          'Destination Account Number': fields.destinationAccountNumber,
-          'Destination Account Name': fields.destinationAccountName,
-          'Fixed Zero': fields.fixedZero,
-          'Amount': fields.amount,
-          'Processing Date': fields.processingDate,
-          'Empty': '',
-          'SUN Name': fields.sunName,
-          'Payment Reference': fields.paymentReference,
-          'SUN Number': fields.sunNumber ?? '',
-          'Trailer 1': '',
-          'Trailer 2': '',
-        };
-        rows.push(toRow(mapped, headers));
+        const df = DateFormatter.getRandomDateFormat();
+        const fields = generateInvalidEaziPayRow({ fileType: 'EaziPay', canInlineEdit: true } as FileRequest, df);
+        rows.push(toRow(mapEaziPayFieldsToRecord(fields), headers));
       } else {
         rows.push({ fields: headers.map(h => ({ value: '', order: h.order })) });
       }
@@ -253,7 +188,8 @@ app.use('/api/bacs18paymentlines/:sun', createMcpRouter('Bacs18PaymentLines'));
 app.use('/api/bacs18standardfile/:sun', createMcpRouter('Bacs18StandardFile'));
 app.use('/api/eazipay/:sun', createMcpRouter('EaziPay'));
 
-app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  void next; // mark param as used to satisfy lint while keeping 4-arg signature
   logError(err, req);
   const response = { success: false, error: err.message };
   logResponse(res, response);

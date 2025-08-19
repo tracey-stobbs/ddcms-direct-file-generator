@@ -285,3 +285,26 @@ export function getEaziPayHeaders(): string[] {
   'Trailer 2'
   ];
 }
+
+/**
+ * Map EaziPaySpecificFields to a name->value record aligned with headers
+ */
+export function mapEaziPayFieldsToRecord(fields: EaziPaySpecificFields): Record<string, unknown> {
+  return {
+    'Transaction Code': fields.transactionCode,
+    'Originating Sort Code': fields.originatingSortCode,
+    'Originating Account Number': fields.originatingAccountNumber,
+    'Destination Sort Code': fields.destinationSortCode,
+    'Destination Account Number': fields.destinationAccountNumber,
+    'Destination Account Name': fields.destinationAccountName,
+    'Fixed Zero': fields.fixedZero,
+    'Amount': fields.amount,
+    'Processing Date': fields.processingDate,
+    'Empty': '',
+    'SUN Name': fields.sunName,
+    'Payment Reference': fields.paymentReference,
+    'SUN Number': fields.sunNumber ?? '',
+    'Trailer 1': '',
+    'Trailer 2': ''
+  };
+}
