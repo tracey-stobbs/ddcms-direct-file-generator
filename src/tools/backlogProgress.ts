@@ -107,7 +107,7 @@ export function renderDashboard(epics: EpicCounts[], overall: LightCounts, openQ
   lines.push('');
   // Table header uses the legend ordering
   lines.push('| Scope | 🟢 Done | 🟡 In Progress/Review | 🔴 Blocked | ⚪ To Do |');
-  lines.push('|:--|--:|--:|--:|--:|');
+  lines.push('|:--|:--:|:--:|:--:|:--:|');
   const row = (scope: string, c: LightCounts): string => `| ${scope} | ${c.green} | ${c.yellow} | ${c.red} | ${c.white} |`;
   lines.push(row('Overall', overall));
   for (const e of epics) {

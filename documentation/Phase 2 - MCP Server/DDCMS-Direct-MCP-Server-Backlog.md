@@ -14,7 +14,7 @@ Legend
 ## progress dashboard
 
 | Scope | 🟢 Done | 🟡 In Progress/Review | 🔴 Blocked | ⚪ To Do |
-|:--|--:|--:|--:|--:|
+|:--|:--:|:--:|:--:|:--:|
 | Overall | 17 | 0 | 4 | 18 |
 | E1 MCP server scaffolding | 3 | 0 | 0 | 0 |
 | E2 Core schemas and validation | 1 | 0 | 0 | 2 |
@@ -43,10 +43,12 @@ Legend
 
 ---
 
-## epic E1: MCP server scaffolding (M1)
+## 🟢 epic E1: MCP server scaffolding (M1)
+
+<details open>
+<summary>...</summary>
 
 1. Story E1-S1: Create MCP stdio server bootstrap
-
 - Priority: P0, Size: S, Status: Done 🟢
 - Description: Add `src/mcp/server.ts` with stdio transport, JSON-RPC handler registration, graceful shutdown.
 - Acceptance:
@@ -70,11 +72,13 @@ Legend
 - Acceptance:
   - `npm run start:mcp` starts server from dist.
 - Dependencies: E1-S1
+</details>
 
 ---
 
-## epic E2: Core schemas and validation (M1)
-
+## 🟢 epic E2: Core schemas and validation (M1)
+<details open>
+<summary>...</summary>
 4. Story E2-S1: Define common error model
 
 - Priority: P0, Size: XS, Status: Done 🟢
@@ -99,11 +103,12 @@ Legend
 - Acceptance:
   - Normalization parity with HTTP observed in tests.
 - Dependencies: E2-S2
-
+</details>
 ---
 
-## epic E3: EaziPay tools (M1)
-
+## 🟢 epic E3: EaziPay tools (M1)
+<details open>
+<summary>...</summary>
 7. Story E3-S1: eazipay.generate_file tool
 
 - Priority: P0, Size: S, Status: Done 🟢
@@ -128,11 +133,13 @@ Legend
 - Acceptance:
   - Returns deliberately invalid data; contract matches valid-row.
 - Dependencies: E2-S3
+</details>
 
 ---
 
-## epic E4: SDDirect tools (M2)
-
+## 🟢 epic E4: SDDirect tools (M2)
+<details open>
+<summary>...</summary>
 10. Story E4-S1: sddirect.generate_file tool
 
 - Priority: P1, Size: S, Status: Done 🟢
@@ -148,11 +155,13 @@ Legend
 - Acceptance:
   - Payload shape identical to EaziPay row tools.
 - Dependencies: E2-S3
+</details>
 
 ---
 
-## epic E5: Common tools (M2)
-
+## 🟢 epic E5: Common tools (M2)
+<details open>
+<summary>...</summary>
 12. Story E5-S1: common.list_supported_formats
 
 - Priority: P2, Size: XS, Status: Done 🟢
@@ -182,11 +191,13 @@ Legend
 - Priority: P1, Size: XS, Status: Done 🟢
 - Acceptance: Reads with offset/length caps; UTF-8/binary modes; safe path resolution.
 - Dependencies: E5-S4
+</details>
 
 ---
 
-## epic E6: Observability & robustness (M3)
-
+## ⚪ epic E6: Observability & robustness (M3)
+<details open>
+<summary>...</summary>
 17. Story E6-S1: Structured logging for tools
 
 - Priority: P1, Size: XS, Status: To Do ⚪
@@ -204,11 +215,13 @@ Legend
 - Priority: P2, Size: S, Status: To Do ⚪
 - Acceptance: Configurable workers; overflow returns clear error; tests cover backpressure.
 - Dependencies: E1-S1
+</details>
 
 ---
 
-## epic E7: Testing (M3)
-
+## ⚪ epic E7: Testing (M3)
+<details open>
+<summary>...</summary>
 20. Story E7-S1: Unit tests for schemas and adapters
 
 - Priority: P0, Size: S, Status: To Do ⚪
@@ -226,11 +239,13 @@ Legend
 - Priority: P1, Size: XS, Status: To Do ⚪
 - Acceptance: Params/results validated against exported schemas.
 - Dependencies: E2-S2
+</details>
 
 ---
 
-## epic E8: Docs & packaging (M3)
-
+## ⚪ epic E8: Docs & packaging (M3)
+<details open>
+<summary>...</summary>
 23. Story E8-S1: README updates for MCP usage
 
 - Priority: P1, Size: XS, Status: Done 🟢
@@ -242,11 +257,13 @@ Legend
 - Priority: P2, Size: XS, Status: To Do ⚪
 - Acceptance: HTTP → MCP guidance and timelines.
 - Dependencies: E8-S1
+</details>
 
 ---
 
-## epic E9: Rollout (M3)
-
+## ⚪ epic E9: Rollout (M3)
+<details open>
+<summary>...</summary>
 25. Story E9-S1: Parallel run with HTTP
 
 - Priority: P2, Size: XS, Status: To Do ⚪
@@ -258,11 +275,13 @@ Legend
 - Priority: P2, Size: XS, Status: To Do ⚪
 - Acceptance: Address issues discovered in first agent integrations.
 - Dependencies: E9-S1
+</details>
 
 ---
 
-## epic E10: Bacs18 (Deferred – M4)
-
+## ⚪ epic E10: Bacs18 (Deferred – M4)
+<details open>
+<summary>...</summary>
 27. Story E10-S1: bacs18paymentlines tools (generate/get rows)
 
 - Priority: P3, Size: M, Status: To Do ⚪
@@ -272,6 +291,7 @@ Legend
 
 - Priority: P3, Size: M, Status: To Do ⚪
 - Dependencies: MCP foundation in place (E1–E7)
+</details>
 
 ---
 
