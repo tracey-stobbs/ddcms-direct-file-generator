@@ -25,31 +25,33 @@ Legend
 `;
 
 describe('tools/backlogProgress', () => {
-  it('parses epics and counts lights', () => {
-    const { epics, overall, openQuestions } = parseBacklogMarkdown(sample);
-    expect(epics.length).toBe(2);
-    expect(epics[0].code).toBe('E1');
-    expect(epics[0].counts.green).toBe(2); // one uses implicit Done
-    expect(epics[1].counts.white).toBe(1);
-    expect(epics[1].counts.red).toBe(1);
-    expect(openQuestions.red).toBe(1);
-    expect(overall.green).toBe(2);
-    expect(overall.red).toBe(2); // includes open questions
-  });
+    it('parses epics and counts lights', () => {
+        const { epics, overall, openQuestions } = parseBacklogMarkdown(sample);
+        expect(epics.length).toBe(2);
+        expect(epics[0].code).toBe('E1');
+        expect(epics[0].counts.green).toBe(2); // one uses implicit Done
+        expect(epics[1].counts.white).toBe(1);
+        expect(epics[1].counts.red).toBe(1);
+        expect(openQuestions.red).toBe(1);
+        expect(overall.green).toBe(2);
+        expect(overall.red).toBe(2); // includes open questions
+    });
 
-  it('renders dashboard table with totals', () => {
-    const { epics, overall, openQuestions } = parseBacklogMarkdown(sample);
-    const dash = renderDashboard(epics, overall, openQuestions);
-    expect(dash).toContain('## progress dashboard');
-    expect(dash).toContain('| Scope | 🟢 Done | 🟡 In Progress/Review | 🔴 Blocked | ⚪ To Do |');
-    expect(dash).toContain('Overall');
-    expect(dash).toContain('E1 Alpha');
-  });
+    it('renders dashboard table with totals', () => {
+        const { epics, overall, openQuestions } = parseBacklogMarkdown(sample);
+        const dash = renderDashboard(epics, overall, openQuestions);
+        expect(dash).toContain('## progress dashboard');
+        expect(dash).toContain(
+            '| Scope | 🟢 Done | 🟡 In Progress/Review | 🔴 Blocked | ⚪ To Do |',
+        );
+        expect(dash).toContain('Overall');
+        expect(dash).toContain('E1 Alpha');
+    });
 
-  it('updates markdown by inserting dashboard', () => {
-    const updated = updateBacklogDashboard(sample);
-    expect(updated).toContain('## progress dashboard');
-    // Should only have one dashboard
-    expect(updated.match(/## progress dashboard/g)?.length).toBe(1);
-  });
+    it('updates markdown by inserting dashboard', () => {
+        const updated = updateBacklogDashboard(sample);
+        expect(updated).toContain('## progress dashboard');
+        // Should only have one dashboard
+        expect(updated.match(/## progress dashboard/g)?.length).toBe(1);
+    });
 });

@@ -28,8 +28,8 @@ Contents:
 ## Additional Field-Level Validation Rules:
 
 - Sun Number
-  - If the Transaction Code is none of 0C, 0N, or 0S, it must be null or undefined.
-  - It is an optional field, so can be null or undefined, even if Transaction Code is one of 0C, 0N, 0S
+    - If the Transaction Code is none of 0C, 0N, or 0S, it must be null or undefined.
+    - It is an optional field, so can be null or undefined, even if Transaction Code is one of 0C, 0N, 0S
 
 - Trailer 1 (empty)
 - Trailer 2 (empty)
@@ -40,20 +40,20 @@ Contents:
 
 ```typescript
 const defaultRequest: Request = {
-  fileType: 'EaziPay',
-  canInlineEdit: true,
-  includeHeaders: false,
-  hasInvalidRows: false,
-  numberOfRows: 15,
-  includeOptionalFields: true,
-  defaultValues: {
-    originatingAccountDetails: {
-      canBeInvalid: true,
-      sortCode: '912291',
-      accountNumber: '51491194',
-      accountName: 'Test Account',
+    fileType: 'EaziPay',
+    canInlineEdit: true,
+    includeHeaders: false,
+    hasInvalidRows: false,
+    numberOfRows: 15,
+    includeOptionalFields: true,
+    defaultValues: {
+        originatingAccountDetails: {
+            canBeInvalid: true,
+            sortCode: '912291',
+            accountNumber: '51491194',
+            accountName: 'Test Account',
+        },
     },
-  },
 };
 ```
 

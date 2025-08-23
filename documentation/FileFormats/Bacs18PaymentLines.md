@@ -23,10 +23,10 @@ This document defines the requirements for generating a Bacs18PaymentLines file,
 - A "DAILY" output file contains only the first 11 fields and each payment line has a length of exactly 100 characters
 - The user must be able to specify in their API request on whether to produce a MULTI or a DAILY file. This will default to MULTI.
 - The output file must:
-  - Contain one line per payment instruction.
-  - Have no header or footer rows.
-  - Use the .txt file extension.
-  - Each line must strictly follow the field order and length as specified below.
+    - Contain one line per payment instruction.
+    - Have no header or footer rows.
+    - Use the .txt file extension.
+    - Each line must strictly follow the field order and length as specified below.
 
 - Each payment instruction must include the following fields, at the exact positions and lengths specified:
 

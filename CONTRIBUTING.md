@@ -46,9 +46,9 @@ File: `src/mcp/jsonrpc.ts`
 import { JsonRpcRouter } from './src/mcp/jsonrpc';
 
 const router = new JsonRpcRouter({
-  onError: (message, data) => {
-    console.error(JSON.stringify({ level: 'error', message, data }));
-  },
+    onError: (message, data) => {
+        console.error(JSON.stringify({ level: 'error', message, data }));
+    },
 });
 ```
 
@@ -68,12 +68,14 @@ npm run backlog:update
 A pre-commit hook will auto-run the updater, then lint and tests.
 
 Implementation:
+
 - Parser/renderer: `src/tools/backlogProgress.ts`
 - CLI: `scripts/backlog-progress.ts`
 
 ## Commit hooks
 
 We use Husky to keep the repo healthy:
+
 - Pre-commit: runs dashboard update, lint, tests
 
 ## Coding standards

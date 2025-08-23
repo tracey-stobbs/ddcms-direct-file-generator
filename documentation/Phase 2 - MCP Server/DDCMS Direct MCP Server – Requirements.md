@@ -8,18 +8,18 @@ Purpose
 - Provide an MCP server that exposes tools for agents to generate files and retrieve sample rows for supported file types.
 - Reuse existing validation and generation logic while adapting to the MCP tool contract.
 - Align with existing API requirements in:
-  - documentation/REQUIREMENTS_MCP.md
-  - documentation/REQUIREMENTS.md
-  - documentation/IMPLEMENTATION_PLAN_MCP.md
+    - documentation/REQUIREMENTS_MCP.md
+    - documentation/REQUIREMENTS.md
+    - documentation/IMPLEMENTATION_PLAN_MCP.md
 
 In-scope
 
 - MCP tools to:
-  - Generate files
-  - Retrieve valid/invalid rows
-  - Validate and normalize request parameters
-  - Inspect capabilities and preview naming
-  - Enumerate and read generated artifacts
+    - Generate files
+    - Retrieve valid/invalid rows
+    - Validate and normalize request parameters
+    - Inspect capabilities and preview naming
+    - Enumerate and read generated artifacts
 - Observability, security, and resource controls for agent use.
 
 Out-of-scope
@@ -31,22 +31,22 @@ References to existing modules
 
 - Request validator: validateAndNormalizeMcpRequest in src/lib/validators/requestValidator.ts
 - Requirements and route plans:
-  - documentation/REQUIREMENTS_MCP.md
-  - documentation/IMPLEMENTATION_PLAN_MCP.md
+    - documentation/REQUIREMENTS_MCP.md
+    - documentation/IMPLEMENTATION_PLAN_MCP.md
 - Project overview: README.md
 
 1. Transport and Protocol
 
 - Protocol: MCP (JSON-RPC 2.0 over stdio by default; WebSocket optional).
 - Server identity:
-  - name: ddcms-direct-mcp
-  - version: semver from package.json
+    - name: ddcms-direct-mcp
+    - version: semver from package.json
 - Capabilities:
-  - tools: yes
-  - resources: yes (generated files as read-only byte content)
-  - prompts: no (initially)
-  - cancellation: yes (JSON-RPC cancel or MCP cancel, if supported by the client)
-  - progress: yes (progress events for long-running file generations)
+    - tools: yes
+    - resources: yes (generated files as read-only byte content)
+    - prompts: no (initially)
+    - cancellation: yes (JSON-RPC cancel or MCP cancel, if supported by the client)
+    - progress: yes (progress events for long-running file generations)
 - Concurrency: Support parallel tool invocations with bounded worker pool.
 
 2. Tools (inventory)
@@ -56,142 +56,142 @@ References to existing modules
 
 - Intent: Generate a file for a specific SUN and file type.
 - Params:
-  - fileType: enum ["SDDirect","Bacs18PaymentLines","Bacs18StandardFile","EaziPay"]
-  - sun: string (^\d{6}$)
-  - forInlineEditing?: boolean (default true)
-  - processingDate?: string (format depends on fileType; see docs)
-  - includeHeaders?: boolean (honored only for SDDirect and Bacs18StandardFile)
-  - hasInvalidRows?: boolean
-  - numberOfRows?: number (default 15; positive integer)
-  - outputPath?: string (default output/{fileType}/{sun})
-  - dateFormat?: "YYYY-MM-DD" | "DD-MMM-YYYY" | "DD/MM/YYYY" (EaziPay only)
+    - fileType: enum ["SDDirect","Bacs18PaymentLines","Bacs18StandardFile","EaziPay"]
+    - sun: string (^\d{6}$)
+    - forInlineEditing?: boolean (default true)
+    - processingDate?: string (format depends on fileType; see docs)
+    - includeHeaders?: boolean (honored only for SDDirect and Bacs18StandardFile)
+    - hasInvalidRows?: boolean
+    - numberOfRows?: number (default 15; positive integer)
+    - outputPath?: string (default output/{fileType}/{sun})
+    - dateFormat?: "YYYY-MM-DD" | "DD-MMM-YYYY" | "DD/MM/YYYY" (EaziPay only)
 - Behavior:
-  - Validate params using validateAndNormalizeMcpRequest (route-supplied fileType in API version; tool param here).
-  - Enforce EaziPay header rule (always ignored; warning only).
-  - Ensure output directory exists; 400 if creation fails.
-  - Call generator layer with normalized request.
-  - Stream progress events: 0%, 25%, 50%, 75%, 100%.
+    - Validate params using validateAndNormalizeMcpRequest (route-supplied fileType in API version; tool param here).
+    - Enforce EaziPay header rule (always ignored; warning only).
+    - Ensure output directory exists; 400 if creation fails.
+    - Call generator layer with normalized request.
+    - Stream progress events: 0%, 25%, 50%, 75%, 100%.
 - Result:
-  - fileType, sun, fileName, outputPath, rowsWritten, includeHeadersEffective, processingDate, warnings[]
+    - fileType, sun, fileName, outputPath, rowsWritten, includeHeadersEffective, processingDate, warnings[]
 - Errors:
-  - 400 VALIDATION_ERROR (bad sun, numberOfRows, processingDate format per file type, non-writable outputPath)
-  - 500 GENERATION_FAILED (I/O or generator error)
+    - 400 VALIDATION_ERROR (bad sun, numberOfRows, processingDate format per file type, non-writable outputPath)
+    - 500 GENERATION_FAILED (I/O or generator error)
 
-  2.2 get_valid_row
+        2.2 get_valid_row
 
 - Intent: Return representative valid rows for a file type.
 - Params:
-  - fileType: enum
-  - sun: string (^\d{6}$)
-  - rowCount?: number (default 1; positive integer)
+    - fileType: enum
+    - sun: string (^\d{6}$)
+    - rowCount?: number (default 1; positive integer)
 - Behavior:
-  - Validate sun format.
-  - Return headers (1-based order), rows[].fields[] with order, and metadata.
+    - Validate sun format.
+    - Return headers (1-based order), rows[].fields[] with order, and metadata.
 - Result:
-  - { headers: {name, order}[], rows: [{ fields: {value, order}[] }...], metadata: { fileType, sun, rowKind: "valid", generatedAt, notes? } }
+    - { headers: {name, order}[], rows: [{ fields: {value, order}[] }...], metadata: { fileType, sun, rowKind: "valid", generatedAt, notes? } }
 - Errors: 400 on invalid sun or rowCount.
 
-  2.3 get_invalid_row
+    2.3 get_invalid_row
 
 - Same contract as get_valid_row but returns deliberately invalid values for testing.
 
-  2.4 validate_processing_date
+    2.4 validate_processing_date
 
 - Intent: Validate and normalize processingDate without generating a file.
 - Params:
-  - fileType: enum
-  - processingDate: string
-  - dateFormat?: EaziPay-only formats (see docs)
+    - fileType: enum
+    - processingDate: string
+    - dateFormat?: EaziPay-only formats (see docs)
 - Behavior:
-  - Apply file-type-specific rules (working day logic, bank holidays).
-  - On success, return normalized/echoed date in expected output format.
+    - Apply file-type-specific rules (working day logic, bank holidays).
+    - On success, return normalized/echoed date in expected output format.
 - Result:
-  - { isValid: boolean, normalized?: string, warnings?: string[] }
+    - { isValid: boolean, normalized?: string, warnings?: string[] }
 - Errors: 400 with details when invalid.
 
-  2.5 preview_file_name
+    2.5 preview_file_name
 
 - Intent: Preview the filename that would be produced for given options.
 - Params:
-  - fileType, sun, numberOfRows?, includeHeaders?, hasInvalidRows?, dateFormat? (EaziPay)
+    - fileType, sun, numberOfRows?, includeHeaders?, hasInvalidRows?, dateFormat? (EaziPay)
 - Result:
-  - { fileName, columnCount, extension, headersDesignator, validityDesignator, timestampPreview }
+    - { fileName, columnCount, extension, headersDesignator, validityDesignator, timestampPreview }
 - Notes: Column count rules per documentation/REQUIREMENTS.md (e.g., EaziPay 15/23 logic, SDDirect 06/11).
 
-  2.6 list_supported_formats
+    2.6 list_supported_formats
 
 - Intent: Return capabilities per file type.
 - Result:
-  - For each file type: supportsHeaders, defaultExtension(s), dateRules, rowPreviewSupported, processingDateFormats, filenamePattern.
+    - For each file type: supportsHeaders, defaultExtension(s), dateRules, rowPreviewSupported, processingDateFormats, filenamePattern.
 
-  2.7 list_output_files
+        2.7 list_output_files
 
 - Intent: Enumerate generated files for a SUN and optional file type.
 - Params:
-  - sun: string (^\d{6}$)
-  - fileType?: enum
-  - limit?: number (default 50, max 500)
+    - sun: string (^\d{6}$)
+    - fileType?: enum
+    - limit?: number (default 50, max 500)
 - Result:
-  - [{ fileName, absolutePath, sizeBytes, createdAt, fileType, sun }]
+    - [{ fileName, absolutePath, sizeBytes, createdAt, fileType, sun }]
 - Security: Only under output root; no path traversal.
 
-  2.8 read_output_file
+    2.8 read_output_file
 
 - Intent: Read content of a generated file (for quick inspection).
 - Params:
-  - sun, fileType, fileName
-  - offset?: number (default 0)
-  - length?: number (default 65536) – cap to prevent large transfers
+    - sun, fileType, fileName
+    - offset?: number (default 0)
+    - length?: number (default 65536) – cap to prevent large transfers
 - Result:
-  - { encoding: "utf-8" | "binary", content: string, eof: boolean }
+    - { encoding: "utf-8" | "binary", content: string, eof: boolean }
 - Security: Validate that resolved path stays under allowed output directory.
 
 3. Tool-to-Module Mapping
 
 - Validation:
-  - Use validateAndNormalizeMcpRequest in src/lib/validators/requestValidator.ts for normalization rules identical to the HTTP API.
+    - Use validateAndNormalizeMcpRequest in src/lib/validators/requestValidator.ts for normalization rules identical to the HTTP API.
 - Generation:
-  - Reuse the existing file generation layer (factory-based per file type) as described in documentation/IMPLEMENTATION_PLAN_MCP.md.
+    - Reuse the existing file generation layer (factory-based per file type) as described in documentation/IMPLEMENTATION_PLAN_MCP.md.
 - Rows:
-  - Reuse or add per-file-type row builders aligning with documentation/REQUIREMENTS_MCP.md row payload contract.
+    - Reuse or add per-file-type row builders aligning with documentation/REQUIREMENTS_MCP.md row payload contract.
 
 4. Resources
 
 - Expose generated files as read-only resources:
-  - Resource URIs: mcp://output/{fileType}/{sun}/{fileName}
-  - List via list_output_files; read via read_output_file
-  - No write/delete tools in v1 for safety.
+    - Resource URIs: mcp://output/{fileType}/{sun}/{fileName}
+    - List via list_output_files; read via read_output_file
+    - No write/delete tools in v1 for safety.
 
 5. Data and Validation Rules
 
 - Follow documentation/REQUIREMENTS.md:
-  - FR2 File naming convention and storage
-  - FR3 Data generation rules (Faker.js, invalid row proportions)
-  - FR4 SDDirect column/headers rules
-  - FR4.1 EaziPay format, date formats, trailer columns, header override (ignored)
-  - FR5 Field-level validation (Transaction Code, Pay Date, allowed character sets)
+    - FR2 File naming convention and storage
+    - FR3 Data generation rules (Faker.js, invalid row proportions)
+    - FR4 SDDirect column/headers rules
+    - FR4.1 EaziPay format, date formats, trailer columns, header override (ignored)
+    - FR5 Field-level validation (Transaction Code, Pay Date, allowed character sets)
 - MCP-specific emphasis:
-  - processingDate validation and normalization per documentation/REQUIREMENTS_MCP.md
-  - Include warnings when options are ignored (e.g., includeHeaders for EaziPay).
+    - processingDate validation and normalization per documentation/REQUIREMENTS_MCP.md
+    - Include warnings when options are ignored (e.g., includeHeaders for EaziPay).
 
 6. Security and Safety
 
 - Path safety:
-  - All file operations constrained to ./output/{fileType}/{sun}.
-  - Deny path traversal (normalize and verify prefix).
+    - All file operations constrained to ./output/{fileType}/{sun}.
+    - Deny path traversal (normalize and verify prefix).
 - Input validation:
-  - Strict schema validation for all params.
-  - SUN validation: ^\d{6}$ (reject otherwise).
-  - Limits:
-    - numberOfRows: positive integer, configurable max (default 10,000).
-    - list limits: max 500.
-    - read length: cap to 1 MiB by default.
+    - Strict schema validation for all params.
+    - SUN validation: ^\d{6}$ (reject otherwise).
+    - Limits:
+        - numberOfRows: positive integer, configurable max (default 10,000).
+        - list limits: max 500.
+        - read length: cap to 1 MiB by default.
 - Credentials:
-  - No secrets in code; read env config if needed.
+    - No secrets in code; read env config if needed.
 - Process safety:
-  - Never kill Node.js process; support graceful shutdown only.
+    - Never kill Node.js process; support graceful shutdown only.
 - Dependency hygiene:
-  - Keep dependencies patched; audit regularly.
+    - Keep dependencies patched; audit regularly.
 
 7. Observability and Logging
 
@@ -210,16 +210,16 @@ References to existing modules
 9. Testing Requirements
 
 - Unit tests (Vitest):
-  - Tool parameter schemas
-  - Validation functions (including edge cases and warnings)
-  - Path safety guards
-  - Filename preview logic
+    - Tool parameter schemas
+    - Validation functions (including edge cases and warnings)
+    - Path safety guards
+    - Filename preview logic
 - Integration tests:
-  - End-to-end tool calls via MCP harness
-  - File generation with output inspection
-  - Row payload contracts for each file type
+    - End-to-end tool calls via MCP harness
+    - File generation with output inspection
+    - Row payload contracts for each file type
 - Contract tests:
-  - JSON Schema validation for tool params/results
+    - JSON Schema validation for tool params/results
 - Coverage: strive for 100% line coverage (see documentation/REQUIREMENTS.md).
 
 10. Compatibility and Migration
@@ -227,27 +227,27 @@ References to existing modules
 - Parity with HTTP API behavior documented in documentation/REQUIREMENTS_MCP.md.
 - Error model compatibility with existing HTTP responses (translated to MCP tool errors).
 - Deprecation notes:
-  - If agents move to MCP, keep HTTP API for human/manual usage until sunset.
+    - If agents move to MCP, keep HTTP API for human/manual usage until sunset.
 
 11. Configuration
 
 - Environment variables:
-  - OUTPUT_ROOT (default ./output)
-  - MAX_ROWS (default 10000)
-  - READ_MAX_LENGTH (default 1048576)
-  - WORKERS (default: number of cores)
-  - LOG_LEVEL (info|debug|warn|error)
+    - OUTPUT_ROOT (default ./output)
+    - MAX_ROWS (default 10000)
+    - READ_MAX_LENGTH (default 1048576)
+    - WORKERS (default: number of cores)
+    - LOG_LEVEL (info|debug|warn|error)
 - Bank holidays source:
-  - Use existing calendar logic per documentation/REQUIREMENTS.md (real UK data; tests must include fixtures).
+    - Use existing calendar logic per documentation/REQUIREMENTS.md (real UK data; tests must include fixtures).
 
 12. Design and Patterns
 
 - Adapter pattern:
-  - MCP tool handlers adapt from tool params to existing validators/generators without changing core logic.
+    - MCP tool handlers adapt from tool params to existing validators/generators without changing core logic.
 - Factory pattern:
-  - Continue to obtain generators per file type (keeps OCP and reduces conditional complexity).
+    - Continue to obtain generators per file type (keeps OCP and reduces conditional complexity).
 - Template method (lightweight) in tool scaffolding:
-  - Common pre/post handling (validation, logging, error mapping), with per-tool business logic injected.
+    - Common pre/post handling (validation, logging, error mapping), with per-tool business logic injected.
 
 13. Error Model
 
@@ -262,10 +262,10 @@ References to existing modules
 - Follow documentation/REQUIREMENTS.md FR2 for naming:
   [FileType]_[COLUMNCOUNT]\_x_[ROWS]_[HEADERS]_[VALIDITY]\_[TIMESTAMP].[extension]
 - EaziPay rules:
-  - Headers: always NH
-  - Date format: one of three formats; consistent per file
-  - Trailer columns: quoted vs unquoted variant (randomly chosen per file)
-  - Column count reflected in filename (15/23)
+    - Headers: always NH
+    - Date format: one of three formats; consistent per file
+    - Trailer columns: quoted vs unquoted variant (randomly chosen per file)
+    - Column count reflected in filename (15/23)
 
 15. Acceptance Criteria
 
@@ -278,15 +278,15 @@ References to existing modules
 16. Implementation Notes
 
 - Structure:
-  - src/mcp/server.ts – bootstrap and transport
-  - src/mcp/tools/\*.ts – individual tool handlers
-  - src/mcp/schemas/\*.ts – JSON Schemas
-  - src/mcp/adapters/\*.ts – bridges to validators and generators
-  - src/mcp/resources/\*.ts – output resource listing/reading
-  - tests/… – Vitest suites for unit and integration
+    - src/mcp/server.ts – bootstrap and transport
+    - src/mcp/tools/\*.ts – individual tool handlers
+    - src/mcp/schemas/\*.ts – JSON Schemas
+    - src/mcp/adapters/\*.ts – bridges to validators and generators
+    - src/mcp/resources/\*.ts – output resource listing/reading
+    - tests/… – Vitest suites for unit and integration
 - Reuse:
-  - Call validateAndNormalizeMcpRequest for normalization parity with HTTP API.
-  - Reuse existing file generation modules as-is; wrap with adapters.
+    - Call validateAndNormalizeMcpRequest for normalization parity with HTTP API.
+    - Reuse existing file generation modules as-is; wrap with adapters.
 
 17. Open Questions (please confirm)
 
@@ -304,12 +304,12 @@ Appendix A: Tool JSON Schemas (outline)
 Appendix B: Example Flows
 
 - Typical agent flow:
-  1. list_supported_formats → pick fileType
-  2. validate_processing_date (optional) → normalized date
-  3. preview_file_name → verify naming
-  4. generate_file → returns file metadata + path
-  5. list_output_files → locate file
-  6. read_output_file (small preview) or handoff path to another tool
+    1. list_supported_formats → pick fileType
+    2. validate_processing_date (optional) → normalized date
+    3. preview_file_name → verify naming
+    4. generate_file → returns file metadata + path
+    5. list_output_files → locate file
+    6. read_output_file (small preview) or handoff path to another tool
 
 Change Log
 

@@ -57,16 +57,16 @@ Design patterns:
 ## deliverables
 
 - New code under `src/mcp/`:
-  - `src/mcp/server.ts` – bootstrap MCP server (stdio), tool registration, graceful shutdown
-  - `src/mcp/tools/*.ts` – tool handlers (eazipay, sddirect, common)
-  - `src/mcp/adapters/*.ts` – normalization + generator bridges
-  - `src/mcp/schemas/*.ts` – Zod or TS-to-JSON Schema for tool params/results
-  - `src/mcp/resources/*.ts` – list/read output files with path safety
+    - `src/mcp/server.ts` – bootstrap MCP server (stdio), tool registration, graceful shutdown
+    - `src/mcp/tools/*.ts` – tool handlers (eazipay, sddirect, common)
+    - `src/mcp/adapters/*.ts` – normalization + generator bridges
+    - `src/mcp/schemas/*.ts` – Zod or TS-to-JSON Schema for tool params/results
+    - `src/mcp/resources/*.ts` – list/read output files with path safety
 - Tests:
-  - `src/mcp/**/*.test.ts` for unit/integration
+    - `src/mcp/**/*.test.ts` for unit/integration
 - Docs:
-  - This implementation plan
-  - Update `README.md` with MCP usage
+    - This implementation plan
+    - Update `README.md` with MCP usage
 
 ## phases & tasks
 
@@ -91,9 +91,9 @@ Phase 3 – EaziPay tools
 
 - Tools: `eazipay.generate_file`, `eazipay.get_valid_row`, `eazipay.get_invalid_row`.
 - Implement adapters:
-  - Normalize request, apply SUN defaults (using SUN_STUB), set output path, ensure dir exists.
-  - Call `getFileGenerator('EaziPay')` for file generation; map response.
-  - For rows, call `generateValidEaziPayRow`/`generateInvalidEaziPayRow` + `mapEaziPayFieldsToRecord` and `getEaziPayHeaders`.
+    - Normalize request, apply SUN defaults (using SUN_STUB), set output path, ensure dir exists.
+    - Call `getFileGenerator('EaziPay')` for file generation; map response.
+    - For rows, call `generateValidEaziPayRow`/`generateInvalidEaziPayRow` + `mapEaziPayFieldsToRecord` and `getEaziPayHeaders`.
 - Emit progress events (0/25/50/75/100) for generate_file.
 
 Phase 4 – SDDirect tools
@@ -206,11 +206,11 @@ Pseudo-flow (generate_file):
 - Cancellation: honor MCP cancellation token if available; otherwise best-effort.
 - Concurrency: configurable worker pool (default = CPU cores); queue overflow returns 429-equivalent error.
 - Config via env:
-  - OUTPUT_ROOT=./output
-  - MAX_ROWS=10000
-  - READ_MAX_LENGTH=1048576
-  - WORKERS=os.cpus().length
-  - LOG_LEVEL=info
+    - OUTPUT_ROOT=./output
+    - MAX_ROWS=10000
+    - READ_MAX_LENGTH=1048576
+    - WORKERS=os.cpus().length
+    - LOG_LEVEL=info
 
 ## security & safety
 

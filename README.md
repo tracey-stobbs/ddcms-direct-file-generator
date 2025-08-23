@@ -11,11 +11,11 @@ Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md) for guideline
 - Entry: `dist/mcp/server.js` (build first), npm script: `npm run start:mcp`.
 - Tools implemented: EaziPay (generate_file, get_valid_row, get_invalid_row), SDDirect (generate_file, get_valid_row, get_invalid_row), and Common utilities.
 - Error semantics: standardized JSON-RPC errors with named codes via `JsonRpcErrorCodes`.
-  - ParseError (-32700) on invalid JSON lines (id: null)
-  - InvalidRequest (-32600) for malformed requests
-  - MethodNotFound (-32601) for unknown tools
-  - InvalidParams (-32602) for validation failures (e.g., bad SUN)
-  - InternalError (-32603) for unexpected exceptions
+    - ParseError (-32700) on invalid JSON lines (id: null)
+    - InvalidRequest (-32600) for malformed requests
+    - MethodNotFound (-32601) for unknown tools
+    - InvalidParams (-32602) for validation failures (e.g., bad SUN)
+    - InternalError (-32603) for unexpected exceptions
 
 ### JSON-RPC error logging 🔕
 
@@ -28,10 +28,10 @@ import { JsonRpcRouter } from './jsonrpc';
 
 // Enable logging (example):
 const router = new JsonRpcRouter({
-  onError: (message, data) => {
-    // Prefer structured logging and avoid leaking sensitive data
-    console.error(JSON.stringify({ level: 'error', message, data }));
-  },
+    onError: (message, data) => {
+        // Prefer structured logging and avoid leaking sensitive data
+        console.error(JSON.stringify({ level: 'error', message, data }));
+    },
 });
 ```
 
@@ -42,15 +42,15 @@ If no listener is supplied, a no-op is used and errors are still returned to the
 These helper tools assist discovery, validation, and safe file browsing.
 
 - `common.list_supported_formats`
-  - Returns available file types, header support, date formats, filename patterns.
+    - Returns available file types, header support, date formats, filename patterns.
 - `common.preview_file_name`
-  - Predicts the file name, column count, and extension for a given request without writing a file.
+    - Predicts the file name, column count, and extension for a given request without writing a file.
 - `common.validate_processing_date`
-  - Validates and normalizes processing dates per file type rules (e.g., EaziPay working-day constraints).
+    - Validates and normalizes processing dates per file type rules (e.g., EaziPay working-day constraints).
 - `common.list_output_files`
-  - Lists files under the output root for an optional `{ fileType, sun }` filter with safe path enforcement.
+    - Lists files under the output root for an optional `{ fileType, sun }` filter with safe path enforcement.
 - `common.read_output_file`
-  - Reads a file by path relative to output root with offset/length limits and binary/text mode; prevents traversal.
+    - Reads a file by path relative to output root with offset/length limits and binary/text mode; prevents traversal.
 
 All common tools use strict Zod validation and return `InvalidParams (-32602)` with details on bad input.
 
@@ -59,10 +59,10 @@ All common tools use strict Zod validation and return `InvalidParams (-32602)` w
 To keep tool handlers lean, use centralized helpers that convert Zod issues into standardized JSON-RPC InvalidParams errors with useful details.
 
 - `parseOrInvalidParams(schema, input)`
-  - Synchronously parses using `schema.parse(input)`.
-  - On failure, throws `InvalidParams (-32602)` with `data.details` as an array like `["field: message"]`. Root-level errors are labeled as `(root)`.
+    - Synchronously parses using `schema.parse(input)`.
+    - On failure, throws `InvalidParams (-32602)` with `data.details` as an array like `["field: message"]`. Root-level errors are labeled as `(root)`.
 - `parseOrInvalidParamsAsync(schema, input)`
-  - Async variant using `schema.parseAsync(input)`—useful when schemas include async refinements.
+    - Async variant using `schema.parseAsync(input)`—useful when schemas include async refinements.
 
 Example usage inside a tool handler:
 
@@ -71,12 +71,15 @@ Example usage inside a tool handler:
 import { parseOrInvalidParams } from '../validation';
 import { z } from 'zod';
 
-const zParams = z.object({ sun: z.string().regex(/^\d{6}$/), numberOfRows: z.number().min(1).max(100000) });
+const zParams = z.object({
+    sun: z.string().regex(/^\d{6}$/),
+    numberOfRows: z.number().min(1).max(100000),
+});
 
 export function exampleHandler(rawParams: unknown) {
-  const params = parseOrInvalidParams(zParams, rawParams);
-  // ...use params safely
-  return { ok: true };
+    const params = parseOrInvalidParams(zParams, rawParams);
+    // ...use params safely
+    return { ok: true };
 }
 ```
 
@@ -89,18 +92,18 @@ export function exampleHandler(rawParams: unknown) {
 
 - Single `/api/generate` endpoint (JSON, body optional)
 - **Multiple File Formats:**
-  - **SDDirect** (.csv) - Complete implementation
-  - **EaziPay** (.csv/.txt) - Complete implementation ✨ **NEW**
-  - **Bacs18PaymentLines** (.txt) - Future support
-  - **Bacs18StandardFile** (.bacs) - Future support
+    - **SDDirect** (.csv) - Complete implementation
+    - **EaziPay** (.csv/.txt) - Complete implementation ✨ **NEW**
+    - **Bacs18PaymentLines** (.txt) - Future support
+    - **Bacs18StandardFile** (.bacs) - Future support
 - **EaziPay Specific Features:** ✨ **NEW**
-  - **3 Date Format Options**: YYYY-MM-DD, DD-MMM-YYYY, DD/MM/YYYY
-  - **Smart Header Handling**: Always headerless (automatically overrides requests)
-  - **Dynamic Column Count**: 15 columns (quoted trailer) or 23 columns (unquoted trailer)
-  - **Random File Extensions**: Intelligent .csv/.txt selection
-  - **Advanced Field Validation**: Fixed zero, empty fields, conditional SUN numbers
-  - **Transaction Code Rules**: Special handling for 0C, 0N, 0S codes
-  - **Working Day Calculations**: UK Bank Holiday aware processing dates
+    - **3 Date Format Options**: YYYY-MM-DD, DD-MMM-YYYY, DD/MM/YYYY
+    - **Smart Header Handling**: Always headerless (automatically overrides requests)
+    - **Dynamic Column Count**: 15 columns (quoted trailer) or 23 columns (unquoted trailer)
+    - **Random File Extensions**: Intelligent .csv/.txt selection
+    - **Advanced Field Validation**: Fixed zero, empty fields, conditional SUN numbers
+    - **Transaction Code Rules**: Special handling for 0C, 0N, 0S codes
+    - **Working Day Calculations**: UK Bank Holiday aware processing dates
 - Configurable output location and file content
 - Field-level validation and invalid data generation
 - Working day calculations with UK Bank Holiday support
@@ -113,11 +116,11 @@ export function exampleHandler(rawParams: unknown) {
 Centralized, safe filesystem utilities used by MCP Common tools and available to other modules:
 
 - `listOutputFiles({ fileType, sun, limit? })`
-  - Returns `{ root, files: [{ name, size, modified }] }` for `output/<fileType>/<sun>`.
-  - Enforces a limit (default 100) and ignores non-file entries.
+    - Returns `{ root, files: [{ name, size, modified }] }` for `output/<fileType>/<sun>`.
+    - Enforces a limit (default 100) and ignores non-file entries.
 - `readOutputFile({ fileType, sun, fileName, offset?, length?, mode? })`
-  - Reads a slice of a file with safe defaults: `offset=0`, `length=64KB`, `mode='utf8' | 'base64'`.
-  - Prevents path traversal using strict root-anchored joins and throws on missing files.
+    - Reads a slice of a file with safe defaults: `offset=0`, `length=64KB`, `mode='utf8' | 'base64'`.
+    - Prevents path traversal using strict root-anchored joins and throws on missing files.
 
 Example:
 
@@ -125,7 +128,14 @@ Example:
 import { listOutputFiles, readOutputFile } from './src/lib/fileReader/fileReader';
 
 const listing = listOutputFiles({ fileType: 'SDDirect', sun: '123456', limit: 5 });
-const chunk = readOutputFile({ fileType: 'SDDirect', sun: '123456', fileName: listing.files[0].name, offset: 0, length: 1024, mode: 'utf8' });
+const chunk = readOutputFile({
+    fileType: 'SDDirect',
+    sun: '123456',
+    fileName: listing.files[0].name,
+    offset: 0,
+    length: 1024,
+    mode: 'utf8',
+});
 ```
 
 ## Getting Started
@@ -194,10 +204,10 @@ npm run test
 
 ```json
 {
-  "fileType": "SDDirect",
-  "numberOfRows": 20,
-  "hasInvalidRows": true,
-  "hasHeader": true
+    "fileType": "SDDirect",
+    "numberOfRows": 20,
+    "hasInvalidRows": true,
+    "hasHeader": true
 }
 ```
 
@@ -205,10 +215,10 @@ npm run test
 
 ```json
 {
-  "fileType": "EaziPay",
-  "numberOfRows": 10,
-  "hasInvalidRows": false,
-  "dateFormat": "DD-MMM-YYYY"
+    "fileType": "EaziPay",
+    "numberOfRows": 10,
+    "hasInvalidRows": false,
+    "dateFormat": "DD-MMM-YYYY"
 }
 ```
 
@@ -245,8 +255,8 @@ npm run test
 
 ```json
 {
-  "success": true,
-  "filePath": "output/EaziPay_23_x_10_NH_V_20250721_141500.txt"
+    "success": true,
+    "filePath": "output/EaziPay_23_x_10_NH_V_20250721_141500.txt"
 }
 ```
 
@@ -418,17 +428,17 @@ npm run lint
 The project includes HTTP request files for manual testing with VS Code's REST Client extension:
 
 - **`SDDirect.http`** - Comprehensive test cases for SDDirect file generation
-  - Basic requests with various configurations
-  - Edge cases (min/max rows, invalid data)
-  - Error scenarios and validation testing
-  - Performance testing with large datasets
-  - Future file type testing (Bacs18)
+    - Basic requests with various configurations
+    - Edge cases (min/max rows, invalid data)
+    - Error scenarios and validation testing
+    - Performance testing with large datasets
+    - Future file type testing (Bacs18)
 - **`eazipay.http`** - Complete test suite for EaziPay file generation
-  - All three date format options (YYYY-MM-DD, DD-MMM-YYYY, DD/MM/YYYY)
-  - Header validation testing (always headerless)
-  - Invalid data generation testing
-  - File extension verification (.csv/.txt)
-  - Error handling and edge cases
+    - All three date format options (YYYY-MM-DD, DD-MMM-YYYY, DD/MM/YYYY)
+    - Header validation testing (always headerless)
+    - Invalid data generation testing
+    - File extension verification (.csv/.txt)
+    - Error handling and edge cases
 
 **Usage**: Install the REST Client extension in VS Code, then click "Send Request" above any HTTP request in these files. Variables like `{{number_of_rows}}` are defined at the top of each file for easy modification.
 
@@ -436,13 +446,13 @@ The project includes HTTP request files for manual testing with VS Code's REST C
 
 - ✅ **SDDirect** - Complete implementation (Phase 1)
 - ✅ **EaziPay** - Complete implementation (Phase 2.1) ⭐ **NEWLY COMPLETED**
-  - ✅ 3 Date format options
-  - ✅ Dynamic column count (15/23)
-  - ✅ Random file extensions (.csv/.txt)
-  - ✅ Advanced field validation
-  - ✅ Transaction code special handling
-  - ✅ Working day calculations
-  - ✅ 100% test coverage (132 tests)
+    - ✅ 3 Date format options
+    - ✅ Dynamic column count (15/23)
+    - ✅ Random file extensions (.csv/.txt)
+    - ✅ Advanced field validation
+    - ✅ Transaction code special handling
+    - ✅ Working day calculations
+    - ✅ 100% test coverage (132 tests)
 - 🚧 **Bacs18PaymentLines** - Planned (Phase 3)
 - 🚧 **Bacs18StandardFile** - Planned (Phase 4)
 

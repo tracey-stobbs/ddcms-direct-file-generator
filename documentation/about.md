@@ -14,17 +14,17 @@ Do not use port 3000 as it is often used by other development servers.
 ### Building and Running the Application
 
 1. **Install dependencies:**
-   ```
-   npm install
-   ```
+    ```
+    npm install
+    ```
 2. **Build the app:**
-   ```
-   npm run build
-   ```
+    ```
+    npm run build
+    ```
 3. **Start the app:**
-   ```
-   npm start
-   ```
+    ```
+    npm start
+    ```
 
 To specify a custom port, set the PORT environment variable before starting the server.
 Example: `$env:PORT=3005; npm start`
@@ -41,15 +41,15 @@ Where:
 
 - `[FileType]`: the file type that has been generated
 - `[COLUMNCOUNT]`: Number of columns in the file
-  - `06`: Only required columns (no optional fields)
-  - `11`: All columns including optional fields
+    - `06`: Only required columns (no optional fields)
+    - `11`: All columns including optional fields
 - `[ROWS]`: Number of rows as specified in the request, default is 15
 - `[HEADERS]`: Indicates if headers are included
-  - `_H`: Headers included
-  - `NH`: No headers
+    - `_H`: Headers included
+    - `NH`: No headers
 - `[VALIDITY]`: Indicates if the file contains invalid rows
-  - `V`: All rows are valid
-  - `I`: Contains invalid rows
+    - `V`: All rows are valid
+    - `I`: Contains invalid rows
 - `[TIMESTAMP]`: Date and time in format YYYYMMDD_HHMMSS (e.g., 20250530_142548)
 - `[extension]`: the file extension as specified in the file format spec
 
@@ -69,14 +69,14 @@ must contain unit tests
 
 ```typescript
 export interface Request {
-  fileType: 'SDDirect' | 'Bacs18PaymentLines' | 'Bacs18StandardFile';
-  canInlineEdit: boolean;
-  includeHeaders?: boolean;
-  numberOfRows?: number;
-  hasInvalidRows?: boolean;
-  includeOptionalFields?: boolean | OptionalField[];
-  defaultValues?: OptionalFieldItem;
-  outputPath?: string;
+    fileType: 'SDDirect' | 'Bacs18PaymentLines' | 'Bacs18StandardFile';
+    canInlineEdit: boolean;
+    includeHeaders?: boolean;
+    numberOfRows?: number;
+    hasInvalidRows?: boolean;
+    includeOptionalFields?: boolean | OptionalField[];
+    defaultValues?: OptionalFieldItem;
+    outputPath?: string;
 }
 ```
 
@@ -84,20 +84,20 @@ When values are not provided, use these values:
 
 ```typescript
 export const defaultRequest: Request = {
-  fileType: 'SDDirect',
-  canInlineEdit: true,
-  includeHeaders: true,
-  hasInvalidRows: false,
-  numberOfRows: 15,
-  includeOptionalFields: true,
-  defaultValues: {
-    originatingAccountDetails: {
-      canBeInvalid: true,
-      sortCode: '912291',
-      accountNumber: '51491194',
-      accountName: 'Test Account',
+    fileType: 'SDDirect',
+    canInlineEdit: true,
+    includeHeaders: true,
+    hasInvalidRows: false,
+    numberOfRows: 15,
+    includeOptionalFields: true,
+    defaultValues: {
+        originatingAccountDetails: {
+            canBeInvalid: true,
+            sortCode: '912291',
+            accountNumber: '51491194',
+            accountName: 'Test Account',
+        },
     },
-  },
 } as const;
 ```
 
@@ -146,6 +146,6 @@ The specification for these files are listed in the following files:
 - All non-header rows should include randomly generated field data following the [Field-Level Validation Rules](../field-level-validation.md) . The exception to this is when the data has been specified in the OptionalFields item in the request.
 
 - if the request body includes: `{    "hasInvalidRows": true    }`
-  - then approximately 50% of the generated rows must have at least one, but no more than three, fields which do not adhere to [Field-Level Validation Rules](../field-level-validation.md).
-  - The number of invalid rows should be rounded down to the nearest whole number.
-  - If `canInlineEdit` is true, there must be no more than 49 errored rows, regardless of the total row count.
+    - then approximately 50% of the generated rows must have at least one, but no more than three, fields which do not adhere to [Field-Level Validation Rules](../field-level-validation.md).
+    - The number of invalid rows should be rounded down to the nearest whole number.
+    - If `canInlineEdit` is true, there must be no more than 49 errored rows, regardless of the total row count.
