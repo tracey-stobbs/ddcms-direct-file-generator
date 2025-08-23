@@ -1,15 +1,15 @@
-import { DateTime } from "luxon";
-import path from "path";
+import { DateTime } from 'luxon';
+import path from 'path';
 import {
-    formatEaziPayRowAsArray,
-    generateInvalidEaziPayRow,
-    generateValidEaziPayRow
-} from "../fileType/eazipay";
-import { generateInvalidSDDirectRow, generateValidSDDirectRow } from "../fileType/sddirect";
-import { Request } from "../types";
-import { DateFormatter } from "../utils/dateFormatter";
-import { validateAndNormalizeHeaders } from "../validators/requestValidator";
-import { FileSystem, nodeFs } from "./fsWrapper";
+  formatEaziPayRowAsArray,
+  generateInvalidEaziPayRow,
+  generateValidEaziPayRow,
+} from '../fileType/eazipay';
+import { generateInvalidSDDirectRow, generateValidSDDirectRow } from '../fileType/sddirect';
+import { Request } from '../types';
+import { DateFormatter } from '../utils/dateFormatter';
+import { validateAndNormalizeHeaders } from '../validators/requestValidator';
+import { FileSystem, nodeFs } from './fsWrapper';
 
 export async function generateFile(request: Request): Promise<string> {
   return generateFileWithFs(request, nodeFs);
@@ -18,19 +18,19 @@ export async function generateFile(request: Request): Promise<string> {
 export async function generateFileWithFs(request: Request, fs: FileSystem): Promise<string> {
   // Normalize the request (handle header validation)
   const normalizedRequest = validateAndNormalizeHeaders(request);
-  
+
   const now = DateTime.now();
-  const timestamp = now.toFormat("yyyyLLdd_HHmmss");
+  const timestamp = now.toFormat('yyyyLLdd_HHmmss');
   const fileType = normalizedRequest.fileType;
-  
-  const outputDir = normalizedRequest.outputPath || path.join(process.cwd(), "output");
+
+  const outputDir = normalizedRequest.outputPath || path.join(process.cwd(), 'output');
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
   // Generate file based on type
   switch (fileType) {
-    case "SDDirect":
+    case 'SDDirect':
       return generateSDDirectFile(normalizedRequest, fs, timestamp, outputDir);
-    case "EaziPay":
+    case 'EaziPay':
       return generateEaziPayFile(normalizedRequest, fs, timestamp, outputDir);
     default:
       throw new Error(`Unsupported file type: ${fileType}`);
@@ -41,9 +41,9 @@ export async function generateFileWithFs(request: Request, fs: FileSystem): Prom
  * Generate SDDirect file (existing logic)
  */
 async function generateSDDirectFile(
-  request: Request, 
-  fs: FileSystem, 
-  timestamp: string, 
+  request: Request,
+  fs: FileSystem,
+  timestamp: string,
   outputDir: string
 ): Promise<string> {
   const numberOfRows = request.numberOfRows ?? 15;
@@ -51,16 +51,25 @@ async function generateSDDirectFile(
   const includeHeaders = request.includeHeaders ?? true;
   const includeOptionalFields = request.includeOptionalFields ?? true;
   const fileType = request.fileType;
-  const extension = "csv";
+  const extension = 'csv';
 
   // Determine columns per requirements
   const requiredFields = [
-    "Destination Account Name","Destination Sort Code","Destination Account Number","Payment Reference","Amount","Transaction code"
+    'Destination Account Name',
+    'Destination Sort Code',
+    'Destination Account Number',
+    'Payment Reference',
+    'Amount',
+    'Transaction code',
   ];
   const allOptionalFields = [
-    "Realtime Information Checksum","Pay Date","Originating Sort Code","Originating Account Number","Originating Account Name"
+    'Realtime Information Checksum',
+    'Pay Date',
+    'Originating Sort Code',
+    'Originating Account Number',
+    'Originating Account Name',
   ];
-  
+
   // Always include all optional columns if any optional field is requested
   let headers: string[];
   if (includeOptionalFields === false) {
@@ -68,7 +77,7 @@ async function generateSDDirectFile(
   } else {
     headers = [...requiredFields, ...allOptionalFields];
   }
-  const columnCount = headers.length.toString().padStart(2, "0");
+  const columnCount = headers.length.toString().padStart(2, '0');
 
   // Generate rows
   const rows: string[][] = [];
@@ -76,7 +85,7 @@ async function generateSDDirectFile(
   if (hasInvalidRows) {
     invalidRows = Math.min(Math.floor(numberOfRows / 2), request.canInlineEdit ? 49 : numberOfRows);
   }
-  
+
   for (let i = 0; i < numberOfRows; i++) {
     let row: Record<string, unknown>;
     if (hasInvalidRows && i < invalidRows) {
@@ -84,35 +93,35 @@ async function generateSDDirectFile(
     } else {
       row = generateValidSDDirectRow(request);
     }
-    
+
     // Only populate requested optional fields, others blank
-    const populatedRow = headers.map(h => {
-      if (requiredFields.includes(h)) return String(row[h] ?? "");
-      if (includeOptionalFields === true) return String(row[h] ?? "");
+    const populatedRow = headers.map((h) => {
+      if (requiredFields.includes(h)) return String(row[h] ?? '');
+      if (includeOptionalFields === true) return String(row[h] ?? '');
       if (Array.isArray(includeOptionalFields)) {
         const fieldsAsStrings = includeOptionalFields.map(String);
-        return fieldsAsStrings.includes(h) ? String(row[h] ?? "") : "";
+        return fieldsAsStrings.includes(h) ? String(row[h] ?? '') : '';
       }
-      return "";
+      return '';
     });
     rows.push(populatedRow);
   }
 
   // File naming
-  const validity = hasInvalidRows ? "I" : "V";
-  const headerFlag = includeHeaders ? "_H" : "NH";
+  const validity = hasInvalidRows ? 'I' : 'V';
+  const headerFlag = includeHeaders ? '_H' : 'NH';
   const filename = `${fileType}_${columnCount}_x_${numberOfRows}${headerFlag}_${validity}_${timestamp}.${extension}`;
   const filePath = path.join(outputDir, filename);
 
   // Write file
   const content = [];
   if (includeHeaders) {
-    content.push(headers.join(","));
+    content.push(headers.join(','));
   }
-  content.push(...rows.map(r => r.join(",")));
-  const fileContent = content.join("\n");
-  
-  fs.writeFileSync(filePath, fileContent, "utf8");
+  content.push(...rows.map((r) => r.join(',')));
+  const fileContent = content.join('\n');
+
+  fs.writeFileSync(filePath, fileContent, 'utf8');
   return filePath;
 }
 
@@ -128,12 +137,12 @@ async function generateEaziPayFile(
   const numberOfRows = request.numberOfRows ?? 15;
   const hasInvalidRows = request.hasInvalidRows ?? false;
   const fileType = request.fileType;
-  
+
   // EaziPay-specific logic
   const dateFormat = request.dateFormat || DateFormatter.getRandomDateFormat();
   const extension = getFileExtension(fileType);
   // Always 15 columns; last two trailer columns are empty by design
-  const columnCount = (15).toString().padStart(2, "0");
+  const columnCount = (15).toString().padStart(2, '0');
 
   // Generate rows
   const rows: string[][] = [];
@@ -143,22 +152,23 @@ async function generateEaziPayFile(
   }
 
   for (let i = 0; i < numberOfRows; i++) {
-    const rowData = (hasInvalidRows && i > 1 && i < invalidRows)
-      ? generateInvalidEaziPayRow(request, dateFormat)
-      : generateValidEaziPayRow(request, dateFormat);
+    const rowData =
+      hasInvalidRows && i > 1 && i < invalidRows
+        ? generateInvalidEaziPayRow(request, dateFormat)
+        : generateValidEaziPayRow(request, dateFormat);
     const rowArray = formatEaziPayRowAsArray(rowData);
     rows.push(rowArray);
   }
 
   // File naming (EaziPay never has headers)
-  const validity = hasInvalidRows ? "I" : "V";
-  const headerFlag = "NH"; // Always no headers for EaziPay
+  const validity = hasInvalidRows ? 'I' : 'V';
+  const headerFlag = 'NH'; // Always no headers for EaziPay
   const filename = `${fileType}_${columnCount}_x_${numberOfRows}_${headerFlag}_${validity}_${timestamp}.${extension}`;
   const filePath = path.join(outputDir, filename);
 
   // Write file (no headers for EaziPay)
-  const fileContent = rows.map(r => r.join(",")).join("\n");
-  fs.writeFileSync(filePath, fileContent, "utf8");
+  const fileContent = rows.map((r) => r.join(',')).join('\n');
+  fs.writeFileSync(filePath, fileContent, 'utf8');
   return filePath;
 }
 
@@ -167,15 +177,15 @@ async function generateEaziPayFile(
  */
 function getFileExtension(fileType: string): string {
   switch (fileType) {
-    case "SDDirect":
-      return "csv";
-    case "EaziPay":
-      return Math.random() < 0.5 ? "csv" : "txt";
-    case "Bacs18PaymentLines":
-      return "txt";
-    case "Bacs18StandardFile":
-      return "bacs";
+    case 'SDDirect':
+      return 'csv';
+    case 'EaziPay':
+      return Math.random() < 0.5 ? 'csv' : 'txt';
+    case 'Bacs18PaymentLines':
+      return 'txt';
+    case 'Bacs18StandardFile':
+      return 'bacs';
     default:
-      return "csv";
+      return 'csv';
   }
 }

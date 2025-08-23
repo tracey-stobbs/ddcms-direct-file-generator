@@ -8,7 +8,6 @@ nodejs, typescript, express, vitest
 
 ## Running the Application
 
-
 The application runs on port 3001 by default to avoid conflicts with other common applications.
 Do not use port 3000 as it is often used by other development servers.
 
@@ -39,6 +38,7 @@ Generated files follow this naming pattern:
 ```
 
 Where:
+
 - `[FileType]`: the file type that has been generated
 - `[COLUMNCOUNT]`: Number of columns in the file
   - `06`: Only required columns (no optional fields)
@@ -60,7 +60,7 @@ must contain unit tests
 
 - tests must live alongside the file it is testing with a format such as {filename.test.ts}
 
-- request.http is a file than can aide in user's manual testing.  It has no impact on the project, and must not become part of the application. It must also not be modified.
+- request.http is a file than can aide in user's manual testing. It has no impact on the project, and must not become part of the application. It must also not be modified.
 
 ## Endpoints
 
@@ -69,7 +69,7 @@ must contain unit tests
 
 ```typescript
 export interface Request {
-  fileType: "SDDirect" | "Bacs18PaymentLines" | "Bacs18StandardFile";
+  fileType: 'SDDirect' | 'Bacs18PaymentLines' | 'Bacs18StandardFile';
   canInlineEdit: boolean;
   includeHeaders?: boolean;
   numberOfRows?: number;
@@ -79,11 +79,12 @@ export interface Request {
   outputPath?: string;
 }
 ```
+
 When values are not provided, use these values:
 
 ```typescript
 export const defaultRequest: Request = {
-  fileType: "SDDirect",
+  fileType: 'SDDirect',
   canInlineEdit: true,
   includeHeaders: true,
   hasInvalidRows: false,
@@ -92,19 +93,20 @@ export const defaultRequest: Request = {
   defaultValues: {
     originatingAccountDetails: {
       canBeInvalid: true,
-      sortCode: "912291",
-      accountNumber: "51491194",
-      accountName: "Test Account"
-    }
-  }
+      sortCode: '912291',
+      accountNumber: '51491194',
+      accountName: 'Test Account',
+    },
+  },
 } as const;
-
 ```
+
 Some types are provided in `./types.ts` you must strive to use these types whenever possible, although you are allowed to created your own.
 
 ### File Storage
 
 Generated files are saved to the file system using the following logic:
+
 - If `outputPath` is specified in the request, the file will be saved to that location
 - If `outputPath` is not provided, files will be saved to a default `./output` directory relative to the application root
 - The filename follows the naming convention specified above: `[FileType]_[COLUMNCOUNT]_x_[ROWS]_[HEADERS]_[VALIDITY]_[TIMESTAMP].[extension]`
@@ -112,9 +114,11 @@ Generated files are saved to the file system using the following logic:
 ### API Response Format
 
 On successful file generation, the API should return:
+
 - The full path and filename of the generated file
 
 On error, the API should:
+
 - Log full details of the error for debugging purposes
 - Return a summary message to the client explaining what went wrong
 
@@ -123,7 +127,6 @@ If IncludeOptionalFields is true, the generated file must include generated data
 If IncludeOptionalFields is provided as an array, only the optional fields contained in that array should have data generated.
 
 If defaultValues is not undefined, and not an empty object, use the data that is specified for ALL rows, do not randomly generate. If IncludeOptionalFields is an array which doesn't include a property that exists in OptionalFields, then it should be assumed that IncludeOptionalFields also includes the property/properties specified in OptionalFields.
-
 
 ### FileTypes and FileFormats
 
@@ -140,7 +143,7 @@ The specification for these files are listed in the following files:
 
 - Use faker.js to generate random data
 - Use luxon for anything related to date/time.
-- All non-header rows should include randomly generated field data following the [Field-Level Validation Rules](../field-level-validation.md) .  The exception to this is when the data has been specified in the OptionalFields item in the request.
+- All non-header rows should include randomly generated field data following the [Field-Level Validation Rules](../field-level-validation.md) . The exception to this is when the data has been specified in the OptionalFields item in the request.
 
 - if the request body includes: `{    "hasInvalidRows": true    }`
   - then approximately 50% of the generated rows must have at least one, but no more than three, fields which do not adhere to [Field-Level Validation Rules](../field-level-validation.md).

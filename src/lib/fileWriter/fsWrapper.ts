@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync as nodeWriteFileSync } from "fs";
+import { existsSync, mkdirSync, writeFileSync as nodeWriteFileSync } from 'fs';
 
 export interface FileSystem {
   existsSync(path: string): boolean;

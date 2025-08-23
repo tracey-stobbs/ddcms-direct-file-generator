@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+coverage/
+
+# Generated assets
+output/
+
+# Editor/OS
+.vscode/
+.DS_Store
+Thumbs.db
