@@ -4,6 +4,8 @@ A Node.js API for generating DDCMS Direct files in predefined formats with rando
 
 Note: MCP server requirements and payload contracts live in `documentation/Phase 2 - MCP Server/DDCMS Direct MCP Server – Requirements.md`.
 
+Contributions welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines. 🙌
+
 ## MCP server (JSON-RPC 2.0 over stdio) ⚙️
 
 - Entry: `dist/mcp/server.js` (build first), npm script: `npm run start:mcp`.
@@ -14,6 +16,26 @@ Note: MCP server requirements and payload contracts live in `documentation/Phase
   - MethodNotFound (-32601) for unknown tools
   - InvalidParams (-32602) for validation failures (e.g., bad SUN)
   - InternalError (-32603) for unexpected exceptions
+
+### JSON-RPC error logging 🔕
+
+By default, the JSON-RPC server is quiet and does not print error logs to stderr. This keeps tests and CLI usage noise-free. If you want error logs, provide an `onError` listener when creating the router.
+
+File: `src/mcp/jsonrpc.ts`
+
+```ts
+import { JsonRpcRouter } from './jsonrpc';
+
+// Enable logging (example):
+const router = new JsonRpcRouter({
+  onError: (message, data) => {
+    // Prefer structured logging and avoid leaking sensitive data
+    console.error(JSON.stringify({ level: 'error', message, data }));
+  },
+});
+```
+
+If no listener is supplied, a no-op is used and errors are still returned to the client with standardized JSON-RPC error payloads.
 
 ### Common tools (Epic E5) 🧰
 
@@ -360,6 +382,20 @@ eazipay.http                   # EaziPay API test requests
 - Follow SOLID principles and design patterns
 - Use meaningful variable names and self-documenting code
 - See `documentation/REQUIREMENTS.md` and `IMPLEMENTATION_PLAN.md` for details
+
+### Backlog progress dashboard ♻️
+
+The traffic-light progress dashboard in the backlog is generated automatically.
+
+- Source backlog: `documentation/Phase 2 - MCP Server/DDCMS-Direct-MCP-Server-Backlog.md`
+- Update dashboard locally:
+
+```sh
+npm run backlog:update
+```
+
+- On commit, a pre-commit hook runs the updater, then lint and tests to keep the dashboard fresh and the repo healthy.
+- Implementation details live in `src/tools/backlogProgress.ts` and `scripts/backlog-progress.ts`.
 
 ## Testing
 

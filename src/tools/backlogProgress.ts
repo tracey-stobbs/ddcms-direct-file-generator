@@ -1,6 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 
+// Progress dashboard generator
+// See documentation/Phase 2 - MCP Server/DDCMS-Direct-MCP-Server-Backlog.md ("progress dashboard")
+// Update via: npm run backlog:update (uses scripts/backlog-progress.ts)
+
 export type LightCounts = { green: number; yellow: number; red: number; white: number };
 export type EpicCounts = { code: string; title: string; counts: LightCounts };
 
@@ -104,7 +108,7 @@ export function renderDashboard(epics: EpicCounts[], overall: LightCounts, openQ
   // Table header uses the legend ordering
   lines.push('| Scope | 🟢 Done | 🟡 In Progress/Review | 🔴 Blocked | ⚪ To Do |');
   lines.push('|:--|--:|--:|--:|--:|');
-  const row = (scope: string, c: LightCounts) => `| ${scope} | ${c.green} | ${c.yellow} | ${c.red} | ${c.white} |`;
+  const row = (scope: string, c: LightCounts): string => `| ${scope} | ${c.green} | ${c.yellow} | ${c.red} | ${c.white} |`;
   lines.push(row('Overall', overall));
   for (const e of epics) {
     lines.push(row(`${e.code} ${e.title}`, e.counts));
