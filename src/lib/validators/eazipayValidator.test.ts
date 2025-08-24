@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { EaziPayValidator } from './eazipayValidator';
-import type { EaziPayTrailerFormat } from '../types';
 
 describe('EaziPayValidator', () => {
   describe('validateFixedZero', () => {
@@ -128,70 +127,9 @@ describe('EaziPayValidator', () => {
     });
   });
 
-  describe('validateEaziPayTrailer', () => {
-    it('should validate quoted trailer format', () => {
-      const quotedTrailer = '",,,,,,,,"';
-      expect(EaziPayValidator.validateEaziPayTrailer(quotedTrailer)).toBe('quoted');
-    });
-
-    it('should validate unquoted trailer format', () => {
-      const unquotedTrailer = ',,,,,,,,,';
-      expect(EaziPayValidator.validateEaziPayTrailer(unquotedTrailer)).toBe('unquoted');
-    });
-
-    it('should reject invalid trailer formats', () => {
-      const invalidTrailers = [
-        ',,,,,,,,',   // 8 commas instead of 9
-        ',,,,,,,,,,', // 10 commas instead of 9
-        '",,,,,,,,',  // Missing closing quote
-        ',,,,,,,,"',  // Missing opening quote
-        '","',        // Wrong content
-        '',           // Empty string
-        'invalid',    // Random string
-        '",,,,,,,,,,"' // Too many commas in quotes
-      ];
-
-      invalidTrailers.forEach(trailer => {
-        expect(() => {
-          EaziPayValidator.validateEaziPayTrailer(trailer);
-        }).toThrow(`Invalid EaziPayTrailer format`);
-      });
-    });
-  });
-
-  describe('generateValidTrailer', () => {
-    it('should generate quoted trailer', () => {
-      const trailer = EaziPayValidator.generateValidTrailer('quoted');
-      expect(trailer).toBe('",,,,,,,,"');
-      expect(EaziPayValidator.validateEaziPayTrailer(trailer)).toBe('quoted');
-    });
-
-    it('should generate unquoted trailer', () => {
-      const trailer = EaziPayValidator.generateValidTrailer('unquoted');
-      expect(trailer).toBe(',,,,,,,,,');
-      expect(EaziPayValidator.validateEaziPayTrailer(trailer)).toBe('unquoted');
-    });
-
-    it('should throw error for unknown format', () => {
-      expect(() => {
-        EaziPayValidator.generateValidTrailer('invalid' as EaziPayTrailerFormat);
-      }).toThrow('Unknown trailer format: invalid');
-    });
-  });
-
   describe('getColumnCount', () => {
-    it('should return 15 for quoted format', () => {
-      expect(EaziPayValidator.getColumnCount('quoted')).toBe(15);
-    });
-
-    it('should return 23 for unquoted format', () => {
-      expect(EaziPayValidator.getColumnCount('unquoted')).toBe(23);
-    });
-
-    it('should throw error for unknown format', () => {
-      expect(() => {
-        EaziPayValidator.getColumnCount('invalid' as EaziPayTrailerFormat);
-      }).toThrow('Unknown trailer format: invalid');
+    it('should return the fixed column count', () => {
+      expect(EaziPayValidator.getColumnCount()).toBe(14);
     });
   });
 
@@ -237,7 +175,7 @@ describe('EaziPayValidator', () => {
       empty: undefined,
       sunNumber: undefined,
       transactionCode: '17',
-      eaziPayTrailer: '",,,,,,,,"'
+  // trailer removed
     };
 
     it('should validate all valid fields', () => {
@@ -277,10 +215,10 @@ describe('EaziPayValidator', () => {
     it('should catch trailer errors', () => {
       const result = EaziPayValidator.validateAllFields({
         ...validFields,
-        eaziPayTrailer: 'invalid'
+        // trailer validation removed
       });
-      expect(result.isValid).toBe(false);
-      expect(result.errors.some(error => error.includes('Invalid EaziPayTrailer format'))).toBe(true);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toHaveLength(0);
     });
 
     it('should catch multiple errors', () => {
@@ -289,10 +227,10 @@ describe('EaziPayValidator', () => {
         empty: null,
         sunNumber: '12345',
         transactionCode: '17',
-        eaziPayTrailer: 'invalid'
+        // trailer removed
       });
       expect(result.isValid).toBe(false);
-      expect(result.errors).toHaveLength(4);
+      expect(result.errors).toHaveLength(3);
     });
 
     it('should validate fields with SUN number allowed', () => {

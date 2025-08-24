@@ -4,7 +4,7 @@ export type Prettify<T> = {
 
 // EaziPay-specific types
 export type EaziPayDateFormat = "YYYY-MM-DD" | "DD-MMM-YYYY" | "DD/MM/YYYY";
-export type EaziPayTrailerFormat = "quoted" | "unquoted";
+// Trailer has been removed; replaced by two empty columns at the end
 
 export interface EaziPaySpecificFields {
   transactionCode: string;
@@ -20,7 +20,9 @@ export interface EaziPaySpecificFields {
   sunName: string;
   paymentReference: string;
   sunNumber?: string;
-  eaziPayTrailer: string;
+  // Two empty trailer columns (always empty)
+  emptyTrailer1?: undefined;
+  emptyTrailer2?: undefined;
 }
 
 // Base request shared across endpoints

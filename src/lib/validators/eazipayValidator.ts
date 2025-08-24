@@ -1,5 +1,3 @@
-import type { EaziPayTrailerFormat } from '../types';
-
 /**
  * Validator for EaziPay-specific field validation rules
  * Handles Fixed Zero, Empty Field, SUN Number conditional logic, and EaziPayTrailer
@@ -49,57 +47,9 @@ export class EaziPayValidator {
     return true;
   }
 
-  /**
-   * Validate and determine EaziPayTrailer format
-   * @param trailer - The trailer string to validate
-   * @returns The trailer format type if valid
-   * @throws Error if trailer format is invalid
-   */
-  static validateEaziPayTrailer(trailer: string): EaziPayTrailerFormat {
-    const quotedPattern = '",,,,,,,,"';  // 9 commas within quotes
-    const unquotedPattern = ',,,,,,,,,';  // 9 consecutive commas
-    
-    if (trailer === quotedPattern) {
-      return 'quoted';
-    }
-    
-    if (trailer === unquotedPattern) {
-      return 'unquoted';
-    }
-    
-    throw new Error(`Invalid EaziPayTrailer format. Expected "${quotedPattern}" or "${unquotedPattern}", got "${trailer}"`);
-  }
-
-  /**
-   * Generate a valid trailer string for the specified format
-   * @param format - The trailer format to generate
-   * @returns Valid trailer string
-   */
-  static generateValidTrailer(format: EaziPayTrailerFormat): string {
-    switch (format) {
-      case 'quoted':
-        return '",,,,,,,,"';  // 9 commas within quotes
-      case 'unquoted':
-        return ',,,,,,,,,';   // 9 consecutive commas
-      default:
-        throw new Error(`Unknown trailer format: ${format}`);
-    }
-  }
-
-  /**
-   * Get the column count for a given trailer format
-   * @param format - The trailer format
-   * @returns Number of columns (15 for quoted, 23 for unquoted)
-   */
-  static getColumnCount(format: EaziPayTrailerFormat): number {
-    switch (format) {
-      case 'quoted':
-        return 15;  // Trailer is one column
-      case 'unquoted':
-        return 23;  // Trailer expands to 9 columns (14 regular + 9 trailer = 23)
-      default:
-        throw new Error(`Unknown trailer format: ${format}`);
-    }
+  // Column count is fixed now (two empty trailer columns at the end)
+  static getColumnCount(): number {
+    return 14; // total columns output by formatEaziPayRowAsArray
   }
 
   /**
@@ -129,7 +79,6 @@ export class EaziPayValidator {
     empty: unknown;
     sunNumber: unknown;
     transactionCode: string;
-    eaziPayTrailer: string;
   }): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
@@ -146,13 +95,6 @@ export class EaziPayValidator {
     // Validate SUN Number
     if (!this.validateSunNumber(fields.sunNumber, fields.transactionCode)) {
       errors.push(`SUN Number invalid for transaction code ${fields.transactionCode}. Must be null/undefined for codes other than 0C, 0N, 0S`);
-    }
-
-    // Validate EaziPay Trailer
-    try {
-      this.validateEaziPayTrailer(fields.eaziPayTrailer);
-    } catch (error) {
-      errors.push((error as Error).message);
     }
 
     return {

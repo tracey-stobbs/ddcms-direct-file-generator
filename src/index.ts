@@ -111,7 +111,7 @@ async function buildRowsResponse(fileType: string, request: InternalRequest, num
   if (fileType === 'EaziPay') {
     const headers = getEaziPayHeaders().map((name, idx) => ({ name, value: idx }));
     const rows = Array.from({ length: numberOfRows }, (_, i) => {
-      const row = invalid && i !== 0 ? generateInvalidEaziPayRow(request, request.dateFormat ?? 'YYYY-MM-DD', 'unquoted') : generateValidEaziPayRow(request, request.dateFormat ?? 'YYYY-MM-DD', 'unquoted');
+      const row = invalid && i !== 0 ? generateInvalidEaziPayRow(request, request.dateFormat ?? 'YYYY-MM-DD') : generateValidEaziPayRow(request, request.dateFormat ?? 'YYYY-MM-DD');
       const arr = formatEaziPayRowAsArray(row);
       return { fields: arr.map((value, order) => ({ value, order })) };
     });

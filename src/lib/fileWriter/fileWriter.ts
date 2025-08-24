@@ -137,9 +137,8 @@ async function generateEaziPayFile(
   
   // EaziPay-specific logic
   const dateFormat = request.dateFormat || DateFormatter.getRandomDateFormat();
-  const trailerFormat = Math.random() < 0.5 ? 'quoted' : 'unquoted';
   const extension = getFileExtension(fileType);
-  const columnCount = EaziPayValidator.getColumnCount(trailerFormat).toString().padStart(2, "0");
+  const columnCount = EaziPayValidator.getColumnCount().toString().padStart(2, "0");
 
   // Generate rows
   const rows: string[][] = [];
@@ -150,10 +149,10 @@ async function generateEaziPayFile(
 
   for (let i = 0; i < numberOfRows; i++) {
     let rowData;
-    if (hasInvalidRows && i >1 && i < invalidRows) {
-      rowData = generateInvalidEaziPayRow(request, dateFormat, trailerFormat);
+    if (hasInvalidRows && i > 1 && i < invalidRows) {
+      rowData = generateInvalidEaziPayRow(request, dateFormat);
     } else {
-      rowData = generateValidEaziPayRow(request, dateFormat, trailerFormat);
+      rowData = generateValidEaziPayRow(request, dateFormat);
     }
     
     const rowArray = formatEaziPayRowAsArray(rowData);
