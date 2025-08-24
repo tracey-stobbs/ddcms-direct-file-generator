@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { EaziPayDateFormat, Request } from '../types';
 import { EaziPayValidator } from '../validators/eazipayValidator';
 import {
-  formatEaziPayRowAsArray,
-  generateInvalidEaziPayRow,
-  generateValidEaziPayRow,
-  getEaziPayHeaders
+    formatEaziPayRowAsArray,
+    generateInvalidEaziPayRow,
+    generateValidEaziPayRow,
+    getEaziPayHeaders
 } from './eazipay';
 
 describe('EaziPay Generator', () => {

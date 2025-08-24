@@ -24,8 +24,8 @@ export function generateValidEaziPayRow(
     transactionCode,
     originatingSortCode: originatingDetails.sortCode,
     originatingAccountNumber: originatingDetails.accountNumber,
-    destinationSortCode: faker.finance.routingNumber().slice(0, 6),
-    destinationAccountNumber: faker.finance.account(8),
+  destinationSortCode: faker.finance.routingNumber().slice(0, 6),
+  destinationAccountNumber: faker.finance.accountNumber(8),
     destinationAccountName: faker.company.name().slice(0, 18),
     fixedZero: 0,
     amount: generateAmount(transactionCode),
@@ -68,7 +68,7 @@ export function generateInvalidEaziPayRow(
   ];
   
   // Randomly pick 1-3 fields to invalidate
-  const numInvalid = faker.datatype.number({ min: 1, max: 3 });
+  const numInvalid = faker.number.int({ min: 1, max: 3 });
   const fieldsToInvalidate = faker.helpers.shuffle(invalidatableFields).slice(0, numInvalid);
   
   for (const fieldName of fieldsToInvalidate) {
@@ -117,7 +117,7 @@ function getOriginatingDetails(request: Request): { sortCode: string; accountNum
   const details = request.defaultValues?.originatingAccountDetails;
   return {
     sortCode: details?.sortCode || faker.finance.routingNumber().slice(0, 6),
-    accountNumber: details?.accountNumber || faker.finance.account(8),
+    accountNumber: details?.accountNumber || faker.finance.accountNumber(8),
     accountName: details?.accountName || faker.company.name().slice(0, 18)
   };
 }
@@ -127,7 +127,7 @@ function getOriginatingDetails(request: Request): { sortCode: string; accountNum
  * Must be > 6 and < 18 characters, start with alphanumeric, not start with "DDIC" or space
  */
 function generatePaymentReference(): string {
-  let ref = faker.random.alphaNumeric(faker.datatype.number({ min: 7, max: 17 }));
+  let ref = faker.string.alphanumeric(faker.number.int({ min: 7, max: 17 }));
   
   // Ensure it meets validation rules
   while (
@@ -135,7 +135,7 @@ function generatePaymentReference(): string {
     /^([A-Za-z0-9])\\1+$/.test(ref) || // Not all identical characters
     ref.length <= 6 || ref.length >= 18 // Length constraints
   ) {
-    ref = faker.random.alphaNumeric(faker.datatype.number({ min: 7, max: 17 }));
+  ref = faker.string.alphanumeric(faker.number.int({ min: 7, max: 17 }));
   }
   
   return ref;
@@ -150,7 +150,7 @@ function generateAmount(transactionCode: string): number {
     return 0;
   }
   
-  return faker.datatype.number({ min: 1, max: 999999 });
+  return faker.number.int({ min: 1, max: 999999 });
 }
 
 /**
@@ -165,7 +165,7 @@ function generateProcessingDate(transactionCode: string, dateFormat: EaziPayDate
     targetDate = AddWorkingDays(today, 2);
   } else {
     // At least 2 working days, up to 30 days in future
-    const workingDays = faker.datatype.number({ min: 2, max: 30 });
+  const workingDays = faker.number.int({ min: 2, max: 30 });
     targetDate = AddWorkingDays(today, workingDays);
   }
   
@@ -183,7 +183,7 @@ function generateSunNumber(transactionCode: string): string | undefined {
   
   // For allowed transaction codes, randomly decide whether to include SUN number
   if (faker.datatype.boolean()) {
-    return faker.random.alphaNumeric(faker.datatype.number({ min: 5, max: 10 }));
+    return faker.string.alphanumeric(faker.number.int({ min: 5, max: 10 }));
   }
   
   return undefined;
@@ -199,31 +199,31 @@ function generateInvalidFieldValue(fieldName: string, transactionCode: string): 
       
     case 'originatingSortCode':
     case 'destinationSortCode':
-      return faker.random.alpha({ count: 6 }); // Non-numeric
+  return faker.string.alpha({ length: 6 }); // Non-numeric
       
     case 'originatingAccountNumber':
     case 'destinationAccountNumber':
-      return faker.random.alpha({ count: 8 }); // Non-numeric
+  return faker.string.alpha({ length: 8 }); // Non-numeric
       
     case 'destinationAccountName':
-      return faker.random.alpha({ count: 25 }); // Too long (>18 chars)
+  return faker.string.alpha({ length: 25 }); // Too long (>18 chars)
       
     case 'bacsReference':
-      return 'DDIC' + faker.random.alphaNumeric(5); // Starts with DDIC (invalid)
+  return 'DDIC' + faker.string.alphanumeric(5); // Starts with DDIC (invalid)
       
     case 'amount':
       return -999; // Negative amount
       
     case 'fixedZero':
-      return faker.datatype.number({ min: 1, max: 10 }); // Not zero
+  return faker.number.int({ min: 1, max: 10 }); // Not zero
       
     case 'sunNumber':
       // If transaction code doesn't allow SUN number, but we provide one anyway
       if (!EaziPayValidator.isSunNumberAllowed(transactionCode)) {
-        return faker.random.alphaNumeric(5); // Invalid because not allowed
+  return faker.string.alphanumeric(5); // Invalid because not allowed
       }
       // If allowed, return valid value (this shouldn't make it invalid, but we need some invalid value)
-      return faker.random.alpha({ count: 50 }); // Too long
+  return faker.string.alpha({ length: 50 }); // Too long
       
     case 'eaziPayTrailer':
       return faker.helpers.arrayElement([',,,,,,,,', ',,,,,,,,,,', 'invalid']); // Wrong comma count or invalid
