@@ -35,7 +35,7 @@ export function generateValidEaziPayRow(
     sunName: faker.company.name().slice(0, 18),
     paymentReference: generatePaymentReference(),
     sunNumber: generateSunNumber(transactionCode),
-    eaziPayTrailer: EaziPayValidator.generateValidTrailer("unquoted")
+  eaziPayTrailer: EaziPayValidator.generateValidTrailer(trailerFormat)
   };
 }
 
@@ -267,9 +267,11 @@ export function formatEaziPayRowAsArray(fields: EaziPaySpecificFields): string[]
  * @returns Promise resolving to the generated file path
  */
 export async function generateEaziPayFile(request: Request, fs: FileSystem): Promise<string> {
-  // Import here to avoid circular dependency
+  // Deprecated in new API flow; kept for backward compatibility in tests
   const { generateFileWithFs } = await import("../fileWriter/fileWriter");
-  return generateFileWithFs(request, fs);
+  const sun = request.defaultValues?.originatingAccountDetails?.sortCode ?? "DEFAULT";
+  const result = await generateFileWithFs(request, fs, sun);
+  return result.filePath;
 }
 
 /**

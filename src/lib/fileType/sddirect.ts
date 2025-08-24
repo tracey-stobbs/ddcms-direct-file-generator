@@ -1,5 +1,8 @@
 import { faker } from "@faker-js/faker";
 import { DateTime } from "luxon";
+import { generateFileWithFs } from "../fileWriter/fileWriter";
+import type { FileSystem } from "../fileWriter/fsWrapper";
+import { Request } from "../types";
 
 // Helper: Generate a valid payment reference
 function generatePaymentReference(): string {
@@ -18,7 +21,7 @@ function generatePayDate(): string {
   return DateTime.now().plus({ days }).toFormat("yyyyLLdd");
 }
 
-function getOriginatingDetails(request: Request) {
+function getOriginatingDetails(request: Request): Record<string, string> {
   const details = request.defaultValues?.originatingAccountDetails;
   return {
     "Originating Sort Code": details?.sortCode || faker.finance.routingNumber(),
@@ -79,9 +82,9 @@ export function generateInvalidSDDirectRow(request: Request): Record<string, unk
   }
   return row;
 }
-import { Request } from "../types";
-import { generateFileWithFs } from "../fileWriter/fileWriter";
-export async function generateSDDirectFile(request: Request, fs: any): Promise<string> {
+export async function generateSDDirectFile(request: Request, fs: FileSystem): Promise<string> {
   // Delegate to the tested fileWriter logic
-  return generateFileWithFs(request, fs);
+  const sun = request.defaultValues?.originatingAccountDetails?.sortCode ?? "DEFAULT";
+  const result = await generateFileWithFs(request, fs, sun);
+  return result.filePath;
 }

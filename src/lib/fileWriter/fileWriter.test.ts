@@ -1,6 +1,7 @@
-import { generateFileWithFs } from "./fileWriter.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request } from "../types.js";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { generateFileWithFs } from "./fileWriter.js";
+import type { FileSystem } from "./fsWrapper.js";
 
 
 
@@ -10,7 +11,7 @@ describe("generateFileWithFs", () => {
   const existsSync = vi.fn(() => false);
   const mkdirSync = vi.fn();
   const writeFileSync = vi.fn();
-  const mockFs = { existsSync, mkdirSync, writeFileSync };
+  const mockFs: FileSystem = { existsSync, mkdirSync, writeFileSync };
 
   beforeEach(() => {
     existsSync.mockClear();
@@ -26,8 +27,8 @@ describe("generateFileWithFs", () => {
       hasInvalidRows: false,
       includeOptionalFields: true
     };
-    const filePath = await generateFileWithFs(request as Request, mockFs);
-    expect(filePath).toMatch(/SDDirect_11_x_2_H_V_\d{8}_\d{6}\.csv/);
+  const result = await generateFileWithFs(request as Request, mockFs, "TESTSUN");
+    expect(result.filePath).toMatch(/SDDirect_11_x_2_H_V_\d{8}_\d{6}\.csv/);
     expect(mkdirSync).toHaveBeenCalled();
     expect(writeFileSync).toHaveBeenCalled();
   });
@@ -39,7 +40,7 @@ describe("generateFileWithFs", () => {
       outputPath: "custom/output",
       numberOfRows: 1
     };
-    await generateFileWithFs(request as Request, mockFs);
+  await generateFileWithFs(request as Request, mockFs, "TESTSUN");
     expect(mkdirSync).toHaveBeenCalledWith("custom/output", { recursive: true });
   });
 
@@ -54,7 +55,9 @@ describe("generateFileWithFs", () => {
     };
     let capturedContent = "";
     writeFileSync.mockImplementation((filePath, content) => { capturedContent = content; });
-    await generateFileWithFs(request as Request, mockFs);
+  const result = await generateFileWithFs(request as Request, mockFs, "TESTSUN");
+    // Prefer returned content if provided
+    if (result?.fileContent) capturedContent = result.fileContent;
     const lines = capturedContent.split("\n");
     expect(lines[0].split(",").length).toBe(11); // header has all columns
     const dataRow = lines[1].split(",");

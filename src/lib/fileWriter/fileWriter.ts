@@ -12,19 +12,24 @@ import { EaziPayValidator } from "../validators/eazipayValidator";
 import { validateAndNormalizeHeaders } from "../validators/requestValidator";
 import { FileSystem, nodeFs } from "./fsWrapper";
 
-export async function generateFile(request: Request): Promise<string> {
-  return generateFileWithFs(request, nodeFs);
+export interface GeneratedFile {
+  filePath: string;
+  fileContent: string;
 }
 
-export async function generateFileWithFs(request: Request, fs: FileSystem): Promise<string> {
+export async function generateFile(request: Request, sun: string): Promise<GeneratedFile> {
+  return generateFileWithFs(request, nodeFs, sun);
+}
+
+export async function generateFileWithFs(request: Request, fs: FileSystem, sun: string): Promise<GeneratedFile> {
   // Normalize the request (handle header validation)
-  const normalizedRequest = validateAndNormalizeHeaders(request);
+  const normalizedRequest = validateAndNormalizeHeaders(request.fileType, request);
   
   const now = DateTime.now();
   const timestamp = now.toFormat("yyyyLLdd_HHmmss");
   const fileType = normalizedRequest.fileType;
   
-  const outputDir = normalizedRequest.outputPath || path.join(process.cwd(), "output");
+  const outputDir = normalizedRequest.outputPath || path.join(process.cwd(), "output", fileType, sun);
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
   // Generate file based on type
@@ -46,7 +51,7 @@ async function generateSDDirectFile(
   fs: FileSystem, 
   timestamp: string, 
   outputDir: string
-): Promise<string> {
+): Promise<GeneratedFile> {
   const numberOfRows = request.numberOfRows ?? 15;
   const hasInvalidRows = request.hasInvalidRows ?? false;
   const includeHeaders = request.includeHeaders ?? true;
@@ -114,7 +119,7 @@ async function generateSDDirectFile(
   const fileContent = content.join("\n");
   
   fs.writeFileSync(filePath, fileContent, "utf8");
-  return filePath;
+  return { filePath, fileContent };
 }
 
 /**
@@ -125,7 +130,7 @@ async function generateEaziPayFile(
   fs: FileSystem,
   timestamp: string,
   outputDir: string
-): Promise<string> {
+): Promise<GeneratedFile> {
   const numberOfRows = request.numberOfRows ?? 15;
   const hasInvalidRows = request.hasInvalidRows ?? false;
   const fileType = request.fileType;
@@ -164,7 +169,7 @@ async function generateEaziPayFile(
   // Write file (no headers for EaziPay)
   const fileContent = rows.map(r => r.join(",")).join("\n");
   fs.writeFileSync(filePath, fileContent, "utf8");
-  return filePath;
+  return { filePath, fileContent };
 }
 
 /**

@@ -23,21 +23,27 @@ export interface EaziPaySpecificFields {
   eaziPayTrailer: string;
 }
 
-export interface Request {
-  fileType:
-    | "SDDirect"
-    | "Bacs18PaymentLines"
-    | "Bacs18StandardFile"
-    | "EaziPay";
-  canInlineEdit: boolean;
-  includeHeaders?: boolean;
+// Base request shared across endpoints
+export interface BaseRequest {
+  // New optional processing date override
+  processingDate?: string;
+  // Renamed flag for inline editing
+  forInlineEditing?: boolean;
+  // Common options
   numberOfRows?: number;
-  hasInvalidRows?: boolean;
   includeOptionalFields?: boolean | OptionalField[];
-  defaultValues?: OptionalFieldItem;
-  outputPath?: string;
   dateFormat?: EaziPayDateFormat; // EaziPay only
 }
+
+// Request body for the generate endpoint ONLY
+export interface GenerateRequest extends BaseRequest {
+  includeHeaders?: boolean;
+  hasInvalidRows?: boolean;
+  outputPath?: string;
+}
+
+// Request body for row preview endpoints (valid-row/invalid-row)
+export type RowPreviewRequest = BaseRequest;
 
 interface OptionalFieldObject {
   realtimeInformationChecksum?: string;
@@ -45,14 +51,14 @@ interface OptionalFieldObject {
   originatingAccountDetails?: OriginatingAccountDetails;
 }
 
-interface OriginatingAccountDetailOptions {
+export interface OriginatingAccountDetailOptions {
   canBeInvalid: boolean;
   sortCode?: string;
   accountNumber?: string;
   accountName?: string;
 }
 
-type OriginatingAccountDetails = Prettify<OriginatingAccountDetailOptions>;
+export type OriginatingAccountDetails = Prettify<OriginatingAccountDetailOptions>;
 
 export type OptionalFieldItem = Prettify<OptionalFieldObject>;
 
@@ -62,7 +68,8 @@ export type OptionalField = Prettify<
 
 export interface SuccessResponse {
   success: true;
-  filePath: string;
+  // Generated file content returned by /generate
+  fileContent: string;
 }
 
 export interface ErrorResponse {
@@ -72,6 +79,29 @@ export interface ErrorResponse {
 
 export type ApiResponse = SuccessResponse | ErrorResponse;
 
+// Internal legacy Request type used by generator code
+export interface Request {
+  fileType: "SDDirect" | "Bacs18PaymentLines" | "Bacs18StandardFile" | "EaziPay";
+  canInlineEdit: boolean;
+  includeHeaders?: boolean;
+  numberOfRows?: number;
+  hasInvalidRows?: boolean;
+  includeOptionalFields?: boolean | OptionalField[];
+  defaultValues?: OptionalFieldItem;
+  outputPath?: string;
+  dateFormat?: EaziPayDateFormat; // EaziPay only
+  // New optional processing date override (external API may supply)
+  processingDate?: string;
+}
+
+export const defaultGenerateRequest: GenerateRequest = {
+  forInlineEditing: true,
+  includeHeaders: true,
+  hasInvalidRows: false,
+  numberOfRows: 15,
+  includeOptionalFields: true,
+} as const;
+
 export const defaultRequest: Request = {
   fileType: "SDDirect",
   canInlineEdit: true,
@@ -79,12 +109,4 @@ export const defaultRequest: Request = {
   hasInvalidRows: false,
   numberOfRows: 15,
   includeOptionalFields: true,
-  defaultValues: {
-    originatingAccountDetails: {
-      canBeInvalid: true,
-      sortCode: "912291",
-      accountNumber: "51491194",
-      accountName: "Test Account",
-    },
-  },
 } as const;
