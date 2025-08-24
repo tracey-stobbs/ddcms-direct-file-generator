@@ -10,7 +10,8 @@
     "watch": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "issues:import": "ts-node src/scripts/github/issues-import.ts"
   },
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
