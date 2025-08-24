@@ -1,5 +1,7 @@
 # DDCMS Direct File Creator
 
+![Node Version](https://img.shields.io/badge/node-22.x-brightgreen)
+
 A Node.js API for generating DDCMS Direct files in predefined formats with random, valid, or intentionally invalid data for testing purposes.
 
 ## Features
@@ -26,8 +28,12 @@ A Node.js API for generating DDCMS Direct files in predefined formats with rando
 
 ## Getting Started
 
+See also: [Contributing](./CONTRIBUTING.md) for Volta/nvm setup and workflow guidance.
+
 ### Prerequisites
-- Node.js (Latest LTS)
+- Node.js 22 LTS (recommended)
+  - Volta users: project pins Node via package.json (volta.node=22.17.0)
+  - nvm users: `.nvmrc` set to `22`
 - npm
 - **VS Code** (recommended IDE with configured workspace)
 
