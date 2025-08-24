@@ -13,11 +13,20 @@ Legend
 
 ## progress dashboard
 
-| Scope          | 🟢 Done | 🟡 In Progress/Review | 🔴 Blocked | ⚪ To Do |
-| :------------- | :-----: | :-------------------: | :--------: | :------: |
-| Overall        |    0    |           0           |     4      |    0     |
-| Open Questions |    0    |           0           |     4      |    0     |
-
+| Scope | 🟢 Done | 🟡 In Progress/Review | 🔴 Blocked | ⚪ To Do |
+|:--|:--:|:--:|:--:|:--:|
+| Overall | 17 | 0 | 4 | 18 |
+| E1 MCP server scaffolding | 3 | 0 | 0 | 0 |
+| E2 Core schemas and validation | 1 | 0 | 0 | 2 |
+| E3 EaziPay tools | 3 | 0 | 0 | 0 |
+| E4 SDDirect tools | 2 | 0 | 0 | 0 |
+| E5 Common tools | 5 | 0 | 0 | 0 |
+| E6 Observability & robustness | 0 | 0 | 0 | 3 |
+| E7 Testing | 0 | 0 | 0 | 3 |
+| E8 Docs & packaging | 1 | 0 | 0 | 1 |
+| E9 Rollout | 0 | 0 | 0 | 2 |
+| E10 Bacs18 | 2 | 0 | 0 | 7 |
+| Open Questions | 0 | 0 | 4 | 0 |
 ## guiding principles
 
 - Reuse existing generators/validators; keep adapters thin.

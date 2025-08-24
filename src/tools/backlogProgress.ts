@@ -41,8 +41,12 @@ function statusToLight(line: string): keyof LightCounts | null {
 }
 
 function parseEpicHeader(line: string): { code: string; title: string } | null {
-    // e.g., ## epic E1: MCP server scaffolding (M1)
-    const m = /^##\s+epic\s+(E\d+):\s+(.+)$/i.exec(line.trim());
+    // Accept headers like:
+    //   ## epic E1: Title (M1)
+    //   ## 🟢 epic E1: Title (M1)
+    //   ## :sparkles: epic E2: Title
+    // This regex allows optional non-alphanumeric markers (e.g., emoji) before the word 'epic'.
+    const m = /^##\s+(?:[^A-Za-z0-9]*\s*)?epic\s+(E\d+):\s+(.+)$/i.exec(line.trim());
     if (!m) return null;
     const code = m[1];
     const rawTitle = m[2];
