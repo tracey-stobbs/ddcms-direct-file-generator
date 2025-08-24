@@ -3,16 +3,16 @@
 A Node.js API for generating DDCMS Direct files in predefined formats with random, valid, or intentionally invalid data for testing purposes.
 
 ## Features
-- Single `/api/generate` endpoint (JSON, body optional)
+- Per-filetype API endpoints scoped by SUN
 - **Multiple File Formats:**
   - **SDDirect** (.csv) - Complete implementation
   - **EaziPay** (.csv/.txt) - Complete implementation ✨ **NEW**
   - **Bacs18PaymentLines** (.txt) - Future support
   - **Bacs18StandardFile** (.bacs) - Future support
-- **EaziPay Specific Features:** ✨ **NEW**
+- **EaziPay Specific Features:**
   - **3 Date Format Options**: YYYY-MM-DD, DD-MMM-YYYY, DD/MM/YYYY
   - **Smart Header Handling**: Always headerless (automatically overrides requests)
-  - **Dynamic Column Count**: 15 columns (quoted trailer) or 23 columns (unquoted trailer)
+  - **Fixed Column Count**: 14 columns (last column is an empty trailer placeholder)
   - **Random File Extensions**: Intelligent .csv/.txt selection
   - **Advanced Field Validation**: Fixed zero, empty fields, conditional SUN numbers
   - **Transaction Code Rules**: Special handling for 0C, 0N, 0S codes
@@ -73,95 +73,75 @@ npm run test
 
 ## API Usage
 
-### POST /api/generate
-- Accepts JSON body matching the `Request` interface (see `documentation/types.ts`)
-- Returns the full path of the generated file or an error summary
+New endpoints are namespaced by SUN and file type.
 
-#### SDDirect Example
+### POST /api/:sun/:filetype/generate
+- Body: GenerateRequest
+  - processingDate?: string
+  - forInlineEditing?: boolean
+  - numberOfRows?: number
+  - includeOptionalFields?: boolean | string[]
+  - dateFormat?: 'YYYY-MM-DD' | 'DD-MMM-YYYY' | 'DD/MM/YYYY' (EaziPay only)
+  - includeHeaders?: boolean (SDDirect only)
+  - hasInvalidRows?: boolean
+  - outputPath?: string
+- Returns: { success: true, fileContent: string } and sets header `X-Generated-File` with the relative file path
+
+Example (SDDirect):
 ```json
 {
-  "fileType": "SDDirect",
   "numberOfRows": 20,
   "hasInvalidRows": true,
-  "hasHeader": true
+  "includeHeaders": true
 }
 ```
 
-#### EaziPay Example  
+Example (EaziPay):
 ```json
 {
-  "fileType": "EaziPay",
   "numberOfRows": 10,
   "hasInvalidRows": false,
   "dateFormat": "DD-MMM-YYYY"
 }
 ```
 
-#### EaziPay Advanced Examples ✨ **NEW**
-```json
-// Basic EaziPay generation
-{
-  "fileType": "EaziPay",
-  "numberOfRows": 15,
-  "canInlineEdit": true
-}
-
-// EaziPay with specific date format
-{
-  "fileType": "EaziPay",
-  "numberOfRows": 50,
-  "dateFormat": "YYYY-MM-DD",
-  "hasInvalidRows": true,
-  "canInlineEdit": true
-}
-
-// EaziPay with header request (will be silently ignored)
-{
-  "fileType": "EaziPay",
-  "numberOfRows": 100,
-  "includeHeaders": true,  // Automatically overridden to false
-  "dateFormat": "DD/MM/YYYY",
-  "canInlineEdit": true
-}
-```
-
-#### Example Response
-```json
-{
-  "success": true,
-  "filePath": "output/EaziPay_23_x_10_NH_V_20250721_141500.txt"
-}
-```
+### POST /api/:sun/:filetype/valid-row
+### POST /api/:sun/:filetype/invalid-row
+- Body: RowPreviewRequest (same as GenerateRequest minus includeHeaders/hasInvalidRows/outputPath)
+- Returns:
+  - headers: { name: string, value: number }[]
+  - rows: { fields: { value: string | number | boolean, order: number }[] }[]
+  - metadata: object
 
 #### Filename Format
+- Output directory: `output/{filetype}/{SUN}/...`
 - **SDDirect**: `SDDirect_{columns}_{rows}_{header}_{validity}_{timestamp}.csv`
 - **EaziPay**: `EaziPay_{columns}_{rows}_{header}_{validity}_{timestamp}.{csv|txt}`
 
 Where:
-- `columns`: Number of columns in the file (15 for quoted trailer, 23 for unquoted)
-- `rows`: Number of data rows (always excludes headers for EaziPay)
-- `header`: Always `NH` (no header) for EaziPay
+- `columns`: Number of columns in the file (SDDirect varies; EaziPay fixed at 14)
+- `rows`: Number of data rows (EaziPay always headerless)
+- `header`: `H` or `NH` (EaziPay is always `NH`)
 - `validity`: `V` (valid data) or `I` (includes invalid data)
 - `timestamp`: YYYYMMDD_HHMMSS format
 
-## EaziPay File Format Specification ✨ **NEW**
+## EaziPay File Format Specification
 
-### Field Structure (15 fields in exact order)
-1. **Transaction Code** - One of: 01, 17, 18, 99, 0C, 0N, 0S
-2. **Originating Sort Code** - 6 digit numeric
-3. **Originating Account Number** - 8 digit numeric
-4. **Destination Sort Code** - 6 digit numeric
-5. **Destination Account Number** - 8 digit numeric
-6. **Destination Account Name** - Max 18 characters
-7. **Fixed Zero** - Always `0` (literal zero)
-8. **Amount** - Integer (0 for transaction codes 0C, 0N, 0S)
-9. **Processing Date** - Formatted according to dateFormat
-10. **Empty** - Always empty/undefined
-11. **SUN Name** - Max 18 characters
-12. **Payment Reference** - 7-17 characters, specific validation rules
-13. **SUN Number** - Optional, conditional on transaction code
-14. **BACS Reference** - (same as Payment Reference)  
-15. **EaziPayTrailer** - `",,,,,,,,"` (quoted) or `,,,,,,,,,` (unquoted)
+### Field Structure (14 fields in exact order)
+1. Transaction Code — One of: 01, 17, 18, 99, 0C, 0N, 0S
+2. Originating Sort Code — 6 digit numeric
+3. Originating Account Number — 8 digit numeric
+4. Destination Sort Code — 6 digit numeric
+5. Destination Account Number — 8 digit numeric
+6. Destination Account Name — Max 18 characters
+7. Fixed Zero — Always 0 (literal zero)
+8. Amount — Integer (0 for 0C, 0N, 0S)
+9. Processing Date — Formatted per dateFormat
+10. Empty — Always empty/undefined (renders as empty string)
+11. SUN Name — Max 18 characters
+12. Payment Reference — 7-17 chars, specific validation rules
+13. SUN Number — Optional; only allowed for 0C, 0N, 0S
+14. Empty Trailer 1 — Always empty string
 
 ### Date Format Options
 - **`"YYYY-MM-DD"`** → `2025-07-30`
@@ -170,10 +150,9 @@ Where:
 
 If not specified, a random format is selected for the entire file.
 
-### EaziPayTrailer Behavior
-- **Quoted format** (`",,,,,,,,"`) → **15 total columns** in file
-- **Unquoted format** (`,,,,,,,,,`) → **23 total columns** in file
-- Format is randomly selected per file generation
+### Trailer Behavior
+- Trailer field removed and replaced with a single empty trailing column.
+- EaziPay column count is fixed at 14.
 
 ### Special Validation Rules
 - **Fixed Zero**: Must always be exactly `0`
@@ -183,10 +162,10 @@ If not specified, a random format is selected for the entire file.
 - **Processing Date**: Exactly 2 working days in future for codes 0C, 0N, 0S
 
 ### File Characteristics
-- **Headers**: Never included (always headerless)
-- **Extensions**: Randomly selected `.csv` or `.txt`
-- **Column Count**: Varies (15 or 23) based on trailer format
-- **Working Days**: UK Bank Holiday aware calculations
+- Headers: Never included (always headerless)
+- Extensions: Randomly selected `.csv` or `.txt`
+- Column Count: Fixed at 14
+- Working Days: UK Bank Holiday aware calculations
 
 ## Project Structure
 
@@ -227,7 +206,7 @@ documentation/
 
 # HTTP Test Files
 SDDirect.http                   # SDDirect API test requests
-eazipay.http                   # EaziPay API test requests
+eazipay.http                    # EaziPay API test requests
 ```
 
 ## Technical Implementation
@@ -290,28 +269,25 @@ The project includes HTTP request files for manual testing with VS Code's REST C
 **Usage**: Install the REST Client extension in VS Code, then click "Send Request" above any HTTP request in these files. Variables like `{{number_of_rows}}` are defined at the top of each file for easy modification.
 
 ## File Format Support Status
-- ✅ **SDDirect** - Complete implementation (Phase 1)
-- ✅ **EaziPay** - Complete implementation (Phase 2.1) ⭐ **NEWLY COMPLETED**
-  - ✅ 3 Date format options
-  - ✅ Dynamic column count (15/23)
+- ✅ SDDirect — Complete implementation (Phase 1)
+- ✅ EaziPay — Complete implementation (Phase 2.2)
+  - ✅ 3 date format options
+  - ✅ Fixed 14 column output
   - ✅ Random file extensions (.csv/.txt)
   - ✅ Advanced field validation
   - ✅ Transaction code special handling
   - ✅ Working day calculations
-  - ✅ 100% test coverage (132 tests)
-- 🚧 **Bacs18PaymentLines** - Planned (Phase 3)
-- 🚧 **Bacs18StandardFile** - Planned (Phase 4)
+  - ✅ 100% test coverage
+- 🚧 Bacs18PaymentLines — Planned (Phase 3)
+- 🚧 Bacs18StandardFile — Planned (Phase 4)
 
 ## Recent Updates 📈
-- **Phase 2.1 Complete ✅**: Full EaziPay implementation with comprehensive features
-- **Advanced Date Formatting**: 3 EaziPay date format options with consistent file-wide formatting
-- **Dynamic Column Handling**: Smart 15/23 column generation based on trailer format
-- **Enhanced Field Validation**: EaziPay-specific validation rules including conditional SUN numbers
-- **Random File Extensions**: Intelligent .csv/.txt selection for EaziPay files
-- **Header Override Logic**: Automatic headerless enforcement for EaziPay
-- **Working Day Calculations**: UK Bank Holiday aware date calculations for processing dates
-- **100% Test Coverage**: 132 passing tests with comprehensive unit and integration coverage
-- **Performance Tested**: Validated with 1000+ row file generation
+- Phase 2.2: New per-filetype endpoints: `/api/:sun/:filetype/generate`, `/valid-row`, `/invalid-row`
+- Generate returns fileContent and sets `X-Generated-File` header with relative path
+- Public API: added `processingDate`, renamed `canInlineEdit` → `forInlineEditing`, removed `fileType` from body
+- Row preview responses: headers `{name, value}`, rows `{fields:[{value, order}]}`
+- EaziPay: trailer removed; fixed 14 columns with last column as empty
+- Test suite: 123 passing tests (Vitest)
 
 ## License
 MIT
