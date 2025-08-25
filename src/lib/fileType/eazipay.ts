@@ -5,6 +5,8 @@ import type { FileSystem } from "../fileWriter/fsWrapper";
 import type { EaziPayDateFormat, EaziPaySpecificFields, Request } from "../types";
 import { DateFormatter } from "../utils/dateFormatter";
 import { EaziPayValidator } from "../validators/eazipayValidator";
+import type { FileTypeAdapter, PreviewParams } from "./adapter";
+import { computeInvalidRowsCap, toCsvLine, toInternalRequest } from "./adapter";
 
 /**
  * Generate valid EaziPay row data
@@ -290,3 +292,47 @@ export function getEaziPayHeaders(): string[] {
   'Empty Trailer 1'
   ];
 }
+
+export const eaziPayAdapter: FileTypeAdapter = {
+  buildPreviewRows(params: PreviewParams): string[][] {
+    const numberOfRows = params.numberOfRows ?? 15;
+    const dateFormat = params.dateFormat || DateFormatter.getRandomDateFormat();
+    const rows: string[][] = [];
+    const invalidRows = params.hasInvalidRows ? computeInvalidRowsCap(numberOfRows, params.forInlineEditing) : 0;
+    for (let i = 0; i < numberOfRows; i++) {
+      const rowData = params.hasInvalidRows && i > 1 && i < invalidRows
+        ? generateInvalidEaziPayRow(toInternalRequest("EaziPay", params), dateFormat)
+        : generateValidEaziPayRow(toInternalRequest("EaziPay", params), dateFormat);
+      rows.push(formatEaziPayRowAsArray(rowData));
+    }
+    return rows;
+  },
+  serialize(rows: string[][]): string {
+    return rows.map((r) => toCsvLine(r)).join("\n");
+  },
+  previewMeta(rows: string[][], params: PreviewParams) {
+    return {
+      rows: rows.length,
+      columns: EaziPayValidator.getColumnCount(),
+      header: "NH",
+      validity: params.hasInvalidRows ? "I" : "V",
+      fileType: "EaziPay",
+      sun: params.sun,
+    };
+  },
+  buildRow(params) {
+    const req = toInternalRequest("EaziPay", {
+      sun: params.sun,
+      fileType: "EaziPay",
+      numberOfRows: 1,
+      forInlineEditing: params.forInlineEditing,
+      processingDate: params.processingDate,
+      dateFormat: params.dateFormat,
+    });
+    const data = params.validity === "invalid"
+      ? generateInvalidEaziPayRow(req, params.dateFormat ?? "YYYY-MM-DD")
+      : generateValidEaziPayRow(req, params.dateFormat ?? "YYYY-MM-DD");
+    const fields = formatEaziPayRowAsArray(data);
+    return { row: { fields, asLine: toCsvLine(fields) } };
+  },
+};

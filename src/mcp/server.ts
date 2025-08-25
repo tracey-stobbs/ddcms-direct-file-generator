@@ -1,5 +1,9 @@
 import { JsonValue, McpRouter } from "./router";
 import { loadSchema } from "./schemaLoader";
+// Default service implementations (kept thin; real logic lives outside src/mcp)
+import * as calendar from "../services/calendar";
+import * as fileSvc from "../services/file";
+import * as row from "../services/row";
 
 // Contracts-only service interfaces (implementations live outside src/mcp)
 export interface FileService {
@@ -46,6 +50,18 @@ export function createMcpRouter(services: McpServices): McpRouter {
   });
 
   return router;
+}
+
+// Convenience factory for default services wiring
+export function createDefaultMcpRouter(): McpRouter {
+  // Adapt typed services to JsonValue-based FileService contract
+  const file: FileService = {
+    async preview(params) {
+      // Params have already been schema-validated; safe to cast.
+      return fileSvc.preview(params as unknown as Parameters<typeof fileSvc.preview>[0]) as unknown as JsonValue;
+    },
+  };
+  return createMcpRouter({ file, row, calendar });
 }
 
 // Optional: tiny JSON-RPC like envelope types

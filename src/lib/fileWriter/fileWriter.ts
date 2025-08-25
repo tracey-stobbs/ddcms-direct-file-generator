@@ -1,16 +1,23 @@
+/**
+ * File generation orchestrator
+ *
+ * Design:
+ * - generateFile() produces file content entirely in-memory using filetype adapters.
+ * - No filesystem writes occur by default; we return a deterministic filePath and the content.
+ * - generateFileWithFs() is a thin wrapper that persists the in-memory result using a provided FS.
+ *
+ * Contract:
+ * - Input: Request (fileType, numberOfRows, includeHeaders, includeOptionalFields, hasInvalidRows, etc.), SUN
+ * - Output: { filePath, fileContent }
+ *   - filePath is a virtual path rooted at output/[fileType]/[SUN] unless request.outputPath is set.
+ *   - fileContent is the serialized file as produced by the adapter.
+ */
 import { DateTime } from "luxon";
 import path from "path";
-import {
-  formatEaziPayRowAsArray,
-  generateInvalidEaziPayRow,
-  generateValidEaziPayRow
-} from "../fileType/eazipay";
-import { generateInvalidSDDirectRow, generateValidSDDirectRow } from "../fileType/sddirect";
-import { Request } from "../types";
-import { DateFormatter } from "../utils/dateFormatter";
-import { EaziPayValidator } from "../validators/eazipayValidator";
-import { validateAndNormalizeHeaders } from "../validators/requestValidator";
-import { FileSystem, nodeFs } from "./fsWrapper";
+import type { PreviewParams } from "../fileType/adapter";
+import { getFileTypeAdapter } from "../fileType/factory";
+import type { Request } from "../types";
+import { FileSystem } from "./fsWrapper";
 
 export interface GeneratedFile {
   filePath: string;
@@ -18,157 +25,59 @@ export interface GeneratedFile {
 }
 
 export async function generateFile(request: Request, sun: string): Promise<GeneratedFile> {
-  return generateFileWithFs(request, nodeFs, sun);
+  // Generate the file entirely in-memory (no filesystem writes)
+  return generateFileInMemory(request, sun);
 }
 
 export async function generateFileWithFs(request: Request, fs: FileSystem, sun: string): Promise<GeneratedFile> {
-  // Normalize the request (handle header validation)
-  const normalizedRequest = validateAndNormalizeHeaders(request.fileType, request);
-  
-  const now = DateTime.now();
-  const timestamp = now.toFormat("yyyyLLdd_HHmmss");
-  const fileType = normalizedRequest.fileType;
-  
-  const outputDir = normalizedRequest.outputPath || path.join(process.cwd(), "output", fileType, sun);
-  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
-
-  // Generate file based on type
-  switch (fileType) {
-    case "SDDirect":
-      return generateSDDirectFile(normalizedRequest, fs, timestamp, outputDir);
-    case "EaziPay":
-      return generateEaziPayFile(normalizedRequest, fs, timestamp, outputDir);
-    default:
-      throw new Error(`Unsupported file type: ${fileType}`);
-  }
+  // Back-compat: generate in memory, then persist to disk using provided fs
+  const intendedDir = request.outputPath || path.join(process.cwd(), "output", request.fileType, sun);
+  if (!fs.existsSync(intendedDir)) fs.mkdirSync(intendedDir, { recursive: true });
+  const generated = await generateFileInMemory(request, sun);
+  fs.writeFileSync(generated.filePath, generated.fileContent, "utf8");
+  return generated;
 }
 
-/**
- * Generate SDDirect file (existing logic)
- */
-async function generateSDDirectFile(
-  request: Request, 
-  fs: FileSystem, 
-  timestamp: string, 
-  outputDir: string
-): Promise<GeneratedFile> {
-  const numberOfRows = request.numberOfRows ?? 15;
-  const hasInvalidRows = request.hasInvalidRows ?? false;
-  const includeHeaders = request.includeHeaders ?? true;
-  const includeOptionalFields = request.includeOptionalFields ?? true;
+// Core in-memory generator delegating to file type adapters
+async function generateFileInMemory(request: Request, sun: string): Promise<GeneratedFile> {
+  const now = DateTime.now();
+  const timestamp = now.toFormat("yyyyLLdd_HHmmss");
   const fileType = request.fileType;
-  const extension = "csv";
 
-  // Determine columns per requirements
-  const requiredFields = [
-    "Destination Account Name","Destination Sort Code","Destination Account Number","Payment Reference","Amount","Transaction code"
-  ];
-  const allOptionalFields = [
-    "Realtime Information Checksum","Pay Date","Originating Sort Code","Originating Account Number","Originating Account Name"
-  ];
-  
-  // Always include all optional columns if any optional field is requested
-  let headers: string[];
-  if (includeOptionalFields === false) {
-    headers = [...requiredFields];
-  } else {
-    headers = [...requiredFields, ...allOptionalFields];
-  }
-  const columnCount = headers.length.toString().padStart(2, "0");
+  const adapter = getFileTypeAdapter(fileType);
+  const params = toPreviewParams(request, sun);
+  const rows = adapter.buildPreviewRows(params);
+  const meta = adapter.previewMeta(rows, params);
+  const content = adapter.serialize(rows, params);
 
-  // Generate rows
-  const rows: string[][] = [];
-  let invalidRows = 0;
-  if (hasInvalidRows) {
-    invalidRows = Math.min(Math.floor(numberOfRows / 2), request.canInlineEdit ? 49 : numberOfRows);
-  }
-  
-  for (let i = 0; i < numberOfRows; i++) {
-    let row: Record<string, unknown>;
-    if (hasInvalidRows && i < invalidRows) {
-      row = generateInvalidSDDirectRow(request);
-    } else {
-      row = generateValidSDDirectRow(request);
-    }
-    
-    // Only populate requested optional fields, others blank
-    const populatedRow = headers.map(h => {
-      if (requiredFields.includes(h)) return String(row[h] ?? "");
-      if (includeOptionalFields === true) return String(row[h] ?? "");
-      if (Array.isArray(includeOptionalFields)) {
-        const fieldsAsStrings = includeOptionalFields.map(String);
-        return fieldsAsStrings.includes(h) ? String(row[h] ?? "") : "";
-      }
-      return "";
-    });
-    rows.push(populatedRow);
-  }
+  const columnCount = String(meta.columns).padStart(2, "0");
+  const headerToken = meta.header; // "H" | "NH"
+  const validity = meta.validity; // "V" | "I"
+  const extension = getFileExtension(fileType);
 
-  // File naming
-  const validity = hasInvalidRows ? "I" : "V";
-  const headerFlag = includeHeaders ? "_H" : "NH";
-  const filename = `${fileType}_${columnCount}_x_${numberOfRows}${headerFlag}_${validity}_${timestamp}.${extension}`;
+  const filename = `${fileType}_${columnCount}_x_${meta.rows}_${headerToken}_${validity}_${timestamp}.${extension}`;
+  const outputDir = request.outputPath || path.join(process.cwd(), "output", fileType, sun);
   const filePath = path.join(outputDir, filename);
-
-  // Write file
-  const content = [];
-  if (includeHeaders) {
-    content.push(headers.join(","));
-  }
-  content.push(...rows.map(r => r.join(",")));
-  const fileContent = content.join("\n");
-  
-  fs.writeFileSync(filePath, fileContent, "utf8");
-  return { filePath, fileContent };
+  return { filePath, fileContent: content };
 }
 
 /**
  * Generate EaziPay file (new logic)
  */
-async function generateEaziPayFile(
-  request: Request,
-  fs: FileSystem,
-  timestamp: string,
-  outputDir: string
-): Promise<GeneratedFile> {
-  const numberOfRows = request.numberOfRows ?? 15;
-  const hasInvalidRows = request.hasInvalidRows ?? false;
-  const fileType = request.fileType;
-  
-  // EaziPay-specific logic
-  const dateFormat = request.dateFormat || DateFormatter.getRandomDateFormat();
-  const extension = getFileExtension(fileType);
-  const columnCount = EaziPayValidator.getColumnCount().toString().padStart(2, "0");
-
-  // Generate rows
-  const rows: string[][] = [];
-  let invalidRows = 0;
-  if (hasInvalidRows) {
-    invalidRows = Math.min(Math.floor(numberOfRows / 2), request.canInlineEdit ? 49 : numberOfRows);
-  }
-
-  for (let i = 0; i < numberOfRows; i++) {
-    let rowData;
-    if (hasInvalidRows && i > 1 && i < invalidRows) {
-      rowData = generateInvalidEaziPayRow(request, dateFormat);
-    } else {
-      rowData = generateValidEaziPayRow(request, dateFormat);
-    }
-    
-    const rowArray = formatEaziPayRowAsArray(rowData);
-    rows.push(rowArray);
-  }
-
-  // File naming (EaziPay never has headers)
-  const validity = hasInvalidRows ? "I" : "V";
-  const headerFlag = "NH"; // Always no headers for EaziPay
-  const filename = `${fileType}_${columnCount}_x_${numberOfRows}_${headerFlag}_${validity}_${timestamp}.${extension}`;
-  const filePath = path.join(outputDir, filename);
-
-  // Write file (no headers for EaziPay)
-  const fileContent = rows.map(r => r.join(",")).join("\n");
-  fs.writeFileSync(filePath, fileContent, "utf8");
-  return { filePath, fileContent };
+// Helper: map internal Request to adapter PreviewParams
+function toPreviewParams(request: Request, sun: string): PreviewParams {
+  return {
+    sun,
+    fileType: request.fileType as "EaziPay" | "SDDirect" | "Bacs18PaymentLines",
+    numberOfRows: request.numberOfRows,
+    includeOptionalFields: request.includeOptionalFields,
+    hasInvalidRows: request.hasInvalidRows,
+    includeHeaders: request.includeHeaders,
+    forInlineEditing: request.canInlineEdit,
+    processingDate: request.processingDate,
+    dateFormat: request.fileType === "EaziPay" ? request.dateFormat : undefined,
+    // variant: request.fileType === "Bacs18PaymentLines" ? request.variant : undefined, // not in legacy Request
+  } as const;
 }
 
 /**

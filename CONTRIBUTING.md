@@ -69,3 +69,61 @@ npm run lint          # ESLint
 - Test failures: run `npm test` and `npm run test:watch` to iterate.
 
 Thanks for contributing!
+
+## Filetype adapter pattern (developer guide)
+
+We keep filetype-specific logic co-located with each filetype using a small adapter interface. Services stay thin and transport-agnostic; the factory routes to the right adapter.
+
+- Interface: see `src/lib/fileType/adapter.ts`
+  - `FileTypeAdapter`
+    - `buildPreviewRows(params) => string[][]`
+    - `serialize(rows, params) => string` (CSV with escaping)
+    - `previewMeta(rows, params) => { rows, columns, header, validity, fileType, sun }`
+    - `buildRow(params) => { row: { fields: string[], asLine: string } }`
+  - Shared helpers
+    - `computeInvalidRowsCap(numberOfRows, forInlineEditing)`
+    - `toCsvLine(fields)` (quotes fields containing comma/quote/newline; doubles quotes inside)
+    - `toInternalRequest(fileType, params)` bridges to legacy generator `Request` type
+
+- Factory: `src/lib/fileType/factory.ts`
+  - `getFileTypeAdapter(fileType)` returns the adapter for EaziPay, SDDirect, and Bacs18PaymentLines.
+  - Backward compat file-writer APIs remain for SDDirect/EaziPay (e.g., `generateEaziPayFile`).
+  - Bacs18PaymentLines is experimental and not supported by legacy file generators.
+
+- Services: thin orchestration
+  - `src/services/file.ts` delegates to adapter: `buildPreviewRows` → `serialize` → `previewMeta`.
+  - `src/services/row.ts` delegates to adapter: `buildRow`.
+  - MCP server adapts typed services to JsonValue at the transport boundary.
+
+- File writer orchestration
+  - `src/lib/fileWriter/fileWriter.ts` is transport-agnostic and now generates files entirely in-memory.
+    - `generateFile(request, sun)` uses the adapter to build rows, serialize content, compute meta, and compose a deterministic filename.
+    - Returns `{ filePath, fileContent }` where filePath is a virtual path rooted at `output/<fileType>/<SUN>` (overridden by `request.outputPath`).
+    - No disk writes occur in `generateFile`.
+  - `generateFileWithFs(request, fs, sun)` is a thin wrapper that ensures the target directory exists and persists the in-memory result using the provided `fs` implementation. Keeps backward compatibility for callers that expect files on disk.
+  - Public API behavior: `/generate` returns `fileContent` and sets `X-Generated-File` to the relative virtual path for traceability.
+
+- SDDirect headers contract
+  - Shared constants live in `sddirect.ts` as `SDFields` to avoid drift.
+  - Required headers + optional headers; when `includeOptionalFields` is a string[], only those optionals are included; meta.columns reflects the actual header set.
+
+### Adding a new filetype (checklist)
+1) Create `src/lib/fileType/<name>.ts` exporting `<name>Adapter: FileTypeAdapter`.
+   - Implement `buildPreviewRows`, `serialize`, `previewMeta`, and `buildRow`.
+   - Keep CSV correctness via `toCsvLine`.
+   - Put filetype constants (headers, column counts) here alongside generators.
+2) Register in `getFileTypeAdapter` (and any legacy generators if needed).
+3) Add unit tests covering:
+   - Header selection (required vs optional subset).
+   - CSV escaping edge-cases.
+   - Meta correctness (rows/columns/header/validity).
+4) Update schemas if the public contract changes.
+5) Run quality gates (lint/build/tests) before PR.
+
+### Bacs18PaymentLines notes
+- Adapter: `src/lib/fileType/bacs18PaymentLines.ts`
+- Variants: `MULTI` (12 fields, 106 chars) and `DAILY` (11 fields, 100 chars)
+- Serializer produces fixed-width lines; no headers
+- Sanitization: uppercase and replace disallowed chars with spaces (allowed: A–Z, 0–9, ., &, /, -, space)
+- Disclaimer: Provided for preview/testing only. No guarantee of BACS acceptance.
+

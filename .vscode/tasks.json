@@ -4,7 +4,7 @@
 		{
 			"label": "Install deps and run lint/build/test",
 			"type": "shell",
-			"command": "npm ci && npm run -s lint && npm run -s build && npm run -s test",
+			"command": "npm install && npm run -s lint && npm run -s build && npm run -s test",
 			"args": [],
 			"isBackground": false,
 			"problemMatcher": [

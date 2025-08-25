@@ -9,7 +9,7 @@ A Node.js API for generating DDCMS Direct files in predefined formats with rando
 - **Multiple File Formats:**
   - **SDDirect** (.csv) - Complete implementation
   - **EaziPay** (.csv/.txt) - Complete implementation ✨ **NEW**
-  - **Bacs18PaymentLines** (.txt) - Future support
+  - **Bacs18PaymentLines** (.txt) - Experimental adapter with DAILY/MULTI variants
   - **Bacs18StandardFile** (.bacs) - Future support
 - **EaziPay Specific Features:**
   - **3 Date Format Options**: YYYY-MM-DD, DD-MMM-YYYY, DD/MM/YYYY
@@ -88,10 +88,16 @@ New endpoints are namespaced by SUN and file type.
   - numberOfRows?: number
   - includeOptionalFields?: boolean | string[]
   - dateFormat?: 'YYYY-MM-DD' | 'DD-MMM-YYYY' | 'DD/MM/YYYY' (EaziPay only)
+  - variant?: 'DAILY' | 'MULTI' (Bacs18PaymentLines only; defaults to 'MULTI')
   - includeHeaders?: boolean (SDDirect only)
   - hasInvalidRows?: boolean
   - outputPath?: string
 - Returns: { success: true, fileContent: string } and sets header `X-Generated-File` with the relative file path
+
+Note on persistence:
+- File generation is performed in-memory; the API does not write to disk.
+- The `X-Generated-File` header reflects the deterministic virtual path the file would be written to.
+- If you need to persist to disk (legacy/CLI use), call `generateFileWithFs(request, fs, sun)` which wraps the in-memory result and writes it using the provided filesystem.
 
 Example (SDDirect):
 ```json
@@ -108,6 +114,15 @@ Example (EaziPay):
   "numberOfRows": 10,
   "hasInvalidRows": false,
   "dateFormat": "DD-MMM-YYYY"
+}
+```
+
+Example (Bacs18PaymentLines):
+```json
+{
+  "numberOfRows": 3,
+  "hasInvalidRows": true,
+  "variant": "DAILY"
 }
 ```
 
@@ -239,6 +254,26 @@ eazipay.http                    # EaziPay API test requests
 - Business logic must live outside `src/mcp` and be passed in via the `McpServices` interface when creating the router.
 - Phase 4.0 runs in-memory only; any filesystem tools are deferred to Phase 4.1.
 
+### MCP examples
+
+Use the in-memory router plus the simple JSON-RPC-like handler in `src/mcp/server.ts`.
+
+- file.preview
+  - Request: `{ id: 1, method: "file.preview", params: { sun: "123456", fileType: "EaziPay", numberOfRows: 2 } }`
+  - Result: `{ content: "...", meta: { fileType: "EaziPay", rows: 2, columns: 14, header: false, validity: "valid", sun: "123456" } }`
+  - Bacs18 example: `{ id: 11, method: "file.preview", params: { sun: "123456", fileType: "Bacs18PaymentLines", numberOfRows: 2, variant: "MULTI" } }`
+  - Result: `{ content: "...", meta: { fileType: "Bacs18PaymentLines", rows: 2, columns: 12, header: "NH", validity: "V", sun: "123456" } }`
+
+- row.generate
+  - Request: `{ id: 2, method: "row.generate", params: { sun: "123456", fileType: "SDDirect", validity: "valid" } }`
+  - Result: `{ row: { fields: [ ... ], asLine: "..." }, issues?: [ ... ] }`
+  - Bacs18 example: `{ id: 12, method: "row.generate", params: { sun: "123456", fileType: "Bacs18PaymentLines", validity: "invalid", variant: "DAILY" } }`
+  - Result: `{ row: { fields: [ ...fixed-width fields... ], asLine: "...100 chars..." } }`
+
+- calendar.nextWorkingDay
+  - Request: `{ id: 3, method: "calendar.nextWorkingDay", params: { offsetDays: 2 } }`
+  - Result: `{ date: "YYYY-MM-DD" }`
+
 ## Logging
 - All requests, errors, and responses are logged in structured JSON format for easy analysis.
 
@@ -298,8 +333,17 @@ The project includes HTTP request files for manual testing with VS Code's REST C
   - ✅ Transaction code special handling
   - ✅ Working day calculations
   - ✅ 100% test coverage
-- 🚧 Bacs18PaymentLines — Planned (Phase 3)
+- ⚠️ Bacs18PaymentLines — Experimental adapter available (Phase 3)
 - 🚧 Bacs18StandardFile — Planned (Phase 4)
+
+> Disclaimer: Bacs18PaymentLines output is for development preview/testing only. We make no guarantee that generated files will be accepted by BACS or any downstream system. Validate against your scheme provider before use in production.
+
+### Bacs18PaymentLines — quick format notes
+- Variants: `MULTI` (12 fields, 106 chars/line) and `DAILY` (11 fields, 100 chars/line)
+- Fixed-width text; no headers or footers
+- Allowed characters in text fields: `A–Z`, `0–9`, `.`, `&`, `/`, `-`, and space (others replaced with space); text uppercased
+- Numeric fields are zero-padded; amount is right-justified in pence (11 chars)
+- Processing date (MULTI only): Julian `bYYDDD` (leading space)
 
 ## Recent Updates 📈
 - Phase 2.2: New per-filetype endpoints: `/api/:sun/:filetype/generate`, `/valid-row`, `/invalid-row`

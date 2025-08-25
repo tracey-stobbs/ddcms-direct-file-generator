@@ -59,15 +59,14 @@ describe("generateFileWithFs", () => {
     // Prefer returned content if provided
     if (result?.fileContent) capturedContent = result.fileContent;
     const lines = capturedContent.split("\n");
-    expect(lines[0].split(",").length).toBe(11); // header has all columns
-    const dataRow = lines[1].split(",");
-    // Required fields populated
-    for (let i = 0; i < 6; i++) expect(dataRow[i]).not.toBe("");
-    // Only 'Pay Date' (column 8) populated, others blank
-    expect(dataRow[6]).toBe(""); // Realtime Information Checksum
-    expect(dataRow[7]).not.toBe(""); // Pay Date
-    expect(dataRow[8]).toBe(""); // Originating Sort Code
-    expect(dataRow[9]).toBe(""); // Originating Account Number
-    expect(dataRow[10]).toBe(""); // Originating Account Name
+  // Header contains required + selected optionals only under adapter behavior
+  expect(lines[0].split(",").length).toBe(7); // 6 required + 1 selected optional
+  const dataRow = lines[1].split(",");
+  // Length matches header (6 required + 1 selected optional)
+  expect(dataRow.length).toBe(7);
+  // Required fields populated
+  for (let i = 0; i < 6; i++) expect(dataRow[i]).not.toBe("");
+  // Selected optional (Pay Date) populated
+  expect(dataRow[6]).not.toBe("");
   });
 });

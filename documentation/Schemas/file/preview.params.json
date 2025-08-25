@@ -57,6 +57,14 @@
                 "DD-MMM-YYYY",
                 "DD/MM/YYYY"
             ]
+        },
+        "variant": {
+            "type": "string",
+            "enum": [
+                "DAILY",
+                "MULTI"
+            ],
+            "description": "Bacs18PaymentLines only"
         }
     },
     "required": [
