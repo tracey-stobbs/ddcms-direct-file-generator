@@ -72,13 +72,13 @@ describe('EaziPay Generator', () => {
     });
 
     it('should generate valid trailer for quoted format', () => {
-  const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
-  // no trailer to validate
+      void generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
+      // no trailer to validate
     });
 
     it('should generate valid trailer for unquoted format', () => {
-  const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
-  // no trailer to validate
+      void generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
+      // no trailer to validate
     });
 
     it('should format processing date correctly for different formats', () => {
@@ -272,8 +272,8 @@ describe('EaziPay Generator', () => {
     });
 
     it('should respect trailer format parameter', () => {
-  const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
-  expect(row).toBeDefined();
+      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
+      expect(row).toBeDefined();
     });
   });
 });

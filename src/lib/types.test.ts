@@ -1,11 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import type { 
-  Request, 
-  EaziPayDateFormat, 
-  EaziPayTrailerFormat, 
+import { describe, expect, it } from 'vitest';
+import type {
+  EaziPayDateFormat,
   EaziPaySpecificFields,
+  ErrorResponse,
+  Request,
   SuccessResponse,
-  ErrorResponse
 } from './types';
 
 describe('Type Definitions', () => {
@@ -24,15 +23,7 @@ describe('Type Definitions', () => {
     });
   });
 
-  describe('EaziPayTrailerFormat', () => {
-    it('should accept valid trailer formats', () => {
-      const formats: EaziPayTrailerFormat[] = ["quoted", "unquoted"];
-      
-      expect(formats).toHaveLength(2);
-      expect(formats).toContain("quoted");
-      expect(formats).toContain("unquoted");
-    });
-  });
+  // Trailer concept removed; trailing columns are always empty strings in formatting
 
   describe('Request Interface', () => {
     it('should support EaziPay fileType', () => {
@@ -86,9 +77,8 @@ describe('Type Definitions', () => {
         processingDate: "2025-07-23",
         empty: undefined,
         sunName: "Test Company",
-        bacsReference: "DDREF01",
         sunNumber: undefined,
-        eaziPayTrailer: ",,,,,,,,"
+        // optional trailing empties are not explicit fields on the object
       };
 
       expect(fields.transactionCode).toBe("17");
@@ -111,9 +101,8 @@ describe('Type Definitions', () => {
         processingDate: "2025-07-25",
         empty: undefined,
         sunName: "Test Company",
-        bacsReference: "DDREF01",
         sunNumber: "12345",
-        eaziPayTrailer: ",,,,,,,,"
+        // trailer removed
       };
 
       const fieldsWithoutSunNumber: EaziPaySpecificFields = {
@@ -129,8 +118,7 @@ describe('Type Definitions', () => {
         processingDate: "2025-07-23",
         empty: undefined,
         sunName: "Test Company",
-        bacsReference: "DDREF01",
-        eaziPayTrailer: ",,,,,,,,"
+        // trailer removed
       };
 
       expect(fieldsWithSunNumber.sunNumber).toBe("12345");
@@ -142,11 +130,11 @@ describe('Type Definitions', () => {
     it('should define SuccessResponse correctly', () => {
       const successResponse: SuccessResponse = {
         success: true,
-        filePath: "/path/to/file.csv"
+        fileContent: "A,B,C\n1,2,3\n",
       };
 
       expect(successResponse.success).toBe(true);
-      expect(successResponse.filePath).toBe("/path/to/file.csv");
+  expect(successResponse.fileContent).toContain("A,B,C");
     });
 
     it('should define ErrorResponse correctly', () => {

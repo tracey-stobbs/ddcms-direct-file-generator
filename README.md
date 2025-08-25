@@ -230,6 +230,15 @@ eazipay.http                    # EaziPay API test requests
 - **Random Data**: Faker.js integration with realistic test data
 - **File Extensions**: Smart extension selection (EaziPay: .csv/.txt)
 
+## MCP scaffold (Phase 4.0)
+
+- Location: `src/mcp`
+  - `router.ts`: Schema-backed tool registry using Ajv. Validates params and results.
+  - `server.ts`: Creates the router and registers initial tools (`file.preview`, `row.generate`, `calendar.nextWorkingDay`). Exposes a simple JSON-RPC-like handler.
+  - `schemaLoader.ts`: Loads canonical JSON Schemas from `documentation/Schemas/**`. Tests mock this to avoid filesystem I/O.
+- Business logic must live outside `src/mcp` and be passed in via the `McpServices` interface when creating the router.
+- Phase 4.0 runs in-memory only; any filesystem tools are deferred to Phase 4.1.
+
 ## Logging
 - All requests, errors, and responses are logged in structured JSON format for easy analysis.
 
