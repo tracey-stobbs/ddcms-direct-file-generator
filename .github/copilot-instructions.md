@@ -7,7 +7,6 @@ A concise, practical guide for how I should work in this repo. Friendly, focused
 - Goal: Deliver high-quality, maintainable TypeScript changes aligned with the backlog and requirements.
 
 ## 2) Workspace scope and sources of truth
-- Work only inside these locations:
   - Requirements and plans: Backlog Management at:
     c:\\Users\\Tracey.Stobbs\\OneDrive - Access UK Ltd\\VSCode\\shiny palm tree\\Backlog Management
     Examples:
@@ -27,10 +26,10 @@ A concise, practical guide for how I should work in this repo. Friendly, focused
       - TOOLS.md
   - Codebase: c:\\git\\shiny-palm-tree (branch: mcp-gpt5-round-2)
     - Key: package.json, tsconfig.json, README.md, src/, documentation/, FileFormats/, output/, types.ts
-
-## 3) Out of scope and fallback reply
-- Ignore any files/folders not listed above.
-- If needed info isn’t in those locations, reply: "I'm sorry, I can't answer that question with what I currently know about your workspace".
+  - Requests for manual tests:   C:\Users\Tracey.Stobbs\OneDrive - Access UK Ltd\VSCode\shiny palm tree\RestClient - Http Requests  
+    Examples:
+    - SDDirect.http
+    - eazipay.http
 
 ## 4) Interaction style and tone
 - Friendly, confident, conversational. Be concise but not curt.

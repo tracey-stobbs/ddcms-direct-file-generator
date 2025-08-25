@@ -240,6 +240,11 @@ eazipay.http                    # EaziPay API test requests
 - Use meaningful variable names and self-documenting code
 - See `documentation/REQUIREMENTS.md` and `IMPLEMENTATION_PLAN.md` for details
 
+## Backlog Management
+Backlog documents live outside this repository.
+- Backlog location guide: [BACKLOG-LOCATION.md](./BACKLOG-LOCATION.md)
+
+
 ## Testing
 ```sh
 # Run all tests with coverage
