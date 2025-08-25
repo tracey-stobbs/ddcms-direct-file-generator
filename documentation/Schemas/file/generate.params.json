@@ -1,0 +1,69 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://example.com/mcp/file.generate.params.json",
+    "title": "file.generate params",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "sun": {
+            "type": "string",
+            "minLength": 1
+        },
+        "fileType": {
+            "type": "string",
+            "enum": [
+                "EaziPay",
+                "SDDirect",
+                "Bacs18PaymentLines",
+                "Bacs18StandardFile"
+            ]
+        },
+        "numberOfRows": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "includeOptionalFields": {
+            "oneOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "minItems": 1
+                }
+            ]
+        },
+        "hasInvalidRows": {
+            "type": "boolean"
+        },
+        "includeHeaders": {
+            "type": "boolean",
+            "description": "SDDirect only"
+        },
+        "forInlineEditing": {
+            "type": "boolean"
+        },
+        "processingDate": {
+            "type": "string"
+        },
+        "dateFormat": {
+            "type": "string",
+            "enum": [
+                "YYYY-MM-DD",
+                "DD-MMM-YYYY",
+                "DD/MM/YYYY"
+            ]
+        },
+        "outputPath": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "sun",
+        "fileType"
+    ]
+}

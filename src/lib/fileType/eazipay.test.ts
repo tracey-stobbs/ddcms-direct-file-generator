@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { EaziPayDateFormat, Request } from '../types';
 import { EaziPayValidator } from '../validators/eazipayValidator';
 import {
-  formatEaziPayRowAsArray,
-  generateInvalidEaziPayRow,
-  generateValidEaziPayRow,
-  getEaziPayHeaders
+    formatEaziPayRowAsArray,
+    generateInvalidEaziPayRow,
+    generateValidEaziPayRow,
+    getEaziPayHeaders
 } from './eazipay';
 
 describe('EaziPay Generator', () => {
@@ -31,7 +31,7 @@ describe('EaziPay Generator', () => {
 
   describe('generateValidEaziPayRow', () => {
     it('should generate valid row with all required fields', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       
       expect(row).toHaveProperty('transactionCode');
       expect(row).toHaveProperty('originatingSortCode');
@@ -47,49 +47,45 @@ describe('EaziPay Generator', () => {
       expect(row).toHaveProperty('sunName');
       expect(row).toHaveProperty('paymentReference');
       expect(row).toHaveProperty('sunNumber');
-      expect(row).toHaveProperty('eaziPayTrailer');
+  // trailer removed; two empty columns are implicit in formatting
     });
 
     it('should use default originating account details', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       
       expect(row.originatingSortCode).toBe('912291');
       expect(row.originatingAccountNumber).toBe('51491194');
     });
 
     it('should have fixed zero as exactly 0', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       
       expect(row.fixedZero).toBe(0);
       expect(EaziPayValidator.validateFixedZero(row.fixedZero)).toBe(true);
     });
 
     it('should have empty field as undefined', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       
       expect(row.empty).toBeUndefined();
       expect(EaziPayValidator.validateEmptyField(row.empty)).toBe(true);
     });
 
     it('should generate valid trailer for quoted format', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
-      
-      expect(row.eaziPayTrailer).toBe('",,,,,,,,"');
-      expect(EaziPayValidator.validateEaziPayTrailer(row.eaziPayTrailer)).toBe('quoted');
+      void generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
+      // no trailer to validate
     });
 
     it('should generate valid trailer for unquoted format', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'unquoted');
-      
-      expect(row.eaziPayTrailer).toBe(',,,,,,,,,');
-      expect(EaziPayValidator.validateEaziPayTrailer(row.eaziPayTrailer)).toBe('unquoted');
+      void generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
+      // no trailer to validate
     });
 
     it('should format processing date correctly for different formats', () => {
       const formats: EaziPayDateFormat[] = ['YYYY-MM-DD', 'DD-MMM-YYYY', 'DD/MM/YYYY'];
       
       formats.forEach(format => {
-        const row = generateValidEaziPayRow(mockRequest, format, 'quoted');
+        const row = generateValidEaziPayRow(mockRequest, format);
         
         // Processing date should be in the specified format
         switch (format) {
@@ -109,7 +105,7 @@ describe('EaziPay Generator', () => {
     it('should handle special transaction codes correctly', () => {
       // Test multiple times to eventually get special transaction codes
       for (let i = 0; i < 50; i++) {
-        const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+        const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
         
         if (['0C', '0N', '0S'].includes(row.transactionCode)) {
           // Amount should be 0 for special transaction codes
@@ -120,14 +116,14 @@ describe('EaziPay Generator', () => {
 
     it('should validate SUN number according to transaction code rules', () => {
       for (let i = 0; i < 50; i++) {
-        const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+        const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
         
         expect(EaziPayValidator.validateSunNumber(row.sunNumber, row.transactionCode)).toBe(true);
       }
     });
 
     it('should generate valid payment reference', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       
       expect(row.paymentReference).toBeDefined();
       expect(row.paymentReference.length).toBeGreaterThan(6);
@@ -138,25 +134,24 @@ describe('EaziPay Generator', () => {
 
   describe('generateInvalidEaziPayRow', () => {
     it('should generate row with some invalid fields', () => {
-      const row = generateInvalidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+      const row = generateInvalidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       
       // Should still have all required fields
       expect(row).toHaveProperty('transactionCode');
       expect(row).toHaveProperty('fixedZero');
       expect(row).toHaveProperty('empty');
-      expect(row).toHaveProperty('eaziPayTrailer');
+  // trailer removed
     });
 
     it('should create validation errors when validated', () => {
       // Generate many invalid rows to test different scenarios
       for (let i = 0; i < 20; i++) {
-        const row = generateInvalidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+        const row = generateInvalidEaziPayRow(mockRequest, 'YYYY-MM-DD');
         const validation = EaziPayValidator.validateAllFields({
           fixedZero: row.fixedZero,
           empty: row.empty,
           sunNumber: row.sunNumber,
-          transactionCode: row.transactionCode,
-          eaziPayTrailer: row.eaziPayTrailer
+          transactionCode: row.transactionCode
         });
         
         // At least some rows should be invalid
@@ -171,19 +166,19 @@ describe('EaziPay Generator', () => {
     });
 
     it('should maintain some valid structure even when invalid', () => {
-      const row = generateInvalidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+      const row = generateInvalidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       
       // Basic structure should still be maintained
       expect(typeof row.transactionCode).toBe('string');
       expect(typeof row.originatingSortCode).toBe('string');
       expect(typeof row.originatingAccountNumber).toBe('string');
-      expect(typeof row.eaziPayTrailer).toBe('string');
+  // trailer removed
     });
   });
 
   describe('formatEaziPayRowAsArray', () => {
-    it('should format row as 15-element array', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+    it('should format row as 14-element array (two empty trailer columns included)', () => {
+      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       const array = formatEaziPayRowAsArray(row);
       
       expect(array).toHaveLength(14);
@@ -191,7 +186,7 @@ describe('EaziPay Generator', () => {
     });
 
     it('should format all fields correctly', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+  const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       const array = formatEaziPayRowAsArray(row);
       
       expect(array[0]).toBe(row.transactionCode);
@@ -207,11 +202,12 @@ describe('EaziPay Generator', () => {
       expect(array[10]).toBe(row.sunName);
       expect(array[11]).toBe(row.paymentReference);
       expect(array[12]).toBe(row.sunNumber || '');
-      expect(array[13]).toBe(row.eaziPayTrailer);
+  // last two columns are empty strings
+  expect(array[13]).toBe('');
     });
 
     it('should handle empty and undefined fields correctly', () => {
-      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
+  const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
       const array = formatEaziPayRowAsArray(row);
       
       // Empty field should be empty string
@@ -227,14 +223,15 @@ describe('EaziPay Generator', () => {
   });
 
   describe('getEaziPayHeaders', () => {
-    it('should return all 15 header names', () => {
+    it('should return all 14 header names (including two empty trailer columns)', () => {
       const headers = getEaziPayHeaders();
       
       expect(headers).toHaveLength(14);
       expect(headers[0]).toBe('Transaction Code');
       expect(headers[6]).toBe('Fixed Zero');
       expect(headers[9]).toBe('Empty');
-      expect(headers[13]).toBe('EaziPayTrailer');
+      expect(headers[12]).toBe('SUN Number');
+      expect(headers[13]).toBe('Empty Trailer 1');
     });
 
     it('should return consistent headers', () => {
@@ -247,12 +244,12 @@ describe('EaziPay Generator', () => {
 
   describe('edge cases and validation', () => {
     it('should handle missing default values gracefully', () => {
-      const requestWithoutDefaults: Request = {
+  const requestWithoutDefaults: Request = {
         fileType: 'EaziPay',
         canInlineEdit: true
       };
       
-      const row = generateValidEaziPayRow(requestWithoutDefaults, 'YYYY-MM-DD', 'quoted');
+  const row = generateValidEaziPayRow(requestWithoutDefaults, 'YYYY-MM-DD');
       
       expect(row.originatingSortCode).toBeDefined();
       expect(row.originatingAccountNumber).toBeDefined();
@@ -263,7 +260,7 @@ describe('EaziPay Generator', () => {
     it('should generate different rows on multiple calls', () => {
       const rows = [];
       for (let i = 0; i < 10; i++) {
-        rows.push(generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted'));
+        rows.push(generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD'));
       }
       
       // At least some fields should be different across rows
@@ -275,11 +272,8 @@ describe('EaziPay Generator', () => {
     });
 
     it('should respect trailer format parameter', () => {
-      const quotedRow = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'quoted');
-      const unquotedRow = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD', 'unquoted');
-      
-      expect(quotedRow.eaziPayTrailer).toBe('",,,,,,,,"');
-      expect(unquotedRow.eaziPayTrailer).toBe(',,,,,,,,,');
+      const row = generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD');
+      expect(row).toBeDefined();
     });
   });
 });

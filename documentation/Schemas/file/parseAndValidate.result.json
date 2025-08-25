@@ -1,0 +1,79 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://example.com/mcp/file.parseAndValidate.result.json",
+    "title": "file.parseAndValidate result",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "summary": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "valid": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "invalid": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "total",
+                "valid",
+                "invalid"
+            ]
+        },
+        "rows": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "valid": {
+                        "type": "boolean"
+                    },
+                    "violations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "field": {
+                                    "type": "string"
+                                },
+                                "code": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "field",
+                                "code",
+                                "message"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "index",
+                    "valid"
+                ]
+            }
+        }
+    },
+    "required": [
+        "summary",
+        "rows"
+    ]
+}

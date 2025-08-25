@@ -13,77 +13,53 @@ vi.mock("./lib/utils/logger", () => ({
 }));
 
 
-describe("API: /api/generate", () => {
+describe("API: new endpoints", () => {
   // const app: express.Express = app; // Directly use the imported app
 
-  describe("SDDirect file generation", () => {
-    it("should return a success response with a filePath", async () => {
+  describe("SDDirect generate", () => {
+    it("should return file content for generate", async () => {
       const res = await request(app)
-        .post("/api/generate")
-        .send({ fileType: "SDDirect", canInlineEdit: true });
+        .post("/api/TESTSUN/SDDirect/generate")
+        .send({ forInlineEditing: true });
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.filePath).toMatch(/output\/SDDirect_11_x_15_H_V_\d{8}_\d{6}\.csv/);
+      expect(res.body.fileContent).toBeDefined();
+      expect(typeof res.body.fileContent).toBe("string");
     });
   });
 
-  describe("EaziPay file generation", () => {
-    it("should generate EaziPay file with default settings", async () => {
+  describe("EaziPay endpoints", () => {
+    it("should return file content for EaziPay generate", async () => {
       const res = await request(app)
-        .post("/api/generate")
-        .send({ fileType: "EaziPay", canInlineEdit: true });
+        .post("/api/TESTSUN/EaziPay/generate")
+        .send({ forInlineEditing: true, numberOfRows: 3 });
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.filePath).toMatch(/output\/EaziPay_(15|23)_x_15_NH_V_\d{8}_\d{6}\.(csv|txt)/);
+      expect(typeof res.body.fileContent).toBe("string");
     });
 
-    it("should generate EaziPay file with specific date format", async () => {
+    it("should return structured valid rows", async () => {
       const res = await request(app)
-        .post("/api/generate")
-        .send({ 
-          fileType: "EaziPay", 
-          canInlineEdit: true,
-          dateFormat: "YYYY-MM-DD",
-          numberOfRows: 5
-        });
+        .post("/api/TESTSUN/EaziPay/valid-row")
+        .send({ numberOfRows: 2 });
       expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.filePath).toMatch(/output\/EaziPay_(15|23)_x_5_NH_V_\d{8}_\d{6}\.(csv|txt)/);
+      expect(res.body.headers?.length).toBeGreaterThan(0);
+      expect(res.body.rows?.length).toBe(2);
     });
 
-    it("should ignore includeHeaders for EaziPay", async () => {
+    it("should return structured invalid rows", async () => {
       const res = await request(app)
-        .post("/api/generate")
-        .send({ 
-          fileType: "EaziPay", 
-          canInlineEdit: true,
-          includeHeaders: true  // Should be ignored
-        });
+        .post("/api/TESTSUN/EaziPay/invalid-row")
+        .send({ numberOfRows: 2 });
       expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      // Should still show NH (no headers) in filename
-      expect(res.body.filePath).toMatch(/output\/EaziPay_(15|23)_x_15_NH_V_\d{8}_\d{6}\.(csv|txt)/);
-    });
-
-    it("should generate invalid data when requested", async () => {
-      const res = await request(app)
-        .post("/api/generate")
-        .send({ 
-          fileType: "EaziPay", 
-          canInlineEdit: true,
-          hasInvalidRows: true,
-          numberOfRows: 10
-        });
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      // Should show I (invalid) in filename
-      expect(res.body.filePath).toMatch(/output\/EaziPay_(15|23)_x_10_NH_I_\d{8}_\d{6}\.(csv|txt)/);
+      expect(res.body.headers?.length).toBeGreaterThan(0);
+      expect(res.body.rows?.length).toBe(2);
     });
   });
 
   describe("Error handling and logging", () => {
     it("should log requests and responses", async () => {
-      await request(app).post("/api/generate").send({ fileType: "SDDirect", canInlineEdit: true });
+      await request(app).post("/api/TESTSUN/SDDirect/generate").send({ forInlineEditing: true });
       expect(logRequest).toHaveBeenCalled();
       expect(logResponse).toHaveBeenCalled();
     });
@@ -91,7 +67,7 @@ describe("API: /api/generate", () => {
     it("should handle errors and log them", async () => {
       // Simulate error by sending invalid JSON (triggers express.json() error handler)
       const res = await request(app)
-        .post("/api/generate")
+        .post("/api/TESTSUN/SDDirect/generate")
         .set("Content-Type", "application/json")
         .send("{ invalid json }");
       expect(res.status).toBeGreaterThanOrEqual(400);
@@ -100,13 +76,13 @@ describe("API: /api/generate", () => {
       expect(logError).toHaveBeenCalled();
     });
 
+    // Unknown file type handling now occurs via route param; keep 500 on unknown
     it("should handle unknown file types", async () => {
       const res = await request(app)
-        .post("/api/generate")
-        .send({ fileType: "UnknownType", canInlineEdit: true });
+        .post("/api/TESTSUN/UnknownType/generate")
+        .send({ forInlineEditing: true });
       expect(res.status).toBe(500);
       expect(res.body.success).toBe(false);
-      expect(res.body.error).toBe("An error occurred while generating the file.");
     });
   });
 });

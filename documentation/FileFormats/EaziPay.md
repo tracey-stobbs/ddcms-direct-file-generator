@@ -23,7 +23,8 @@ Contents:
 - SUN Name 
 - BACS Reference
 - SUN Number 
-- EaziPayTrailer
+- Empty Trailer 1
+- Empty Trailer 2
 
 
 ## Additional Field-Level Validation Rules:
@@ -32,8 +33,8 @@ Contents:
   - If the Transaction Code is none of 0C, 0N, or 0S, it must be null or undefined. 
   - It is an optional field, so can be null or undefined, even if Transaction Code is one of 0C, 0N, 0S
 
-- EaziPayTrailer
- - Must be exactly ,,,,,,,, or if and only if Sun Number is undefined,  ",,,,,,,,"
+- Empty Trailer columns
+  - The last two columns are always empty strings.
 ​
 ###### Default Values for incoming request
 ```typescript
@@ -58,6 +59,6 @@ const defaultRequest: Request = {
 
 
 # Example Formats
-e.g. 17,111111,11111111,111111,11111111,Test Company,0,155040,10-APR-2025,,Test Company,DDREF01,,,,,,,,,
+e.g. 17,111111,11111111,111111,11111111,Test Company,0,155040,10-APR-2025,,Test Company,DDREF01,,,
 
 

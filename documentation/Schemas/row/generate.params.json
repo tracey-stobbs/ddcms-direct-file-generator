@@ -1,0 +1,65 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://example.com/mcp/row.generate.params.json",
+    "title": "row.generate params",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "sun": {
+            "type": "string",
+            "minLength": 1
+        },
+        "fileType": {
+            "type": "string"
+        },
+        "validity": {
+            "type": "string",
+            "enum": [
+                "valid",
+                "invalid"
+            ]
+        },
+        "includeOptionalFields": {
+            "oneOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "minItems": 1
+                }
+            ]
+        },
+        "forInlineEditing": {
+            "type": "boolean"
+        },
+        "processingDate": {
+            "type": "string"
+        },
+        "dateFormat": {
+            "type": "string",
+            "enum": [
+                "YYYY-MM-DD",
+                "DD-MMM-YYYY",
+                "DD/MM/YYYY"
+            ]
+        },
+        "variant": {
+            "type": "string",
+            "enum": [
+                "DAILY",
+                "MULTI"
+            ],
+            "description": "Bacs18PaymentLines only"
+        }
+    },
+    "required": [
+        "sun",
+        "fileType",
+        "validity"
+    ]
+}
