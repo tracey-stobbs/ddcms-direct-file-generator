@@ -29,12 +29,7 @@ export async function generateFile(request: Request, sun: string): Promise<Gener
   return generateFileInMemory(request, sun);
 }
 
-export async function generateFileWithFs(request: Request, fs: FileSystem, sun: string): Promise<GeneratedFile> {
-  // Back-compat: generate in memory, then persist to disk using provided fs
-  const intendedDir = request.outputPath || path.join(process.cwd(), "output", request.fileType, sun);
-  if (!fs.existsSync(intendedDir)) fs.mkdirSync(intendedDir, { recursive: true });
-  const generated = await generateFileInMemory(request, sun);
-  fs.writeFileSync(generated.filePath, generated.fileContent, "utf8");
+  fs.writeFileSync(path.join(intendedDir, path.basename(generated.filePath)), generated.fileContent, "utf8");
   return generated;
 }
 
