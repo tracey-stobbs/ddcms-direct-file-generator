@@ -1,16 +1,16 @@
-import path from "path";
-import { JsonValue, McpRouter, McpValidationError } from "./router";
-import { loadSchema } from "./schemaLoader";
+import path from 'path';
+import { JsonValue, McpRouter, McpValidationError } from './router';
+import { loadSchema } from './schemaLoader';
 // Default service implementations (kept thin; real logic lives outside src/mcp)
-import * as calendar from "../services/calendar";
-import * as configSvc from "../services/config";
-import * as eazipaySvc from "../services/eazipay";
-import * as fileSvc from "../services/file";
-import * as fileGenerate from "../services/fileGenerate";
-import * as fsSvc from "../services/fsService";
-import * as row from "../services/row";
-import * as rowValidate from "../services/rowValidate";
-import * as runtimeSvc from "../services/runtime";
+import * as calendar from '../services/calendar';
+import * as configSvc from '../services/config';
+import * as eazipaySvc from '../services/eazipay';
+import * as fileSvc from '../services/file';
+import * as fileGenerate from '../services/fileGenerate';
+import * as fsSvc from '../services/fsService';
+import * as row from '../services/row';
+import * as rowValidate from '../services/rowValidate';
+import * as runtimeSvc from '../services/runtime';
 
 // Contracts-only service interfaces (implementations live outside src/mcp)
 export interface FileService {
@@ -65,36 +65,38 @@ export function createMcpRouter(services: McpServices): McpRouter {
 
   // Tool: file.preview
   router.register({
-    name: "file.preview",
-    paramsSchema: loadSchema("file/preview.params.json"),
-    resultSchema: loadSchema("file/preview.result.json"),
-  handler: (params) => services.file.preview(params),
+    name: 'file.preview',
+    paramsSchema: loadSchema('file/preview.params.json'),
+    resultSchema: loadSchema('file/preview.result.json'),
+    handler: (params) => services.file.preview(params),
   });
 
   // Tool: row.generate
   router.register({
-    name: "row.generate",
-    paramsSchema: loadSchema("row/generate.params.json"),
-    resultSchema: loadSchema("row/generate.result.json"),
-  handler: (params) => services.row.generate(params),
+    name: 'row.generate',
+    paramsSchema: loadSchema('row/generate.params.json'),
+    resultSchema: loadSchema('row/generate.result.json'),
+    handler: (params) => services.row.generate(params),
   });
 
   // Tool: calendar.nextWorkingDay
   router.register({
-    name: "calendar.nextWorkingDay",
-    paramsSchema: loadSchema("calendar/nextWorkingDay.params.json"),
-    resultSchema: loadSchema("calendar/nextWorkingDay.result.json"),
-  handler: (params) => services.calendar.nextWorkingDay(params),
+    name: 'calendar.nextWorkingDay',
+    paramsSchema: loadSchema('calendar/nextWorkingDay.params.json'),
+    resultSchema: loadSchema('calendar/nextWorkingDay.result.json'),
+    handler: (params) => services.calendar.nextWorkingDay(params),
   });
 
   // Tool: calendar.isWorkingDay (4.1)
-  const calendarMaybe = services.calendar as CalendarService & { isWorkingDay?: (params: JsonValue) => Promise<JsonValue> };
-  if (calendarMaybe && typeof calendarMaybe.isWorkingDay === "function") {
+  const calendarMaybe = services.calendar as CalendarService & {
+    isWorkingDay?: (params: JsonValue) => Promise<JsonValue>;
+  };
+  if (calendarMaybe && typeof calendarMaybe.isWorkingDay === 'function') {
     try {
       router.register({
-        name: "calendar.isWorkingDay",
-        paramsSchema: loadSchema("calendar/isWorkingDay.params.json"),
-        resultSchema: loadSchema("calendar/isWorkingDay.result.json"),
+        name: 'calendar.isWorkingDay',
+        paramsSchema: loadSchema('calendar/isWorkingDay.params.json'),
+        resultSchema: loadSchema('calendar/isWorkingDay.result.json'),
         handler: (params) => calendarMaybe.isWorkingDay!(params),
       });
     } catch {
@@ -104,20 +106,30 @@ export function createMcpRouter(services: McpServices): McpRouter {
 
   // Tool: file.generate (4.1) - optional service
   const svcAny = services as McpServices & { fileGenerate?: FileGenerateService };
-  if (svcAny.fileGenerate && typeof svcAny.fileGenerate.generate === "function") {
+  if (svcAny.fileGenerate && typeof svcAny.fileGenerate.generate === 'function') {
     try {
       router.register({
-        name: "file.generate",
-        paramsSchema: loadSchema("file/generate.params.json"),
-        resultSchema: loadSchema("file/generate.result.json"),
+        name: 'file.generate',
+        paramsSchema: loadSchema('file/generate.params.json'),
+        resultSchema: loadSchema('file/generate.result.json'),
         handler: async (params) => {
           const generatedRaw = await svcAny.fileGenerate!.generate(params);
           const generated = generatedRaw as Record<string, unknown>;
           // if caller requested persistence and an fs.write is available, persist under sandbox via fs service
-          const p = params as unknown as Record<string, unknown> & { persist?: boolean; fileType?: string; sun?: string };
-          const fsMaybe = (services as unknown as Record<string, unknown>).fs as FsService | undefined;
-          if (p.persist && fsMaybe && typeof fsMaybe.write === "function") {
-            const parts = [ (p.fileType as string) || "unknown", (p.sun as string) ?? "DEFAULT", path.basename(String(generated.filePath)) ];
+          const p = params as unknown as Record<string, unknown> & {
+            persist?: boolean;
+            fileType?: string;
+            sun?: string;
+          };
+          const fsMaybe = (services as unknown as Record<string, unknown>).fs as
+            | FsService
+            | undefined;
+          if (p.persist && fsMaybe && typeof fsMaybe.write === 'function') {
+            const parts = [
+              (p.fileType as string) || 'unknown',
+              (p.sun as string) ?? 'DEFAULT',
+              path.basename(String(generated.filePath)),
+            ];
             const rel = parts.join(path.sep);
             await fsMaybe.write({ path: rel, content: String(generated.fileContent) } as JsonValue);
             generated.persisted = true;
@@ -128,9 +140,9 @@ export function createMcpRouter(services: McpServices): McpRouter {
       });
 
       router.register({
-        name: "file.estimateFilename",
-        paramsSchema: loadSchema("file/estimateFilename.params.json"),
-        resultSchema: loadSchema("file/estimateFilename.result.json"),
+        name: 'file.estimateFilename',
+        paramsSchema: loadSchema('file/estimateFilename.params.json'),
+        resultSchema: loadSchema('file/estimateFilename.result.json'),
         handler: (params) => svcAny.fileGenerate!.estimateFilename(params),
       });
     } catch {
@@ -139,13 +151,15 @@ export function createMcpRouter(services: McpServices): McpRouter {
   }
 
   // Tool: row.validate (4.1) - optional
-  const rowMaybe = services.row as RowService & { validate?: (params: JsonValue) => Promise<JsonValue> };
-  if (rowMaybe && typeof rowMaybe.validate === "function") {
+  const rowMaybe = services.row as RowService & {
+    validate?: (params: JsonValue) => Promise<JsonValue>;
+  };
+  if (rowMaybe && typeof rowMaybe.validate === 'function') {
     try {
       router.register({
-        name: "row.validate",
-        paramsSchema: loadSchema("row/validate.params.json"),
-        resultSchema: loadSchema("row/validate.result.json"),
+        name: 'row.validate',
+        paramsSchema: loadSchema('row/validate.params.json'),
+        resultSchema: loadSchema('row/validate.result.json'),
         handler: (params) => rowMaybe.validate!(params),
       });
     } catch {
@@ -154,25 +168,27 @@ export function createMcpRouter(services: McpServices): McpRouter {
   }
 
   // Tool: config.get / config.setDefaults (4.0/4.1)
-  const configMaybe = (services as unknown as Record<string, unknown>).config as ConfigService | undefined;
-  if (configMaybe && typeof configMaybe.get === "function") {
+  const configMaybe = (services as unknown as Record<string, unknown>).config as
+    | ConfigService
+    | undefined;
+  if (configMaybe && typeof configMaybe.get === 'function') {
     try {
       router.register({
-        name: "config.get",
-        paramsSchema: loadSchema("config/get.params.json"),
-        resultSchema: loadSchema("config/get.result.json"),
+        name: 'config.get',
+        paramsSchema: loadSchema('config/get.params.json'),
+        resultSchema: loadSchema('config/get.result.json'),
         handler: (params) => configMaybe.get!(params),
       });
     } catch {
       // skip
     }
   }
-  if (configMaybe && typeof configMaybe.setDefaults === "function") {
+  if (configMaybe && typeof configMaybe.setDefaults === 'function') {
     try {
       router.register({
-        name: "config.setDefaults",
-        paramsSchema: loadSchema("config/setDefaults.params.json"),
-        resultSchema: loadSchema("config/setDefaults.result.json"),
+        name: 'config.setDefaults',
+        paramsSchema: loadSchema('config/setDefaults.params.json'),
+        resultSchema: loadSchema('config/setDefaults.result.json'),
         handler: (params) => configMaybe.setDefaults!(params),
       });
     } catch {
@@ -181,13 +197,15 @@ export function createMcpRouter(services: McpServices): McpRouter {
   }
 
   // Tool: runtime.health (4.1)
-  const runtimeMaybe = (services as unknown as Record<string, unknown>).runtime as RuntimeService | undefined;
-  if (runtimeMaybe && typeof runtimeMaybe.health === "function") {
+  const runtimeMaybe = (services as unknown as Record<string, unknown>).runtime as
+    | RuntimeService
+    | undefined;
+  if (runtimeMaybe && typeof runtimeMaybe.health === 'function') {
     try {
       router.register({
-        name: "runtime.health",
-        paramsSchema: loadSchema("runtime/health.params.json"),
-        resultSchema: loadSchema("runtime/health.result.json"),
+        name: 'runtime.health',
+        paramsSchema: loadSchema('runtime/health.params.json'),
+        resultSchema: loadSchema('runtime/health.result.json'),
         handler: (params) => runtimeMaybe.health!(params),
       });
     } catch {
@@ -199,27 +217,27 @@ export function createMcpRouter(services: McpServices): McpRouter {
   const fsMaybe = (services as unknown as Record<string, unknown>).fs as FsService | undefined;
   if (fsMaybe) {
     try {
-      if (typeof fsMaybe.read === "function") {
+      if (typeof fsMaybe.read === 'function') {
         router.register({
-          name: "fs.read",
-          paramsSchema: loadSchema("fs/read.params.json"),
-          resultSchema: loadSchema("fs/read.result.json"),
+          name: 'fs.read',
+          paramsSchema: loadSchema('fs/read.params.json'),
+          resultSchema: loadSchema('fs/read.result.json'),
           handler: (params) => fsMaybe.read!(params),
         });
       }
-      if (typeof fsMaybe.list === "function") {
+      if (typeof fsMaybe.list === 'function') {
         router.register({
-          name: "fs.list",
-          paramsSchema: loadSchema("fs/list.params.json"),
-          resultSchema: loadSchema("fs/list.result.json"),
+          name: 'fs.list',
+          paramsSchema: loadSchema('fs/list.params.json'),
+          resultSchema: loadSchema('fs/list.result.json'),
           handler: (params) => fsMaybe.list!(params),
         });
       }
-      if (typeof fsMaybe.delete === "function") {
+      if (typeof fsMaybe.delete === 'function') {
         router.register({
-          name: "fs.delete",
-          paramsSchema: loadSchema("fs/delete.params.json"),
-          resultSchema: loadSchema("fs/delete.result.json"),
+          name: 'fs.delete',
+          paramsSchema: loadSchema('fs/delete.params.json'),
+          resultSchema: loadSchema('fs/delete.result.json'),
           handler: (params) => fsMaybe.delete!(params),
         });
       }
@@ -229,13 +247,15 @@ export function createMcpRouter(services: McpServices): McpRouter {
   }
 
   // Tool: eazipay.pickOptions
-  const eazipayMaybe = (services as unknown as Record<string, unknown>).eazipay as EaziPayService | undefined;
-  if (eazipayMaybe && typeof eazipayMaybe.pickOptions === "function") {
+  const eazipayMaybe = (services as unknown as Record<string, unknown>).eazipay as
+    | EaziPayService
+    | undefined;
+  if (eazipayMaybe && typeof eazipayMaybe.pickOptions === 'function') {
     try {
       router.register({
-        name: "eazipay.pickOptions",
-        paramsSchema: loadSchema("eazipay/pickOptions.params.json"),
-        resultSchema: loadSchema("eazipay/pickOptions.result.json"),
+        name: 'eazipay.pickOptions',
+        paramsSchema: loadSchema('eazipay/pickOptions.params.json'),
+        resultSchema: loadSchema('eazipay/pickOptions.result.json'),
         handler: (params) => eazipayMaybe.pickOptions!(params),
       });
     } catch {
@@ -252,7 +272,9 @@ export function createDefaultMcpRouter(): McpRouter {
   const file: FileService = {
     async preview(params) {
       // Params have already been schema-validated; safe to cast.
-      return fileSvc.preview(params as unknown as Parameters<typeof fileSvc.preview>[0]) as unknown as JsonValue;
+      return fileSvc.preview(
+        params as unknown as Parameters<typeof fileSvc.preview>[0],
+      ) as unknown as JsonValue;
     },
   };
   const services: McpServices & {
@@ -316,14 +338,14 @@ export interface McpResponse {
 
 export async function handleMcpRequest(router: McpRouter, req: McpRequest): Promise<McpResponse> {
   try {
-    const result = await router.invoke(req.method, (req.params ?? null));
+    const result = await router.invoke(req.method, req.params ?? null);
     return { id: req.id ?? null, result };
   } catch (err: unknown) {
     const norm = normalizeError(err);
     // Standardized error envelope
     const payload: { code: string; message: string; detail?: string; traceId?: string } = {
-      code: norm.code ?? "INTERNAL_ERROR",
-      message: norm.message ?? "Unknown error",
+      code: norm.code ?? 'INTERNAL_ERROR',
+      message: norm.message ?? 'Unknown error',
     };
     if (norm.detail) payload.detail = norm.detail;
     if (norm.traceId) payload.traceId = norm.traceId;
@@ -334,22 +356,32 @@ export async function handleMcpRequest(router: McpRouter, req: McpRequest): Prom
 type NormalizedError = { code?: string; message?: string; detail?: string; traceId?: string };
 function generateTraceId(): string {
   // Simple stable-ish trace id using timestamp + random hex
-  return `${Date.now().toString(36)}-${Math.random().toString(16).slice(2,10)}`;
+  return `${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 10)}`;
 }
 
 function normalizeError(err: unknown): NormalizedError {
   const traceId = generateTraceId();
   if (err instanceof McpValidationError) {
-    return { code: "VALIDATION_ERROR", message: err.message, detail: err.detail, traceId };
+    return { code: 'VALIDATION_ERROR', message: err.message, detail: err.detail, traceId };
   }
   if (err instanceof Error) {
     const anyErr = err as Error & { detail?: unknown };
-    return { code: "INTERNAL_ERROR", message: anyErr.message, detail: typeof anyErr.detail === "string" ? anyErr.detail : undefined, traceId };
+    return {
+      code: 'INTERNAL_ERROR',
+      message: anyErr.message,
+      detail: typeof anyErr.detail === 'string' ? anyErr.detail : undefined,
+      traceId,
+    };
   }
-  if (typeof err === "object" && err !== null) {
+  if (typeof err === 'object' && err !== null) {
     const maybeMsg = (err as Record<string, unknown>).message;
     const maybeDetail = (err as Record<string, unknown>).detail;
-    return { code: "INTERNAL_ERROR", message: typeof maybeMsg === "string" ? maybeMsg : undefined, detail: typeof maybeDetail === "string" ? maybeDetail : undefined, traceId };
+    return {
+      code: 'INTERNAL_ERROR',
+      message: typeof maybeMsg === 'string' ? maybeMsg : undefined,
+      detail: typeof maybeDetail === 'string' ? maybeDetail : undefined,
+      traceId,
+    };
   }
-  return { code: "INTERNAL_ERROR", message: undefined, traceId };
+  return { code: 'INTERNAL_ERROR', message: undefined, traceId };
 }

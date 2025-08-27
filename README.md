@@ -5,6 +5,7 @@
 A Node.js API for generating DDCMS Direct files in predefined formats with random, valid, or intentionally invalid data for testing purposes.
 
 ## Features
+
 - Per-filetype API endpoints scoped by SUN
 - **Multiple File Formats:**
   - **SDDirect** (.csv) - Complete implementation
@@ -31,6 +32,7 @@ A Node.js API for generating DDCMS Direct files in predefined formats with rando
 See also: [Contributing](./CONTRIBUTING.md) for Volta/nvm setup and workflow guidance.
 
 ### Prerequisites
+
 - Node.js 22 LTS (recommended)
   - Volta users: project pins Node via package.json (volta.node=22.17.0)
   - nvm users: `.nvmrc` set to `22`
@@ -38,9 +40,11 @@ See also: [Contributing](./CONTRIBUTING.md) for Volta/nvm setup and workflow gui
 - **VS Code** (recommended IDE with configured workspace)
 
 ### VS Code Setup 🔧
+
 This project includes a complete VS Code workspace configuration for optimal development experience:
 
 **Recommended Extensions** (auto-prompted on workspace open):
+
 - **TypeScript & Testing**: TypeScript Next, Vitest Explorer
 - **HTTP Testing**: REST Client (for `.http` files)
 - **Code Quality**: ESLint, Prettier, Code Spell Checker
@@ -50,6 +54,7 @@ This project includes a complete VS Code workspace configuration for optimal dev
 - **Productivity**: Error Lens, Path Intellisense, Todo Highlight
 
 **Pre-configured Settings**:
+
 - Auto-format on save with Prettier
 - ESLint auto-fix on save
 - TypeScript import organization
@@ -58,21 +63,25 @@ This project includes a complete VS Code workspace configuration for optimal dev
 - Custom spell checker dictionary with project terms
 
 ### Install
+
 ```sh
 npm install
 ```
 
 ### Build
+
 ```sh
 npm run build
 ```
 
 ### Run
+
 ```sh
 npm start
 ```
 
 ### Test
+
 ```sh
 npm run test
 ```
@@ -82,6 +91,7 @@ npm run test
 New endpoints are namespaced by SUN and file type.
 
 ### POST /api/:sun/:filetype/generate
+
 - Body: GenerateRequest
   - processingDate?: string
   - forInlineEditing?: boolean
@@ -95,11 +105,13 @@ New endpoints are namespaced by SUN and file type.
 - Returns: { success: true, fileContent: string } and sets header `X-Generated-File` with the relative file path
 
 Note on persistence:
+
 - File generation is performed in-memory; the API does not write to disk.
 - The `X-Generated-File` header reflects the deterministic virtual path the file would be written to.
 - If you need to persist to disk (legacy/CLI use), call `generateFileWithFs(request, fs, sun)` which wraps the in-memory result and writes it using the provided filesystem.
 
 Example (SDDirect):
+
 ```json
 {
   "numberOfRows": 20,
@@ -109,6 +121,7 @@ Example (SDDirect):
 ```
 
 Example (EaziPay):
+
 ```json
 {
   "numberOfRows": 10,
@@ -118,6 +131,7 @@ Example (EaziPay):
 ```
 
 Example (Bacs18PaymentLines):
+
 ```json
 {
   "numberOfRows": 3,
@@ -127,7 +141,9 @@ Example (Bacs18PaymentLines):
 ```
 
 ### POST /api/:sun/:filetype/valid-row
+
 ### POST /api/:sun/:filetype/invalid-row
+
 - Body: RowPreviewRequest (same as GenerateRequest minus includeHeaders/hasInvalidRows/outputPath)
 - Returns:
   - headers: { name: string, value: number }[]
@@ -135,11 +151,13 @@ Example (Bacs18PaymentLines):
   - metadata: object
 
 #### Filename Format
+
 - Output directory: `output/{filetype}/{SUN}/...`
 - **SDDirect**: `SDDirect_{columns}_{rows}_{header}_{validity}_{timestamp}.csv`
 - **EaziPay**: `EaziPay_{columns}_{rows}_{header}_{validity}_{timestamp}.{csv|txt}`
 
 Where:
+
 - `columns`: Number of columns in the file (SDDirect varies; EaziPay fixed at 14)
 - `rows`: Number of data rows (EaziPay always headerless)
 - `header`: `H` or `NH` (EaziPay is always `NH`)
@@ -149,6 +167,7 @@ Where:
 ## EaziPay File Format Specification
 
 ### Field Structure (14 fields in exact order)
+
 1. Transaction Code — One of: 01, 17, 18, 99, 0C, 0N, 0S
 2. Originating Sort Code — 6 digit numeric
 3. Originating Account Number — 8 digit numeric
@@ -165,6 +184,7 @@ Where:
 14. Empty Trailer 1 — Always empty string
 
 ### Date Format Options
+
 - **`"YYYY-MM-DD"`** → `2025-07-30`
 - **`"DD-MMM-YYYY"`** → `30-JUL-2025` (uppercase month)
 - **`"DD/MM/YYYY"`** → `30/07/2025`
@@ -172,10 +192,12 @@ Where:
 If not specified, a random format is selected for the entire file.
 
 ### Trailer Behavior
+
 - Trailer field removed and replaced with a single empty trailing column.
 - EaziPay column count is fixed at 14.
 
 ### Special Validation Rules
+
 - **Fixed Zero**: Must always be exactly `0`
 - **Empty Field**: Must always be `undefined` (appears as empty in CSV)
 - **SUN Number**: Only allowed when Transaction Code is 0C, 0N, or 0S
@@ -183,6 +205,7 @@ If not specified, a random format is selected for the entire file.
 - **Processing Date**: Exactly 2 working days in future for codes 0C, 0N, 0S
 
 ### File Characteristics
+
 - Headers: Never included (always headerless)
 - Extensions: Randomly selected `.csv` or `.txt`
 - Column Count: Fixed at 14
@@ -199,7 +222,7 @@ src/
 ├── index.ts                     # Express server entry point
 ├── index.test.ts               # Integration tests
 └── lib/
-    ├── types.ts                # Core type definitions  
+    ├── types.ts                # Core type definitions
     ├── calendar.ts             # UK working day calculator
     ├── fileType/
     │   ├── factory.ts         # File type factory pattern
@@ -233,12 +256,14 @@ eazipay.http                    # EaziPay API test requests
 ## Technical Implementation
 
 ### Architecture
+
 - **Factory Pattern**: Extensible file type generation
 - **Dependency Injection**: Clean separation of concerns
 - **Type Safety**: Full TypeScript implementation
 - **Modular Design**: Independent validators and generators
 
 ### Key Components
+
 - **Calendar System**: UK Bank Holiday aware working day calculations
 - **Date Formatting**: Multiple format support for EaziPay
 - **Field Validation**: File type specific validation rules
@@ -259,12 +284,14 @@ eazipay.http                    # EaziPay API test requests
 Use the in-memory router plus the simple JSON-RPC-like handler in `src/mcp/server.ts`.
 
 - file.preview
+
   - Request: `{ id: 1, method: "file.preview", params: { sun: "123456", fileType: "EaziPay", numberOfRows: 2 } }`
   - Result: `{ content: "...", meta: { fileType: "EaziPay", rows: 2, columns: 14, header: false, validity: "valid", sun: "123456" } }`
   - Bacs18 example: `{ id: 11, method: "file.preview", params: { sun: "123456", fileType: "Bacs18PaymentLines", numberOfRows: 2, variant: "MULTI" } }`
   - Result: `{ content: "...", meta: { fileType: "Bacs18PaymentLines", rows: 2, columns: 12, header: "NH", validity: "V", sun: "123456" } }`
 
 - row.generate
+
   - Request: `{ id: 2, method: "row.generate", params: { sun: "123456", fileType: "SDDirect", validity: "valid" } }`
   - Result: `{ row: { fields: [ ... ], asLine: "..." }, issues?: [ ... ] }`
   - Bacs18 example: `{ id: 12, method: "row.generate", params: { sun: "123456", fileType: "Bacs18PaymentLines", validity: "invalid", variant: "DAILY" } }`
@@ -275,9 +302,11 @@ Use the in-memory router plus the simple JSON-RPC-like handler in `src/mcp/serve
   - Result: `{ date: "YYYY-MM-DD" }`
 
 ## Logging
+
 - All requests, errors, and responses are logged in structured JSON format for easy analysis.
 
 ## Contributing
+
 - Follow TypeScript, Node.js, and linting best practices
 - All code must be unit tested (Vitest) with 100% coverage
 - Follow SOLID principles and design patterns
@@ -285,11 +314,13 @@ Use the in-memory router plus the simple JSON-RPC-like handler in `src/mcp/serve
 - See `documentation/REQUIREMENTS.md` and `IMPLEMENTATION_PLAN.md` for details
 
 ## Backlog Management
+
 Backlog documents live outside this repository.
+
 - Backlog location guide: [BACKLOG-LOCATION.md](./BACKLOG-LOCATION.md)
 
-
 ## Testing
+
 ```sh
 # Run all tests with coverage
 npm run test
@@ -305,6 +336,7 @@ npm run lint
 ```
 
 ### Manual API Testing 🧪
+
 The project includes HTTP request files for manual testing with VS Code's REST Client extension:
 
 - **`SDDirect.http`** - Comprehensive test cases for SDDirect file generation
@@ -313,7 +345,6 @@ The project includes HTTP request files for manual testing with VS Code's REST C
   - Error scenarios and validation testing
   - Performance testing with large datasets
   - Future file type testing (Bacs18)
-  
 - **`eazipay.http`** - Complete test suite for EaziPay file generation
   - All three date format options (YYYY-MM-DD, DD-MMM-YYYY, DD/MM/YYYY)
   - Header validation testing (always headerless)
@@ -324,6 +355,7 @@ The project includes HTTP request files for manual testing with VS Code's REST C
 **Usage**: Install the REST Client extension in VS Code, then click "Send Request" above any HTTP request in these files. Variables like `{{number_of_rows}}` are defined at the top of each file for easy modification.
 
 ## File Format Support Status
+
 - ✅ SDDirect — Complete implementation (Phase 1)
 - ✅ EaziPay — Complete implementation (Phase 2.2)
   - ✅ 3 date format options
@@ -339,6 +371,7 @@ The project includes HTTP request files for manual testing with VS Code's REST C
 > Disclaimer: Bacs18PaymentLines output is for development preview/testing only. We make no guarantee that generated files will be accepted by BACS or any downstream system. Validate against your scheme provider before use in production.
 
 ### Bacs18PaymentLines — quick format notes
+
 - Variants: `MULTI` (12 fields, 106 chars/line) and `DAILY` (11 fields, 100 chars/line)
 - Fixed-width text; no headers or footers
 - Allowed characters in text fields: `A–Z`, `0–9`, `.`, `&`, `/`, `-`, and space (others replaced with space); text uppercased
@@ -346,6 +379,7 @@ The project includes HTTP request files for manual testing with VS Code's REST C
 - Processing date (MULTI only): Julian `bYYDDD` (leading space)
 
 ## Recent Updates 📈
+
 - Phase 2.2: New per-filetype endpoints: `/api/:sun/:filetype/generate`, `/valid-row`, `/invalid-row`
 - Generate returns fileContent and sets `X-Generated-File` header with relative path
 - Public API: added `processingDate`, renamed `canInlineEdit` → `forInlineEditing`, removed `fileType` from body
@@ -354,4 +388,5 @@ The project includes HTTP request files for manual testing with VS Code's REST C
 - Test suite: 123 passing tests (Vitest)
 
 ## License
+
 MIT

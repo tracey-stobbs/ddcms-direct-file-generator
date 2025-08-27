@@ -1,18 +1,16 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://example.com/mcp/calendar.nextWorkingDay.params.json",
-    "title": "calendar.nextWorkingDay params",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "fromDate": {
-            "type": "string"
-        },
-        "offsetDays": {
-            "type": "integer"
-        }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/mcp/calendar.nextWorkingDay.params.json",
+  "title": "calendar.nextWorkingDay params",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "fromDate": {
+      "type": "string"
     },
-    "required": [
-        "offsetDays"
-    ]
+    "offsetDays": {
+      "type": "integer"
+    }
+  },
+  "required": ["offsetDays"]
 }

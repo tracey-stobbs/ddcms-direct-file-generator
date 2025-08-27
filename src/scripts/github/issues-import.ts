@@ -33,18 +33,22 @@ if (!TOKEN) {
 
 const [owner, repo] = OWNER_REPO.split('/');
 
-const INPUT_RELATIVE = path.join('Backlog Management', 'Phase 4 - Project MCP', 'github-issues.json');
+const INPUT_RELATIVE = path.join(
+  'Backlog Management',
+  'Phase 4 - Project MCP',
+  'github-issues.json',
+);
 const INPUT_PATH = path.resolve(process.cwd(), INPUT_RELATIVE);
 
-function request<T>(method: 'GET'|'POST'|'PATCH', urlPath: string, body?: unknown): Promise<T> {
+function request<T>(method: 'GET' | 'POST' | 'PATCH', urlPath: string, body?: unknown): Promise<T> {
   const options: https.RequestOptions = {
     method,
     hostname: 'api.github.com',
     path: urlPath,
     headers: {
       'User-Agent': 'shiny-palm-tree-issues-import-script',
-      'Accept': 'application/vnd.github+json',
-      'Authorization': `Bearer ${TOKEN}`,
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${TOKEN}`,
     },
   };
   return new Promise<T>((resolve, reject) => {
@@ -54,7 +58,11 @@ function request<T>(method: 'GET'|'POST'|'PATCH', urlPath: string, body?: unknow
       res.on('end', () => {
         const text = Buffer.concat(chunks).toString('utf8');
         if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-          try { resolve(text ? JSON.parse(text) : ({} as T)); } catch { resolve({} as T); }
+          try {
+            resolve(text ? JSON.parse(text) : ({} as T));
+          } catch {
+            resolve({} as T);
+          }
         } else {
           reject(new Error(`HTTP ${res.statusCode}: ${text}`));
         }
@@ -86,7 +94,9 @@ async function ensureMilestone(title: string): Promise<number> {
   const existing = await listMilestones();
   const found = existing.find((m) => m.title === title);
   if (found) return found.number;
-  const created = await request<{ number: number }>('POST', `/repos/${owner}/${repo}/milestones`, { title });
+  const created = await request<{ number: number }>('POST', `/repos/${owner}/${repo}/milestones`, {
+    title,
+  });
   return created.number;
 }
 
@@ -120,7 +130,8 @@ function loadIssues(): IssueInput[] {
 async function main(): Promise<void> {
   const issues = loadIssues();
   console.log(`Importing ${issues.length} issues into ${OWNER_REPO} ...`);
-  let ok = 0; let fail = 0;
+  let ok = 0;
+  let fail = 0;
   for (const it of issues) {
     try {
       await createIssue(it);

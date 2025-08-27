@@ -1,19 +1,16 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://example.com/mcp/fs.read.result.json",
-    "title": "fs.read result",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "content": {
-            "type": "string"
-        },
-        "eof": {
-            "type": "boolean"
-        }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/mcp/fs.read.result.json",
+  "title": "fs.read result",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "content": {
+      "type": "string"
     },
-    "required": [
-        "content",
-        "eof"
-    ]
+    "eof": {
+      "type": "boolean"
+    }
+  },
+  "required": ["content", "eof"]
 }

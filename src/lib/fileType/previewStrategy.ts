@@ -1,19 +1,23 @@
-import type { OptionalField, Request } from "../types";
-import { DateFormatter } from "../utils/dateFormatter";
-import { EaziPayValidator } from "../validators/eazipayValidator";
-import { formatEaziPayRowAsArray, generateInvalidEaziPayRow, generateValidEaziPayRow } from "./eazipay";
-import { generateInvalidSDDirectRow, generateValidSDDirectRow } from "./sddirect";
+import type { OptionalField, Request } from '../types';
+import { DateFormatter } from '../utils/dateFormatter';
+import { EaziPayValidator } from '../validators/eazipayValidator';
+import {
+  formatEaziPayRowAsArray,
+  generateInvalidEaziPayRow,
+  generateValidEaziPayRow,
+} from './eazipay';
+import { generateInvalidSDDirectRow, generateValidSDDirectRow } from './sddirect';
 
 export type PreviewParams = {
   sun: string;
-  fileType: "EaziPay" | "SDDirect";
+  fileType: 'EaziPay' | 'SDDirect';
   numberOfRows?: number;
   includeOptionalFields?: boolean | string[];
   hasInvalidRows?: boolean;
   includeHeaders?: boolean; // SDDirect only
   forInlineEditing?: boolean;
   processingDate?: string;
-  dateFormat?: "YYYY-MM-DD" | "DD-MMM-YYYY" | "DD/MM/YYYY";
+  dateFormat?: 'YYYY-MM-DD' | 'DD-MMM-YYYY' | 'DD/MM/YYYY';
 };
 
 export type PreviewResult = {
@@ -21,9 +25,9 @@ export type PreviewResult = {
   meta: {
     rows: number;
     columns: number;
-    header: "H" | "NH";
-    validity: "V" | "I";
-    fileType: PreviewParams["fileType"];
+    header: 'H' | 'NH';
+    validity: 'V' | 'I';
+    fileType: PreviewParams['fileType'];
     sun: string;
   };
 };
@@ -31,14 +35,14 @@ export type PreviewResult = {
 export interface FileTypePreviewStrategy {
   buildRows(params: PreviewParams): string[][];
   serialize(rows: string[][], params: PreviewParams): string;
-  meta(rows: string[][], params: PreviewParams): PreviewResult["meta"];
+  meta(rows: string[][], params: PreviewParams): PreviewResult['meta'];
 }
 
-export function getPreviewStrategy(fileType: PreviewParams["fileType"]): FileTypePreviewStrategy {
+export function getPreviewStrategy(fileType: PreviewParams['fileType']): FileTypePreviewStrategy {
   switch (fileType) {
-    case "EaziPay":
+    case 'EaziPay':
       return eaziPayStrategy;
-    case "SDDirect":
+    case 'SDDirect':
       return sdDirectStrategy;
   }
 }
@@ -52,17 +56,19 @@ function computeInvalidRowsCap(numberOfRows: number, forInline: boolean | undefi
 export function toCsvLine(fields: string[]): string {
   return fields
     .map((f) => {
-      if (f.includes("\"") || f.includes(",") || f.includes("\n")) {
+      if (f.includes('"') || f.includes(',') || f.includes('\n')) {
         return `"${f.replace(/"/g, '""')}"`;
       }
       return f;
     })
-    .join(",");
+    .join(',');
 }
 
-function normalizeOptionalFields(val: boolean | string[] | undefined): boolean | OptionalField[] | undefined {
+function normalizeOptionalFields(
+  val: boolean | string[] | undefined,
+): boolean | OptionalField[] | undefined {
   if (Array.isArray(val)) return val as OptionalField[];
-  if (typeof val === "boolean") return val;
+  if (typeof val === 'boolean') return val;
   return undefined;
 }
 
@@ -71,44 +77,47 @@ const eaziPayStrategy: FileTypePreviewStrategy = {
     const numberOfRows = params.numberOfRows ?? 15;
     const dateFormat = params.dateFormat || DateFormatter.getRandomDateFormat();
     const rows: string[][] = [];
-    const invalidRows = params.hasInvalidRows ? computeInvalidRowsCap(numberOfRows, params.forInlineEditing) : 0;
+    const invalidRows = params.hasInvalidRows
+      ? computeInvalidRowsCap(numberOfRows, params.forInlineEditing)
+      : 0;
     for (let i = 0; i < numberOfRows; i++) {
-      const rowData = params.hasInvalidRows && i > 1 && i < invalidRows
-        ? generateInvalidEaziPayRow(toInternalRequest("EaziPay", params), dateFormat)
-        : generateValidEaziPayRow(toInternalRequest("EaziPay", params), dateFormat);
+      const rowData =
+        params.hasInvalidRows && i > 1 && i < invalidRows
+          ? generateInvalidEaziPayRow(toInternalRequest('EaziPay', params), dateFormat)
+          : generateValidEaziPayRow(toInternalRequest('EaziPay', params), dateFormat);
       rows.push(formatEaziPayRowAsArray(rowData));
     }
     return rows;
   },
   serialize(rows) {
-    return rows.map((r) => toCsvLine(r)).join("\n");
+    return rows.map((r) => toCsvLine(r)).join('\n');
   },
   meta(rows, params) {
     return {
       rows: rows.length,
       columns: EaziPayValidator.getColumnCount(),
-      header: "NH",
-      validity: params.hasInvalidRows ? "I" : "V",
-      fileType: "EaziPay",
+      header: 'NH',
+      validity: params.hasInvalidRows ? 'I' : 'V',
+      fileType: 'EaziPay',
       sun: params.sun,
     };
   },
 };
 
 const SD_REQUIRED = [
-  "Destination Account Name",
-  "Destination Sort Code",
-  "Destination Account Number",
-  "Payment Reference",
-  "Amount",
-  "Transaction code",
+  'Destination Account Name',
+  'Destination Sort Code',
+  'Destination Account Number',
+  'Payment Reference',
+  'Amount',
+  'Transaction code',
 ] as const;
 const SD_OPTIONAL_ALL = [
-  "Realtime Information Checksum",
-  "Pay Date",
-  "Originating Sort Code",
-  "Originating Account Number",
-  "Originating Account Name",
+  'Realtime Information Checksum',
+  'Pay Date',
+  'Originating Sort Code',
+  'Originating Account Number',
+  'Originating Account Name',
 ] as const;
 
 function computeSDHeaders(includeOptionalFields: boolean | string[] | undefined): string[] {
@@ -123,7 +132,7 @@ function computeSDHeaders(includeOptionalFields: boolean | string[] | undefined)
 function projectSDRow(row: Record<string, unknown>, headers: string[]): string[] {
   return headers.map((h) => {
     const v = row[h];
-    return v === undefined || v === null ? "" : String(v);
+    return v === undefined || v === null ? '' : String(v);
   });
 }
 
@@ -133,21 +142,24 @@ const sdDirectStrategy: FileTypePreviewStrategy = {
     const includeOptionalFields = params.includeOptionalFields ?? true;
     const headers = computeSDHeaders(includeOptionalFields);
     const rows: string[][] = [];
-    const invalidRows = params.hasInvalidRows ? computeInvalidRowsCap(numberOfRows, params.forInlineEditing) : 0;
+    const invalidRows = params.hasInvalidRows
+      ? computeInvalidRowsCap(numberOfRows, params.forInlineEditing)
+      : 0;
     for (let i = 0; i < numberOfRows; i++) {
-      const data = params.hasInvalidRows && i < invalidRows
-        ? generateInvalidSDDirectRow(toInternalRequest("SDDirect", params))
-        : generateValidSDDirectRow(toInternalRequest("SDDirect", params));
-  rows.push(projectSDRow(data, headers));
+      const data =
+        params.hasInvalidRows && i < invalidRows
+          ? generateInvalidSDDirectRow(toInternalRequest('SDDirect', params))
+          : generateValidSDDirectRow(toInternalRequest('SDDirect', params));
+      rows.push(projectSDRow(data, headers));
     }
     // Prepend headers if requested
-    if ((params.includeHeaders ?? true)) {
+    if (params.includeHeaders ?? true) {
       rows.unshift(computeSDHeaders(includeOptionalFields));
     }
     return rows;
   },
   serialize(rows) {
-    return rows.map((r) => toCsvLine(r)).join("\n");
+    return rows.map((r) => toCsvLine(r)).join('\n');
   },
   meta(rows, params) {
     const hasHeader = params.includeHeaders ?? true;
@@ -156,23 +168,24 @@ const sdDirectStrategy: FileTypePreviewStrategy = {
     return {
       rows: dataRowCount,
       columns,
-      header: hasHeader ? "H" : "NH",
-      validity: params.hasInvalidRows ? "I" : "V",
-      fileType: "SDDirect",
+      header: hasHeader ? 'H' : 'NH',
+      validity: params.hasInvalidRows ? 'I' : 'V',
+      fileType: 'SDDirect',
       sun: params.sun,
     };
   },
 };
 
-function toInternalRequest(fileType: "EaziPay" | "SDDirect", p: PreviewParams): Request {
+function toInternalRequest(fileType: 'EaziPay' | 'SDDirect', p: PreviewParams): Request {
   return {
     fileType,
     canInlineEdit: p.forInlineEditing ?? true,
-    includeHeaders: fileType === "SDDirect" ? (p.includeHeaders ?? true) : undefined,
+    includeHeaders: fileType === 'SDDirect' ? p.includeHeaders ?? true : undefined,
     numberOfRows: p.numberOfRows,
     hasInvalidRows: p.hasInvalidRows,
     includeOptionalFields: normalizeOptionalFields(p.includeOptionalFields),
-    dateFormat: fileType === "EaziPay" ? p.dateFormat || DateFormatter.getRandomDateFormat() : undefined,
+    dateFormat:
+      fileType === 'EaziPay' ? p.dateFormat || DateFormatter.getRandomDateFormat() : undefined,
     processingDate: p.processingDate,
   };
 }

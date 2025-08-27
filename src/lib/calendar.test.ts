@@ -4,7 +4,7 @@ import { IsBankHoliday, IsWorkingDay, AddWorkingDays } from '../lib/calendar';
 
 describe('Calendar Service', () => {
   describe('IsBankHoliday', () => {
-    it('should identify New Year\'s Day 2025 as a bank holiday', () => {
+    it("should identify New Year's Day 2025 as a bank holiday", () => {
       const newYearsDay = DateTime.fromFormat('20250101', 'yyyyMMdd');
       expect(IsBankHoliday(newYearsDay)).toBe(true);
     });

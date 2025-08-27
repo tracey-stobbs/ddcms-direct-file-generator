@@ -12,12 +12,12 @@
  *   - filePath is a virtual path rooted at output/[fileType]/[SUN] unless request.outputPath is set.
  *   - fileContent is the serialized file as produced by the adapter.
  */
-import { DateTime } from "luxon";
-import path from "path";
-import type { PreviewParams } from "../fileType/adapter";
-import { getFileTypeAdapter } from "../fileType/factory";
-import type { Request } from "../types";
-import { FileSystem } from "./fsWrapper";
+import { DateTime } from 'luxon';
+import path from 'path';
+import type { PreviewParams } from '../fileType/adapter';
+import { getFileTypeAdapter } from '../fileType/factory';
+import type { Request } from '../types';
+import { FileSystem } from './fsWrapper';
 
 export interface GeneratedFile {
   filePath: string;
@@ -29,19 +29,24 @@ export async function generateFile(request: Request, sun: string): Promise<Gener
   return generateFileInMemory(request, sun);
 }
 
-export async function generateFileWithFs(request: Request, fs: FileSystem, sun: string): Promise<GeneratedFile> {
+export async function generateFileWithFs(
+  request: Request,
+  fs: FileSystem,
+  sun: string,
+): Promise<GeneratedFile> {
   // Back-compat: generate in memory, then persist to disk using provided fs
-  const intendedDir = request.outputPath || path.join(process.cwd(), "output", request.fileType, sun);
+  const intendedDir =
+    request.outputPath || path.join(process.cwd(), 'output', request.fileType, sun);
   if (!fs.existsSync(intendedDir)) fs.mkdirSync(intendedDir, { recursive: true });
   const generated = await generateFileInMemory(request, sun);
-  fs.writeFileSync(generated.filePath, generated.fileContent, "utf8");
+  fs.writeFileSync(generated.filePath, generated.fileContent, 'utf8');
   return generated;
 }
 
 // Core in-memory generator delegating to file type adapters
 async function generateFileInMemory(request: Request, sun: string): Promise<GeneratedFile> {
   const now = DateTime.now();
-  const timestamp = now.toFormat("yyyyLLdd_HHmmss");
+  const timestamp = now.toFormat('yyyyLLdd_HHmmss');
   const fileType = request.fileType;
 
   const adapter = getFileTypeAdapter(fileType);
@@ -50,13 +55,13 @@ async function generateFileInMemory(request: Request, sun: string): Promise<Gene
   const meta = adapter.previewMeta(rows, params);
   const content = adapter.serialize(rows, params);
 
-  const columnCount = String(meta.columns).padStart(2, "0");
+  const columnCount = String(meta.columns).padStart(2, '0');
   const headerToken = meta.header; // "H" | "NH"
   const validity = meta.validity; // "V" | "I"
   const extension = getFileExtension(fileType);
 
   const filename = `${fileType}_${columnCount}_x_${meta.rows}_${headerToken}_${validity}_${timestamp}.${extension}`;
-  const outputDir = request.outputPath || path.join(process.cwd(), "output", fileType, sun);
+  const outputDir = request.outputPath || path.join(process.cwd(), 'output', fileType, sun);
   const filePath = path.join(outputDir, filename);
   return { filePath, fileContent: content };
 }
@@ -68,14 +73,14 @@ async function generateFileInMemory(request: Request, sun: string): Promise<Gene
 function toPreviewParams(request: Request, sun: string): PreviewParams {
   return {
     sun,
-    fileType: request.fileType as "EaziPay" | "SDDirect" | "Bacs18PaymentLines",
+    fileType: request.fileType as 'EaziPay' | 'SDDirect' | 'Bacs18PaymentLines',
     numberOfRows: request.numberOfRows,
     includeOptionalFields: request.includeOptionalFields,
     hasInvalidRows: request.hasInvalidRows,
     includeHeaders: request.includeHeaders,
     forInlineEditing: request.canInlineEdit,
     processingDate: request.processingDate,
-    dateFormat: request.fileType === "EaziPay" ? request.dateFormat : undefined,
+    dateFormat: request.fileType === 'EaziPay' ? request.dateFormat : undefined,
     // variant: request.fileType === "Bacs18PaymentLines" ? request.variant : undefined, // not in legacy Request
   } as const;
 }
@@ -85,15 +90,15 @@ function toPreviewParams(request: Request, sun: string): PreviewParams {
  */
 function getFileExtension(fileType: string): string {
   switch (fileType) {
-    case "SDDirect":
-      return "csv";
-    case "EaziPay":
-      return Math.random() < 0.5 ? "csv" : "txt";
-    case "Bacs18PaymentLines":
-      return "txt";
-    case "Bacs18StandardFile":
-      return "bacs";
+    case 'SDDirect':
+      return 'csv';
+    case 'EaziPay':
+      return Math.random() < 0.5 ? 'csv' : 'txt';
+    case 'Bacs18PaymentLines':
+      return 'txt';
+    case 'Bacs18StandardFile':
+      return 'bacs';
     default:
-      return "csv";
+      return 'csv';
   }
 }

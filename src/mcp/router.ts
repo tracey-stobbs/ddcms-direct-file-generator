@@ -1,4 +1,4 @@
-import Ajv, { ErrorObject, ValidateFunction } from "ajv";
+import Ajv, { ErrorObject, ValidateFunction } from 'ajv';
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue };
 
@@ -17,10 +17,13 @@ export interface RouterOptions {
 
 export class McpRouter {
   private readonly ajv: Ajv;
-  private readonly tools = new Map<string, { validateParams: ValidateFunction; validateResult: ValidateFunction; handler: ToolHandler }>();
+  private readonly tools = new Map<
+    string,
+    { validateParams: ValidateFunction; validateResult: ValidateFunction; handler: ToolHandler }
+  >();
 
   constructor(opts?: RouterOptions) {
-  this.ajv = opts?.ajv ?? new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
+    this.ajv = opts?.ajv ?? new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
   }
 
   register(tool: ToolDefinition): void {
@@ -37,15 +40,19 @@ export class McpRouter {
     if (!entry) throw new Error(`Unknown tool: ${name}`);
 
     if (!entry.validateParams(params)) {
-      const msg = this.ajv.errorsText(entry.validateParams.errors ?? undefined, { dataVar: "params" });
-      throw new McpValidationError("Invalid params", msg, entry.validateParams.errors ?? undefined);
+      const msg = this.ajv.errorsText(entry.validateParams.errors ?? undefined, {
+        dataVar: 'params',
+      });
+      throw new McpValidationError('Invalid params', msg, entry.validateParams.errors ?? undefined);
     }
 
     const result = await entry.handler(params);
 
     if (!entry.validateResult(result)) {
-      const msg = this.ajv.errorsText(entry.validateResult.errors ?? undefined, { dataVar: "result" });
-      throw new McpValidationError("Invalid result", msg, entry.validateResult.errors ?? undefined);
+      const msg = this.ajv.errorsText(entry.validateResult.errors ?? undefined, {
+        dataVar: 'result',
+      });
+      throw new McpValidationError('Invalid result', msg, entry.validateResult.errors ?? undefined);
     }
     return result;
   }
@@ -56,7 +63,7 @@ export class McpValidationError extends Error {
   public readonly errors?: ErrorObject[];
   constructor(message: string, detail?: string, errors?: ErrorObject[]) {
     super(message);
-    this.name = "McpValidationError";
+    this.name = 'McpValidationError';
     this.detail = detail;
     this.errors = errors;
   }

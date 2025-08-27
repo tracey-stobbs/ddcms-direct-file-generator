@@ -1,28 +1,36 @@
 ## Summary
+
 - What changed and why (1–3 sentences)
 
 ## Linked issues
+
 - Closes #
 
 ## Changes
-- 
+
+-
 
 ## Tests
-- Unit: 
-- Integration (if applicable): 
+
+- Unit:
+- Integration (if applicable):
 
 ## Docs
-- README/schemas updated? If N/A, why: 
+
+- README/schemas updated? If N/A, why:
 
 ## Risk/impact
-- Backward-compat, migrations, rollout notes: 
+
+- Backward-compat, migrations, rollout notes:
 
 ## Notes
-- Screenshots/logs/benchmarks (optional): 
+
+- Screenshots/logs/benchmarks (optional):
 
 ---
 
 ## Quality gates
+
 - [ ] Build: TypeScript compiles (tsc)
 - [ ] Lint: eslint passes
 - [ ] Tests: unit tests pass (vitest); integration tests if applicable
