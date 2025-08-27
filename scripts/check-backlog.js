@@ -25,10 +25,29 @@ if (ids.length === 0) {
   process.exit(0);
 }
 
+// Collect PR title/body if running in GitHub Actions with an event payload
+let prText = '';
+const ghEventPath = process.env.GITHUB_EVENT_PATH;
+if (ghEventPath && fs.existsSync(ghEventPath)) {
+  try {
+    const evt = JSON.parse(fs.readFileSync(ghEventPath, 'utf8'));
+    if (evt && evt.pull_request) {
+      const pr = evt.pull_request;
+      prText = `${pr.title || ''}\n${pr.body || ''}`;
+    }
+  } catch (err) {
+    // ignore; fallback to commit search
+  }
+}
+
 let missing = [];
 ids.forEach(id => {
+  // if PR text contains the id, consider it found
+  if (prText && prText.includes(id)) return;
+
   try {
-    const out = execSync(`git log --all --grep=${id} --pretty=format:%H`, { encoding: 'utf8' }).trim();
+    // search commit messages across all refs
+    const out = execSync(`git log --all --grep='${id}' --pretty=format:%H`, { encoding: 'utf8' }).trim();
     if (!out) missing.push(id);
   } catch (err) {
     missing.push(id);
