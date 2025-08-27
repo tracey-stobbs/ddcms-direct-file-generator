@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { JsonValue } from './router';
+import { McpValidationError } from './router';
 import { createDefaultMcpRouter, handleMcpRequest } from './server';
 
 describe('MCP integration (schemas + services)', () => {
@@ -56,5 +57,42 @@ describe('MCP integration (schemas + services)', () => {
         });
         expect(res.error).toBeDefined();
         expect(String(res.error?.message)).toMatch(/Invalid params/);
+    });
+
+    it('file.generate persists file when requested', async () => {
+        const router = createDefaultMcpRouter();
+        const res = await handleMcpRequest(router, {
+            id: 10,
+            method: 'file.generate',
+            params: { sun: '999999', fileType: 'EaziPay', persist: true } as unknown as JsonValue,
+        });
+        if (res.error) {
+            // Try invoking directly to get Ajv errors on the thrown McpValidationError
+            try {
+                await (router as unknown as { invoke: (name: string, params: unknown) => Promise<unknown> }).invoke(
+                    'file.generate',
+                    { sun: '999999', fileType: 'EaziPay', persist: true },
+                );
+            } catch (err: unknown) {
+                if (err instanceof McpValidationError) {
+                    // Log detailed Ajv errors for debugging
+                    // eslint-disable-next-line no-console
+                    console.error('MCP validation errors:', JSON.stringify(err.errors, null, 2));
+                }
+            }
+        }
+        expect(res.error).toBeUndefined();
+        const r = res.result as { filePath?: string; fileContent?: string; persisted?: boolean; persistedPath?: string };
+        expect(r.persisted).toBe(true);
+        expect(typeof r.persistedPath).toBe('string');
+
+        // Check file exists on disk
+        const fs = await import('fs/promises');
+        const path = r.persistedPath as string;
+        const stat = await fs.stat(path);
+        expect(stat.isFile()).toBe(true);
+
+        // cleanup
+        await fs.unlink(path);
     });
 });

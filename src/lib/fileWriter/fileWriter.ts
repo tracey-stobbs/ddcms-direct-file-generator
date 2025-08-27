@@ -22,6 +22,15 @@ import { FileSystem } from './fsWrapper';
 export interface GeneratedFile {
     filePath: string;
     fileContent: string;
+    meta: {
+        rows: number;
+        columns: number;
+        header: string;
+        validity: string;
+        extension: string;
+        fileType: string;
+        sun: string;
+    };
 }
 
 export async function generateFile(request: Request, sun: string): Promise<GeneratedFile> {
@@ -63,7 +72,19 @@ async function generateFileInMemory(request: Request, sun: string): Promise<Gene
     const filename = `${fileType}_${columnCount}_x_${meta.rows}_${headerToken}_${validity}_${timestamp}.${extension}`;
     const outputDir = request.outputPath || path.join(process.cwd(), 'output', fileType, sun);
     const filePath = path.join(outputDir, filename);
-    return { filePath, fileContent: content };
+    return {
+        filePath,
+        fileContent: content,
+        meta: {
+            rows: meta.rows,
+            columns: meta.columns,
+            header: meta.header,
+            validity: meta.validity,
+            extension: `.${extension}`,
+            fileType,
+            sun,
+        },
+    };
 }
 
 /**
