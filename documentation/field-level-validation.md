@@ -6,7 +6,7 @@ This document defines the validation rules when generating DDCMS-Direct output f
 
 ## 2. Scope
 
-- The validation rules apply to all filetypes.
+-   The validation rules apply to all filetypes.
 
 Destination Account Name:
 must be 18 characters or less and must only contain allowed characters
@@ -34,9 +34,9 @@ Must not be null.
 Realtime Information Checksum:
 Must match one of the following patterns:
 
-- A forward slash followed by exactly 3 allowed characters: /XXX
-- Exactly 4 zeros: 0000
-- Can be empty
+-   A forward slash followed by exactly 3 allowed characters: /XXX
+-   Exactly 4 zeros: 0000
+-   Can be empty
 
 Pay Date
 Must be a valid date in the format YYYYMMDD,
@@ -73,10 +73,10 @@ Must be null or undefined
 
 Only the following characters are allowed:
 
-- [A–Za-z] (Alpha characters)
-- [0–9] (Numeric characters)
-- [.] (Full stop)
-- [&] (Ampersand)
-- [/] (Slash)
-- [-] (Hyphen)
-- [ ] (Blank space)
+-   [A–Za-z] (Alpha characters)
+-   [0–9] (Numeric characters)
+-   [.] (Full stop)
+-   [&] (Ampersand)
+-   [/] (Slash)
+-   [-] (Hyphen)
+-   [ ] (Blank space)

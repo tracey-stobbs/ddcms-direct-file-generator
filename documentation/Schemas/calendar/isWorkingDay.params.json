@@ -1,13 +1,13 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/mcp/calendar.isWorkingDay.params.json",
-  "title": "calendar.isWorkingDay params",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "date": {
-      "type": "string"
-    }
-  },
-  "required": ["date"]
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://example.com/mcp/calendar.isWorkingDay.params.json",
+    "title": "calendar.isWorkingDay params",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "date": {
+            "type": "string"
+        }
+    },
+    "required": ["date"]
 }

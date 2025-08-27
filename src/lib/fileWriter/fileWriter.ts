@@ -20,50 +20,50 @@ import type { Request } from '../types';
 import { FileSystem } from './fsWrapper';
 
 export interface GeneratedFile {
-  filePath: string;
-  fileContent: string;
+    filePath: string;
+    fileContent: string;
 }
 
 export async function generateFile(request: Request, sun: string): Promise<GeneratedFile> {
-  // Generate the file entirely in-memory (no filesystem writes)
-  return generateFileInMemory(request, sun);
+    // Generate the file entirely in-memory (no filesystem writes)
+    return generateFileInMemory(request, sun);
 }
 
 export async function generateFileWithFs(
-  request: Request,
-  fs: FileSystem,
-  sun: string,
+    request: Request,
+    fs: FileSystem,
+    sun: string,
 ): Promise<GeneratedFile> {
-  // Back-compat: generate in memory, then persist to disk using provided fs
-  const intendedDir =
-    request.outputPath || path.join(process.cwd(), 'output', request.fileType, sun);
-  if (!fs.existsSync(intendedDir)) fs.mkdirSync(intendedDir, { recursive: true });
-  const generated = await generateFileInMemory(request, sun);
-  fs.writeFileSync(generated.filePath, generated.fileContent, 'utf8');
-  return generated;
+    // Back-compat: generate in memory, then persist to disk using provided fs
+    const intendedDir =
+        request.outputPath || path.join(process.cwd(), 'output', request.fileType, sun);
+    if (!fs.existsSync(intendedDir)) fs.mkdirSync(intendedDir, { recursive: true });
+    const generated = await generateFileInMemory(request, sun);
+    fs.writeFileSync(generated.filePath, generated.fileContent, 'utf8');
+    return generated;
 }
 
 // Core in-memory generator delegating to file type adapters
 async function generateFileInMemory(request: Request, sun: string): Promise<GeneratedFile> {
-  const now = DateTime.now();
-  const timestamp = now.toFormat('yyyyLLdd_HHmmss');
-  const fileType = request.fileType;
+    const now = DateTime.now();
+    const timestamp = now.toFormat('yyyyLLdd_HHmmss');
+    const fileType = request.fileType;
 
-  const adapter = getFileTypeAdapter(fileType);
-  const params = toPreviewParams(request, sun);
-  const rows = adapter.buildPreviewRows(params);
-  const meta = adapter.previewMeta(rows, params);
-  const content = adapter.serialize(rows, params);
+    const adapter = getFileTypeAdapter(fileType);
+    const params = toPreviewParams(request, sun);
+    const rows = adapter.buildPreviewRows(params);
+    const meta = adapter.previewMeta(rows, params);
+    const content = adapter.serialize(rows, params);
 
-  const columnCount = String(meta.columns).padStart(2, '0');
-  const headerToken = meta.header; // "H" | "NH"
-  const validity = meta.validity; // "V" | "I"
-  const extension = getFileExtension(fileType);
+    const columnCount = String(meta.columns).padStart(2, '0');
+    const headerToken = meta.header; // "H" | "NH"
+    const validity = meta.validity; // "V" | "I"
+    const extension = getFileExtension(fileType);
 
-  const filename = `${fileType}_${columnCount}_x_${meta.rows}_${headerToken}_${validity}_${timestamp}.${extension}`;
-  const outputDir = request.outputPath || path.join(process.cwd(), 'output', fileType, sun);
-  const filePath = path.join(outputDir, filename);
-  return { filePath, fileContent: content };
+    const filename = `${fileType}_${columnCount}_x_${meta.rows}_${headerToken}_${validity}_${timestamp}.${extension}`;
+    const outputDir = request.outputPath || path.join(process.cwd(), 'output', fileType, sun);
+    const filePath = path.join(outputDir, filename);
+    return { filePath, fileContent: content };
 }
 
 /**
@@ -71,34 +71,34 @@ async function generateFileInMemory(request: Request, sun: string): Promise<Gene
  */
 // Helper: map internal Request to adapter PreviewParams
 function toPreviewParams(request: Request, sun: string): PreviewParams {
-  return {
-    sun,
-    fileType: request.fileType as 'EaziPay' | 'SDDirect' | 'Bacs18PaymentLines',
-    numberOfRows: request.numberOfRows,
-    includeOptionalFields: request.includeOptionalFields,
-    hasInvalidRows: request.hasInvalidRows,
-    includeHeaders: request.includeHeaders,
-    forInlineEditing: request.canInlineEdit,
-    processingDate: request.processingDate,
-    dateFormat: request.fileType === 'EaziPay' ? request.dateFormat : undefined,
-    // variant: request.fileType === "Bacs18PaymentLines" ? request.variant : undefined, // not in legacy Request
-  } as const;
+    return {
+        sun,
+        fileType: request.fileType as 'EaziPay' | 'SDDirect' | 'Bacs18PaymentLines',
+        numberOfRows: request.numberOfRows,
+        includeOptionalFields: request.includeOptionalFields,
+        hasInvalidRows: request.hasInvalidRows,
+        includeHeaders: request.includeHeaders,
+        forInlineEditing: request.canInlineEdit,
+        processingDate: request.processingDate,
+        dateFormat: request.fileType === 'EaziPay' ? request.dateFormat : undefined,
+        // variant: request.fileType === "Bacs18PaymentLines" ? request.variant : undefined, // not in legacy Request
+    } as const;
 }
 
 /**
  * Get file extension based on file type
  */
 function getFileExtension(fileType: string): string {
-  switch (fileType) {
-    case 'SDDirect':
-      return 'csv';
-    case 'EaziPay':
-      return Math.random() < 0.5 ? 'csv' : 'txt';
-    case 'Bacs18PaymentLines':
-      return 'txt';
-    case 'Bacs18StandardFile':
-      return 'bacs';
-    default:
-      return 'csv';
-  }
+    switch (fileType) {
+        case 'SDDirect':
+            return 'csv';
+        case 'EaziPay':
+            return Math.random() < 0.5 ? 'csv' : 'txt';
+        case 'Bacs18PaymentLines':
+            return 'txt';
+        case 'Bacs18StandardFile':
+            return 'bacs';
+        default:
+            return 'csv';
+    }
 }
