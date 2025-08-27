@@ -1,32 +1,32 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/mcp/row.validate.result.json",
-  "title": "row.validate result",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "valid": {
-      "type": "boolean"
-    },
-    "violations": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "field": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://example.com/mcp/row.validate.result.json",
+    "title": "row.validate result",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "valid": {
+            "type": "boolean"
         },
-        "required": ["field", "code", "message"]
-      }
-    }
-  },
-  "required": ["valid", "violations"]
+        "violations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "field": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": ["field", "code", "message"]
+            }
+        }
+    },
+    "required": ["valid", "violations"]
 }

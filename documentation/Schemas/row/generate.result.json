@@ -1,45 +1,45 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/mcp/row.generate.result.json",
-  "title": "row.generate result",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "row": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "fields": {
-          "type": "array",
-          "items": {
-            "type": ["string", "number", "boolean"]
-          }
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://example.com/mcp/row.generate.result.json",
+    "title": "row.generate result",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "row": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "type": ["string", "number", "boolean"]
+                    }
+                },
+                "asLine": {
+                    "type": "string"
+                }
+            },
+            "required": ["fields", "asLine"]
         },
-        "asLine": {
-          "type": "string"
+        "issues": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "field": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": ["field", "code", "message"]
+            }
         }
-      },
-      "required": ["fields", "asLine"]
     },
-    "issues": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "field": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": ["field", "code", "message"]
-      }
-    }
-  },
-  "required": ["row"]
+    "required": ["row"]
 }

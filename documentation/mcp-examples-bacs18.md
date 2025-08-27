@@ -2,7 +2,7 @@
 
 These requests target the in-memory MCP router (see `src/mcp/server.ts`).
 
-- file.preview (MULTI)
+-   file.preview (MULTI)
 
 Request:
 {
@@ -11,7 +11,7 @@ Request:
 "params": { "sun": "123456", "fileType": "Bacs18PaymentLines", "numberOfRows": 2, "variant": "MULTI" }
 }
 
-- row.generate (DAILY, invalid)
+-   row.generate (DAILY, invalid)
 
 Request:
 {
