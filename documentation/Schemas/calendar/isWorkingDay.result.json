@@ -1,23 +1,17 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://example.com/mcp/calendar.isWorkingDay.result.json",
-    "title": "calendar.isWorkingDay result",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "isWorkingDay": {
-            "type": "boolean"
-        },
-        "reason": {
-            "type": "string",
-            "enum": [
-                "WEEKEND",
-                "BANK_HOLIDAY",
-                "WORKING_DAY"
-            ]
-        }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/mcp/calendar.isWorkingDay.result.json",
+  "title": "calendar.isWorkingDay result",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "isWorkingDay": {
+      "type": "boolean"
     },
-    "required": [
-        "isWorkingDay"
-    ]
+    "reason": {
+      "type": "string",
+      "enum": ["WEEKEND", "BANK_HOLIDAY", "WORKING_DAY"]
+    }
+  },
+  "required": ["isWorkingDay"]
 }

@@ -8,9 +8,9 @@ import type { EaziPayDateFormat } from '../types';
  */
 export class DateFormatter {
   private static readonly VALID_FORMATS: EaziPayDateFormat[] = [
-    "YYYY-MM-DD",
-    "DD-MMM-YYYY", 
-    "DD/MM/YYYY"
+    'YYYY-MM-DD',
+    'DD-MMM-YYYY',
+    'DD/MM/YYYY',
   ];
 
   /**
@@ -25,16 +25,16 @@ export class DateFormatter {
     }
 
     switch (format) {
-      case "YYYY-MM-DD":
+      case 'YYYY-MM-DD':
         return date.toFormat('yyyy-MM-dd');
-      
-      case "DD-MMM-YYYY":
+
+      case 'DD-MMM-YYYY':
         // Use uppercase month abbreviation
         return date.toFormat('dd-MMM-yyyy').toUpperCase();
-      
-      case "DD/MM/YYYY":
+
+      case 'DD/MM/YYYY':
         return date.toFormat('dd/MM/yyyy');
-      
+
       default:
         throw new Error(`Unsupported date format: ${format}`);
     }
@@ -87,9 +87,9 @@ export class DateFormatter {
    */
   static getFormatExamples(date: DateTime): Record<EaziPayDateFormat, string> {
     return {
-      "YYYY-MM-DD": this.formatEaziPayDate(date, "YYYY-MM-DD"),
-      "DD-MMM-YYYY": this.formatEaziPayDate(date, "DD-MMM-YYYY"),
-      "DD/MM/YYYY": this.formatEaziPayDate(date, "DD/MM/YYYY")
+      'YYYY-MM-DD': this.formatEaziPayDate(date, 'YYYY-MM-DD'),
+      'DD-MMM-YYYY': this.formatEaziPayDate(date, 'DD-MMM-YYYY'),
+      'DD/MM/YYYY': this.formatEaziPayDate(date, 'DD/MM/YYYY'),
     };
   }
 }

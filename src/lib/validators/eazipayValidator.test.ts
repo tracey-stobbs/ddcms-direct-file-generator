@@ -74,21 +74,21 @@ describe('EaziPayValidator', () => {
       const allowedCodes = ['0C', '0N', '0S'];
 
       it('should allow SUN number to be present', () => {
-        allowedCodes.forEach(code => {
+        allowedCodes.forEach((code) => {
           expect(EaziPayValidator.validateSunNumber('12345', code)).toBe(true);
           expect(EaziPayValidator.validateSunNumber('SUN123', code)).toBe(true);
         });
       });
 
       it('should allow SUN number to be null or undefined', () => {
-        allowedCodes.forEach(code => {
+        allowedCodes.forEach((code) => {
           expect(EaziPayValidator.validateSunNumber(null, code)).toBe(true);
           expect(EaziPayValidator.validateSunNumber(undefined, code)).toBe(true);
         });
       });
 
       it('should allow empty string SUN number', () => {
-        allowedCodes.forEach(code => {
+        allowedCodes.forEach((code) => {
           expect(EaziPayValidator.validateSunNumber('', code)).toBe(true);
         });
       });
@@ -98,14 +98,14 @@ describe('EaziPayValidator', () => {
       const nonAllowedCodes = ['01', '17', '18', '99'];
 
       it('should require SUN number to be null or undefined', () => {
-        nonAllowedCodes.forEach(code => {
+        nonAllowedCodes.forEach((code) => {
           expect(EaziPayValidator.validateSunNumber(null, code)).toBe(true);
           expect(EaziPayValidator.validateSunNumber(undefined, code)).toBe(true);
         });
       });
 
       it('should reject present SUN number', () => {
-        nonAllowedCodes.forEach(code => {
+        nonAllowedCodes.forEach((code) => {
           expect(EaziPayValidator.validateSunNumber('12345', code)).toBe(false);
           expect(EaziPayValidator.validateSunNumber('SUN123', code)).toBe(false);
           expect(EaziPayValidator.validateSunNumber('', code)).toBe(false);
@@ -117,7 +117,7 @@ describe('EaziPayValidator', () => {
     describe('edge cases', () => {
       it('should handle case-sensitive transaction codes', () => {
         expect(EaziPayValidator.validateSunNumber('12345', '0c')).toBe(false); // lowercase
-        expect(EaziPayValidator.validateSunNumber('12345', '0C')).toBe(true);  // uppercase
+        expect(EaziPayValidator.validateSunNumber('12345', '0C')).toBe(true); // uppercase
       });
 
       it('should handle unknown transaction codes', () => {
@@ -175,7 +175,7 @@ describe('EaziPayValidator', () => {
       empty: undefined,
       sunNumber: undefined,
       transactionCode: '17',
-  // trailer removed
+      // trailer removed
     };
 
     it('should validate all valid fields', () => {
@@ -187,7 +187,7 @@ describe('EaziPayValidator', () => {
     it('should catch fixed zero errors', () => {
       const result = EaziPayValidator.validateAllFields({
         ...validFields,
-        fixedZero: 1
+        fixedZero: 1,
       });
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Fixed Zero must be exactly 0, got: 1');
@@ -196,7 +196,7 @@ describe('EaziPayValidator', () => {
     it('should catch empty field errors', () => {
       const result = EaziPayValidator.validateAllFields({
         ...validFields,
-        empty: null
+        empty: null,
       });
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain('Empty field must be undefined, got: null');
@@ -206,10 +206,12 @@ describe('EaziPayValidator', () => {
       const result = EaziPayValidator.validateAllFields({
         ...validFields,
         sunNumber: '12345',
-        transactionCode: '17' // Not allowed
+        transactionCode: '17', // Not allowed
       });
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('SUN Number invalid for transaction code 17. Must be null/undefined for codes other than 0C, 0N, 0S');
+      expect(result.errors).toContain(
+        'SUN Number invalid for transaction code 17. Must be null/undefined for codes other than 0C, 0N, 0S',
+      );
     });
 
     it('should catch trailer errors', () => {
@@ -237,7 +239,7 @@ describe('EaziPayValidator', () => {
       const result = EaziPayValidator.validateAllFields({
         ...validFields,
         sunNumber: '12345',
-        transactionCode: '0C'
+        transactionCode: '0C',
       });
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);

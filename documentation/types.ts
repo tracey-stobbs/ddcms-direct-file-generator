@@ -3,8 +3,8 @@ export type Prettify<T> = {
 };
 
 // EaziPay-specific types
-export type EaziPayDateFormat = "YYYY-MM-DD" | "DD-MMM-YYYY" | "DD/MM/YYYY";
-export type EaziPayTrailerFormat = "quoted" | "unquoted";
+export type EaziPayDateFormat = 'YYYY-MM-DD' | 'DD-MMM-YYYY' | 'DD/MM/YYYY';
+export type EaziPayTrailerFormat = 'quoted' | 'unquoted';
 
 export interface EaziPaySpecificFields {
   transactionCode: string;
@@ -24,7 +24,7 @@ export interface EaziPaySpecificFields {
 }
 
 export interface Request {
-  fileType: "SDDirect" | "Bacs18PaymentLines" | "Bacs18StandardFile" | "EaziPay";
+  fileType: 'SDDirect' | 'Bacs18PaymentLines' | 'Bacs18StandardFile' | 'EaziPay';
   canInlineEdit: boolean;
   includeHeaders?: boolean;
   numberOfRows?: number;
@@ -52,9 +52,7 @@ type OriginatingAccountDetails = Prettify<OriginatingAccountDetailOptions>;
 
 export type OptionalFieldItem = Prettify<OptionalFieldObject>;
 
-export type OptionalField = Prettify<
-  keyof Record<keyof OptionalFieldItem, string>
->;
+export type OptionalField = Prettify<keyof Record<keyof OptionalFieldItem, string>>;
 
 export interface SuccessResponse {
   success: true;
@@ -69,7 +67,7 @@ export interface ErrorResponse {
 export type ApiResponse = SuccessResponse | ErrorResponse;
 
 export const defaultRequest: Request = {
-  fileType: "SDDirect",
+  fileType: 'SDDirect',
   canInlineEdit: true,
   includeHeaders: true,
   hasInvalidRows: false,
@@ -78,9 +76,9 @@ export const defaultRequest: Request = {
   defaultValues: {
     originatingAccountDetails: {
       canBeInvalid: true,
-      sortCode: "912291",
-      accountNumber: "51491194",
-      accountName: "Test Account"
-    }
-  }
+      sortCode: '912291',
+      accountNumber: '51491194',
+      accountName: 'Test Account',
+    },
+  },
 } as const;

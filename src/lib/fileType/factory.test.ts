@@ -31,7 +31,7 @@ describe('File Generator Factory', () => {
       expect(() => {
         getFileGenerator('sddirect'); // lowercase
       }).toThrow('Unknown file type: sddirect');
-      
+
       expect(() => {
         getFileGenerator('eazipay'); // lowercase
       }).toThrow('Unknown file type: eazipay');

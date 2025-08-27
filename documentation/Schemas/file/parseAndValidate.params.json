@@ -1,19 +1,16 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://example.com/mcp/file.parseAndValidate.params.json",
-    "title": "file.parseAndValidate params",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "filePath": {
-            "type": "string"
-        },
-        "fileType": {
-            "type": "string"
-        }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/mcp/file.parseAndValidate.params.json",
+  "title": "file.parseAndValidate params",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "filePath": {
+      "type": "string"
     },
-    "required": [
-        "filePath",
-        "fileType"
-    ]
+    "fileType": {
+      "type": "string"
+    }
+  },
+  "required": ["filePath", "fileType"]
 }

@@ -1,15 +1,13 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://example.com/mcp/calendar.nextWorkingDay.result.json",
-    "title": "calendar.nextWorkingDay result",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-        "date": {
-            "type": "string"
-        }
-    },
-    "required": [
-        "date"
-    ]
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/mcp/calendar.nextWorkingDay.result.json",
+  "title": "calendar.nextWorkingDay result",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "date": {
+      "type": "string"
+    }
+  },
+  "required": ["date"]
 }

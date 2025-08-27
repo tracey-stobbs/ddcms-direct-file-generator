@@ -37,12 +37,12 @@ export class EaziPayValidator {
   static validateSunNumber(sunNumber: unknown, transactionCode: string): boolean {
     const isTransactionCodeAllowed = this.SUN_ALLOWED_TRANSACTION_CODES.includes(transactionCode);
     const isSunNumberEmpty = sunNumber === null || sunNumber === undefined;
-    
+
     if (!isTransactionCodeAllowed) {
       // If transaction code doesn't allow SUN number, it must be null/undefined
       return isSunNumberEmpty;
     }
-    
+
     // If transaction code allows SUN number, it can be present or null/undefined
     return true;
   }
@@ -94,12 +94,14 @@ export class EaziPayValidator {
 
     // Validate SUN Number
     if (!this.validateSunNumber(fields.sunNumber, fields.transactionCode)) {
-      errors.push(`SUN Number invalid for transaction code ${fields.transactionCode}. Must be null/undefined for codes other than 0C, 0N, 0S`);
+      errors.push(
+        `SUN Number invalid for transaction code ${fields.transactionCode}. Must be null/undefined for codes other than 0C, 0N, 0S`,
+      );
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }

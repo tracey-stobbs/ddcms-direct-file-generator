@@ -1,0 +1,8 @@
+node_modules
+dist
+.output
+output
+coverage
+.vscode
+.idea
+*.log
