@@ -1,4 +1,4 @@
-import { JsonValue, McpRouter } from "./router";
+import { JsonValue, McpRouter, McpValidationError } from "./router";
 import { loadSchema } from "./schemaLoader";
 // Default service implementations (kept thin; real logic lives outside src/mcp)
 import * as calendar from "../services/calendar";
@@ -81,29 +81,37 @@ export async function handleMcpRequest(router: McpRouter, req: McpRequest): Prom
     const result = await router.invoke(req.method, (req.params ?? null));
     return { id: req.id ?? null, result };
   } catch (err: unknown) {
-    const e = normalizeError(err);
-    const message = e.message ?? "Unknown error";
-    const detail = e.detail;
-    return { id: req.id ?? null, error: { message, detail } };
+    const norm = normalizeError(err);
+    // Standardized error envelope
+    const payload: { code: string; message: string; detail?: string; traceId?: string } = {
+      code: norm.code ?? "INTERNAL_ERROR",
+      message: norm.message ?? "Unknown error",
+    };
+    if (norm.detail) payload.detail = norm.detail;
+    if (norm.traceId) payload.traceId = norm.traceId;
+    return { id: req.id ?? null, error: payload };
   }
 }
 
-type NormalizedError = { message?: string; detail?: string };
+type NormalizedError = { code?: string; message?: string; detail?: string; traceId?: string };
+function generateTraceId(): string {
+  // Simple stable-ish trace id using timestamp + random hex
+  return `${Date.now().toString(36)}-${Math.random().toString(16).slice(2,10)}`;
+}
+
 function normalizeError(err: unknown): NormalizedError {
+  const traceId = generateTraceId();
+  if (err instanceof McpValidationError) {
+    return { code: "VALIDATION_ERROR", message: err.message, detail: err.detail, traceId };
+  }
   if (err instanceof Error) {
     const anyErr = err as Error & { detail?: unknown };
-    return {
-      message: anyErr.message,
-      detail: typeof anyErr.detail === "string" ? anyErr.detail : undefined,
-    };
+    return { code: "INTERNAL_ERROR", message: anyErr.message, detail: typeof anyErr.detail === "string" ? anyErr.detail : undefined, traceId };
   }
   if (typeof err === "object" && err !== null) {
     const maybeMsg = (err as Record<string, unknown>).message;
     const maybeDetail = (err as Record<string, unknown>).detail;
-    return {
-      message: typeof maybeMsg === "string" ? maybeMsg : undefined,
-      detail: typeof maybeDetail === "string" ? maybeDetail : undefined,
-    };
+    return { code: "INTERNAL_ERROR", message: typeof maybeMsg === "string" ? maybeMsg : undefined, detail: typeof maybeDetail === "string" ? maybeDetail : undefined, traceId };
   }
-  return {};
+  return { code: "INTERNAL_ERROR", message: undefined, traceId };
 }
