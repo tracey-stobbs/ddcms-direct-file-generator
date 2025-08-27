@@ -1,3 +1,4 @@
+import path from "path";
 import { JsonValue, McpRouter, McpValidationError } from "./router";
 import { loadSchema } from "./schemaLoader";
 // Default service implementations (kept thin; real logic lives outside src/mcp)
@@ -50,6 +51,7 @@ export interface FsService {
   read?(params: JsonValue): Promise<JsonValue>;
   list?(params: JsonValue): Promise<JsonValue>;
   delete?(params: JsonValue): Promise<JsonValue>;
+  write?(params: JsonValue): Promise<JsonValue>;
 }
 
 export interface EaziPayService {
@@ -108,7 +110,21 @@ export function createMcpRouter(services: McpServices): McpRouter {
         name: "file.generate",
         paramsSchema: loadSchema("file/generate.params.json"),
         resultSchema: loadSchema("file/generate.result.json"),
-        handler: (params) => svcAny.fileGenerate!.generate(params),
+        handler: async (params) => {
+          const generatedRaw = await svcAny.fileGenerate!.generate(params);
+          const generated = generatedRaw as Record<string, unknown>;
+          // if caller requested persistence and an fs.write is available, persist under sandbox via fs service
+          const p = params as unknown as Record<string, unknown> & { persist?: boolean; fileType?: string; sun?: string };
+          const fsMaybe = (services as unknown as Record<string, unknown>).fs as FsService | undefined;
+          if (p.persist && fsMaybe && typeof fsMaybe.write === "function") {
+            const parts = [ (p.fileType as string) || "unknown", (p.sun as string) ?? "DEFAULT", path.basename(String(generated.filePath)) ];
+            const rel = parts.join(path.sep);
+            await fsMaybe.write({ path: rel, content: String(generated.fileContent) } as JsonValue);
+            generated.persisted = true;
+            generated.persistedPath = rel;
+          }
+          return generated as unknown as JsonValue;
+        },
       });
 
       router.register({

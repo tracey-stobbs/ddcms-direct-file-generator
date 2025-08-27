@@ -33,3 +33,13 @@ export async function deleteFile(params: JsonValue): Promise<JsonValue> {
   await fs.unlink(full);
   return { success: true } as JsonValue;
 }
+
+export async function write(params: JsonValue): Promise<JsonValue> {
+  const p = (params as unknown as Record<string, unknown>)?.path as string | undefined;
+  const content = (params as unknown as Record<string, unknown>)?.content as string | undefined;
+  if (!p || typeof content !== "string") return { success: false } as JsonValue;
+  const full = safePath(p);
+  await fs.mkdir(path.dirname(full), { recursive: true });
+  await fs.writeFile(full, content, "utf8");
+  return { success: true, path: full } as JsonValue;
+}
