@@ -29,6 +29,38 @@ const branch = run('git rev-parse --abbrev-ref HEAD');
 const title = process.argv[2] || `chore(backlog): add backlog-ID -> commit check (${branch})`;
 const body = process.argv[3] || 'Adds CI check that ensures completed backlog IDs in BACKLOG.md are referenced in commits or PRs.';
 
+// Helper to GET repo metadata and obtain default_branch
+function getRepoMeta(callback) {
+  const opts = {
+    hostname: 'api.github.com',
+    path: `/repos/${owner}/${repo}`,
+    method: 'GET',
+    headers: {
+      'User-Agent': 'shiny-palm-tree-bot',
+      'Authorization': `token ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+    },
+  };
+
+  const req = https.request(opts, res => {
+    let data = '';
+    res.on('data', d => data += d);
+    res.on('end', () => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        try {
+          const json = JSON.parse(data);
+          return callback(null, json);
+        } catch (e) {
+          return callback(e);
+        }
+      }
+      return callback(new Error(`Failed to fetch repo meta: ${res.statusCode}`));
+    });
+  });
+  req.on('error', e => callback(e));
+  req.end();
+}
+
 const postData = JSON.stringify({
   title,
   head: branch,
@@ -87,5 +119,23 @@ function doRequest(urlStr, redirectsLeft = 5) {
   req.end();
 }
 
-// Initial API URL
-doRequest(`https://api.github.com/repos/${owner}/${repo}/pulls`);
+// Get default branch and then create PR against it
+getRepoMeta((err, meta) => {
+  if (err) {
+    console.error('Could not determine default branch, falling back to "main". Error:', err.message || err);
+    return doRequest(`https://api.github.com/repos/${owner}/${repo}/pulls`);
+  }
+  const base = meta.default_branch || 'main';
+  const url = `https://api.github.com/repos/${owner}/${repo}/pulls`;
+  // adjust postData for base
+  const payload = JSON.stringify({
+    title,
+    head: branch,
+    base,
+    body,
+  });
+  // override postData used by doRequest
+  global.postData = payload;
+  // call doRequest with explicit payload
+  doRequest(url);
+});
