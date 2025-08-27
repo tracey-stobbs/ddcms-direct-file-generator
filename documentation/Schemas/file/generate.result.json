@@ -8,6 +8,9 @@
         "filePath": {
             "type": "string"
         },
+        "fileContent": {
+            "type": "string"
+        },
         "meta": {
             "type": "object",
             "additionalProperties": false,
@@ -22,15 +25,24 @@
                 },
                 "header": {
                     "type": "string",
-                    "enum": ["H", "NH"]
+                    "enum": [
+                        "H",
+                        "NH"
+                    ]
                 },
                 "validity": {
                     "type": "string",
-                    "enum": ["V", "I"]
+                    "enum": [
+                        "V",
+                        "I"
+                    ]
                 },
                 "extension": {
                     "type": "string",
-                    "enum": [".csv", ".txt"]
+                    "enum": [
+                        ".csv",
+                        ".txt"
+                    ]
                 },
                 "fileType": {
                     "type": "string"
@@ -39,8 +51,24 @@
                     "type": "string"
                 }
             },
-            "required": ["rows", "columns", "header", "validity", "fileType", "sun"]
+            "required": [
+                "rows",
+                "columns",
+                "header",
+                "validity",
+                "fileType",
+                "sun"
+            ]
+        },
+        "persisted": {
+            "type": "boolean"
+        },
+        "persistedPath": {
+            "type": "string"
         }
     },
-    "required": ["filePath", "meta"]
+    "required": [
+        "filePath",
+        "meta"
+    ]
 }

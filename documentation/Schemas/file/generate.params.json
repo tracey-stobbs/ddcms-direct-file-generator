@@ -11,7 +11,12 @@
         },
         "fileType": {
             "type": "string",
-            "enum": ["EaziPay", "SDDirect", "Bacs18PaymentLines", "Bacs18StandardFile"]
+            "enum": [
+                "EaziPay",
+                "SDDirect",
+                "Bacs18PaymentLines",
+                "Bacs18StandardFile"
+            ]
         },
         "numberOfRows": {
             "type": "integer",
@@ -47,11 +52,22 @@
         },
         "dateFormat": {
             "type": "string",
-            "enum": ["YYYY-MM-DD", "DD-MMM-YYYY", "DD/MM/YYYY"]
+            "enum": [
+                "YYYY-MM-DD",
+                "DD-MMM-YYYY",
+                "DD/MM/YYYY"
+            ]
         },
         "outputPath": {
             "type": "string"
+        },
+        "persist": {
+            "type": "boolean",
+            "description": "If true, persist generated file to sandbox via fs.write"
         }
     },
-    "required": ["sun", "fileType"]
+    "required": [
+        "sun",
+        "fileType"
+    ]
 }

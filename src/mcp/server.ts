@@ -131,12 +131,17 @@ export function createMcpRouter(services: McpServices): McpRouter {
                             path.basename(String(generated.filePath)),
                         ];
                         const rel = parts.join(path.sep);
-                        await fsMaybe.write({
+                        const writeResult = (await fsMaybe.write({
                             path: rel,
                             content: String(generated.fileContent),
-                        } as JsonValue);
+                        } as JsonValue)) as unknown as Record<string, unknown> | undefined;
                         generated.persisted = true;
-                        generated.persistedPath = rel;
+                        // prefer full path returned by fs service when available
+                        if (writeResult && typeof writeResult === 'object' && 'path' in writeResult) {
+                            generated.persistedPath = String(writeResult['path']);
+                        } else {
+                            generated.persistedPath = rel;
+                        }
                     }
                     return generated as unknown as JsonValue;
                 },
@@ -305,7 +310,8 @@ export function createDefaultMcpRouter(): McpRouter {
     services.fs = {
         read: fsSvc.read,
         list: fsSvc.list,
-        delete: fsSvc.deleteFile,
+    delete: fsSvc.deleteFile,
+    write: fsSvc.write,
     };
 
     // Optional runtime
