@@ -30,10 +30,12 @@ const title = process.argv[2] || `chore(backlog): add backlog-ID -> commit check
 const body = process.argv[3] || 'Adds CI check that ensures completed backlog IDs in BACKLOG.md are referenced in commits or PRs.';
 
 // Helper to GET repo metadata and obtain default_branch
-function getRepoMeta(callback) {
+function getRepoMeta(urlStr = `https://api.github.com/repos/${owner}/${repo}`, redirectsLeft = 5, callback) {
+  const url = new URL(urlStr);
   const opts = {
-    hostname: 'api.github.com',
-    path: `/repos/${owner}/${repo}`,
+    hostname: url.hostname,
+    port: url.port || 443,
+    path: url.pathname + url.search,
     method: 'GET',
     headers: {
       'User-Agent': 'shiny-palm-tree-bot',
@@ -46,6 +48,15 @@ function getRepoMeta(callback) {
     let data = '';
     res.on('data', d => data += d);
     res.on('end', () => {
+      // follow redirects for 301/302/307
+      if ((res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307) && redirectsLeft > 0) {
+        const loc = res.headers.location;
+        if (loc) {
+          console.log(`Following repo-meta redirect to ${loc} (status ${res.statusCode})`);
+          return getRepoMeta(loc, redirectsLeft - 1, callback);
+        }
+      }
+
       if (res.statusCode >= 200 && res.statusCode < 300) {
         try {
           const json = JSON.parse(data);
@@ -68,7 +79,7 @@ const postData = JSON.stringify({
   body,
 });
 
-function doRequest(urlStr, redirectsLeft = 5) {
+function doRequest(urlStr, payload, redirectsLeft = 5) {
   const url = new URL(urlStr);
   const opts = {
     hostname: url.hostname,
@@ -80,7 +91,7 @@ function doRequest(urlStr, redirectsLeft = 5) {
       'Authorization': `token ${token}`,
       'Accept': 'application/vnd.github.v3+json',
       'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(postData),
+      'Content-Length': Buffer.byteLength(payload),
     },
   };
 
@@ -100,7 +111,7 @@ function doRequest(urlStr, redirectsLeft = 5) {
         if (loc) {
           console.log(`Following redirect to ${loc} (status ${res.statusCode})`);
           // retry against the new URL
-          return doRequest(loc, redirectsLeft - 1);
+          return doRequest(loc, payload, redirectsLeft - 1);
         }
       }
 
@@ -115,27 +126,19 @@ function doRequest(urlStr, redirectsLeft = 5) {
     process.exit(5);
   });
 
-  req.write(postData);
+  req.write(payload);
   req.end();
 }
 
 // Get default branch and then create PR against it
-getRepoMeta((err, meta) => {
+getRepoMeta(undefined, 5, (err, meta) => {
+  const url = `https://api.github.com/repos/${owner}/${repo}/pulls`;
   if (err) {
     console.error('Could not determine default branch, falling back to "main". Error:', err.message || err);
-    return doRequest(`https://api.github.com/repos/${owner}/${repo}/pulls`);
+    const payload = JSON.stringify({ title, head: branch, base: 'main', body });
+    return doRequest(url, payload);
   }
-  const base = meta.default_branch || 'main';
-  const url = `https://api.github.com/repos/${owner}/${repo}/pulls`;
-  // adjust postData for base
-  const payload = JSON.stringify({
-    title,
-    head: branch,
-    base,
-    body,
-  });
-  // override postData used by doRequest
-  global.postData = payload;
-  // call doRequest with explicit payload
-  doRequest(url);
+  const base = meta && meta.default_branch ? meta.default_branch : 'main';
+  const payload = JSON.stringify({ title, head: branch, base, body });
+  doRequest(url, payload);
 });
