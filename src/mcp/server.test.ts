@@ -114,6 +114,30 @@ describe('MCP server envelope', () => {
             params: {} as unknown as JsonValue,
         });
         expect(res.id).toBe('a');
+        // Standard envelope properties
         expect(res.error?.message).toMatch(/Invalid params/);
+        expect(res.error && 'code' in res.error ? res.error.code : undefined).toBe('VALIDATION_ERROR');
+        expect(res.error && 'traceId' in res.error).toBe(true);
+    });
+
+    it('wraps internal errors with traceId', async () => {
+        const router = createMcpRouter({
+            ...services,
+            file: {
+                preview: async () => {
+                    throw new Error('boom');
+                },
+            },
+        });
+        const res = await handleMcpRequest(router, {
+            id: 2,
+            method: 'file.preview',
+            params: { count: 1 } as unknown as JsonValue,
+        });
+        expect(res.id).toBe(2);
+    const err = res.error as unknown as Record<string, unknown>;
+    expect(err && err['code']).toBe('INTERNAL_ERROR');
+    expect(typeof err['message']).toBe('string');
+    expect('traceId' in err).toBe(true);
     });
 });
