@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import type { JsonValue } from './router';
-import { McpValidationError } from './router';
 import { createDefaultMcpRouter, handleMcpRequest } from './server';
 
 describe('MCP integration (schemas + services)', () => {
@@ -66,21 +65,7 @@ describe('MCP integration (schemas + services)', () => {
             method: 'file.generate',
             params: { sun: '999999', fileType: 'EaziPay', persist: true } as unknown as JsonValue,
         });
-        if (res.error) {
-            // Try invoking directly to get Ajv errors on the thrown McpValidationError
-            try {
-                await (router as unknown as { invoke: (name: string, params: unknown) => Promise<unknown> }).invoke(
-                    'file.generate',
-                    { sun: '999999', fileType: 'EaziPay', persist: true },
-                );
-            } catch (err: unknown) {
-                if (err instanceof McpValidationError) {
-                    // Log detailed Ajv errors for debugging
-                    // eslint-disable-next-line no-console
-                    console.error('MCP validation errors:', JSON.stringify(err.errors, null, 2));
-                }
-            }
-        }
+    // previously had diagnostic logging here; removed now that validation issues are fixed
         expect(res.error).toBeUndefined();
         const r = res.result as { filePath?: string; fileContent?: string; persisted?: boolean; persistedPath?: string };
         expect(r.persisted).toBe(true);

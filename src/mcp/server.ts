@@ -271,6 +271,49 @@ export function createMcpRouter(services: McpServices): McpRouter {
         }
     }
 
+    // Optional: file.parseAndValidate (4.1)
+    const parseMaybe = (services as unknown as Record<string, unknown>).fileParseAndValidate as
+        | { parseAndValidate?: (params: JsonValue) => Promise<JsonValue> }
+        | undefined;
+    if (parseMaybe && typeof parseMaybe.parseAndValidate === 'function') {
+        try {
+            router.register({
+                name: 'file.parseAndValidate',
+                paramsSchema: loadSchema('file/parseAndValidate.params.json'),
+                resultSchema: loadSchema('file/parseAndValidate.result.json'),
+                handler: (params) => parseMaybe.parseAndValidate!(params),
+            });
+        } catch {
+            // skip
+        }
+    }
+
+    // Tool discovery: mcp.discover
+    try {
+        router.register({
+            name: 'mcp.discover',
+            paramsSchema: loadSchema('mcp/discover.params.json'),
+            resultSchema: loadSchema('mcp/discover.result.json'),
+            handler: () => {
+                // expose registered tool names and their schema $ids
+                // Access router internals (tools map)
+                const map = (router as unknown as { [k: string]: unknown }).tools as
+                    | Map<string, { validateParams?: { schema?: { $id?: string } }; validateResult?: { schema?: { $id?: string } } }>
+                    | undefined;
+                const list = map
+                    ? Array.from(map.entries()).map(([name, entry]) => ({
+                          name,
+                          paramsSchema: entry.validateParams?.schema?.$id,
+                          resultSchema: entry.validateResult?.schema?.$id,
+                      }))
+                    : [];
+                return { tools: list } as JsonValue;
+            },
+        });
+    } catch {
+        // skip discovery if schemas missing
+    }
+
     return router;
 }
 
