@@ -153,12 +153,12 @@ Example (Bacs18PaymentLines):
 #### Filename Format
 
 -   Output directory: `output/{filetype}/{SUN}/...`
--   **SDDirect**: `SDDirect_{columns}_{rows}_{header}_{validity}_{timestamp}.csv`
--   **EaziPay**: `EaziPay_{columns}_{rows}_{header}_{validity}_{timestamp}.{csv|txt}`
+-   **SDDirect**: `SDDirect_{columns2}_x_{rows}_{header}_{validity}_{timestamp}.csv`
+-   **EaziPay**: `EaziPay_{columns2}_x_{rows}_{header}_{validity}_{timestamp}.{csv|txt}`
 
 Where:
 
--   `columns`: Number of columns in the file (SDDirect varies; EaziPay fixed at 14)
+-   `columns2`: 2-digit column count (zero-padded). SDDirect varies; EaziPay fixed at 14
 -   `rows`: Number of data rows (EaziPay always headerless)
 -   `header`: `H` or `NH` (EaziPay is always `NH`)
 -   `validity`: `V` (valid data) or `I` (includes invalid data)
@@ -300,6 +300,40 @@ Use the in-memory router plus the simple JSON-RPC-like handler in `src/mcp/serve
 -   calendar.nextWorkingDay
     -   Request: `{ id: 3, method: "calendar.nextWorkingDay", params: { offsetDays: 2 } }`
     -   Result: `{ date: "YYYY-MM-DD" }`
+
+## MCP tools (Phase 4.1)
+
+Phase 4.1 adds optional tools behind Ajv-validated schemas under `documentation/Schemas/**`. The MCP server registers these when schemas and services are available.
+
+-   file.estimateFilename
+    -   Params schema: `file/estimateFilename.params.json` (fileType, columns, rows, header, validity, optional timestamp/extension)
+    -   Result schema: `file/estimateFilename.result.json`
+    -   Returns: `{ filename: string }`
+    -   Example: `{ id: 11, method: "file.estimateFilename", params: { fileType: "EaziPay", columns: 14, rows: 1, header: "NH", validity: "V" } }`
+
+-   row.validate
+    -   Params schema: `row/validate.params.json` (fields must be string | number | boolean; no undefined)
+    -   Result schema: `row/validate.result.json` ({ valid: boolean, violations: [...] })
+    -   Example: `{ id: 20, method: "row.validate", params: { fileType: "EaziPay", row: { fields: ["01", "123456", "12345678", "123456", "12345678", "Name", 0, 1, "2025-10-01", "", "Sun Name", "REF12345", "", ""] } } }`
+
+-   file.parseAndValidate
+    -   Params schema: `file/parseAndValidate.params.json` ({ filePath, fileType })
+    -   Result schema: `file/parseAndValidate.result.json` (summary + per-row flags)
+    -   Example: `{ id: 27, method: "file.parseAndValidate", params: { filePath: ".../output/parse-validate/demo.csv", fileType: "EaziPay" } }`
+
+-   fs.read | fs.list | fs.delete
+    -   Params/results schemas under `fs/` (Phase 4.1)
+    -   Reads/writes are sandboxed under `./output` only; paths are normalized and access is denied outside
+    -   `fs.read` supports partial reads with `{ offset, length }` and returns `{ content, eof }`
+
+-   runtime.health
+    -   Params/results schemas under `runtime/`
+    -   Returns `{ status: "ok", uptime: number }`
+
+-   eazipay.pickOptions
+    -   Returns supported `dateFormats` and `trailerFormats` (schema-aligned)
+
+Discovery: `mcp.discover` returns the registered tool names and their schema `$id`s for clients to introspect.
 
 ## Logging
 
