@@ -8,7 +8,7 @@ import {
     getEaziPayHeaders,
 } from './lib/fileType/eazipay';
 import { generateInvalidSDDirectRow, generateValidSDDirectRow } from './lib/fileType/sddirect';
-import { generateFile } from './lib/fileWriter/fileWriter';
+import { resolveFileWriter } from './lib/fileWriter/factory';
 import type {
     ErrorResponse,
     GenerateRequest,
@@ -73,7 +73,9 @@ app.post('/api/:sun/:filetype/generate', async (req: Request, res: Response) => 
         }
 
         const internal = toInternalRequest(filetype, normalizedRequest, sun);
-        const generated = await generateFile(internal, sun);
+    // API context: persist to filesystem by default
+    const writer = resolveFileWriter('api');
+    const generated = await writer.generate(internal, sun);
         const relFilePath = generated.filePath
             .replace(process.cwd() + path.sep, '')
             .replace(/\\/g, '/');
