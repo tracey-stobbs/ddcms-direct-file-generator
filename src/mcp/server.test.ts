@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { logger } from '../lib/logger';
+import { MCP_ERROR_CODES } from './errors';
 import { JsonValue } from './router';
 import { createMcpRouter, handleMcpRequest, McpServices } from './server';
 
@@ -107,6 +109,7 @@ describe('MCP server envelope', () => {
     });
 
     it('wraps validation errors', async () => {
+        const spy = vi.spyOn(logger, 'error').mockImplementation(() => {});
         const router = createMcpRouter(services);
         const res = await handleMcpRequest(router, {
             id: 'a',
@@ -116,11 +119,20 @@ describe('MCP server envelope', () => {
         expect(res.id).toBe('a');
         // Standard envelope properties
         expect(res.error?.message).toMatch(/Invalid params/);
-        expect(res.error && 'code' in res.error ? res.error.code : undefined).toBe('VALIDATION_ERROR');
+        const e1 = res.error as unknown as Record<string, unknown> | undefined;
+        expect(e1 && e1['code']).toBe(MCP_ERROR_CODES.VALIDATION_ERROR);
         expect(res.error && 'traceId' in res.error).toBe(true);
+        expect(spy).toHaveBeenCalledTimes(1);
+        const [msg, context] = spy.mock.calls[0] as unknown as [string, Record<string, unknown>];
+        expect(msg).toBe('MCP error');
+        expect(context['event']).toBe('error');
+        expect(context['method']).toBe('file.preview');
+        expect(typeof context['traceId']).toBe('string');
+        spy.mockRestore();
     });
 
     it('wraps internal errors with traceId', async () => {
+        const spy = vi.spyOn(logger, 'error').mockImplementation(() => {});
         const router = createMcpRouter({
             ...services,
             file: {
@@ -135,9 +147,16 @@ describe('MCP server envelope', () => {
             params: { count: 1 } as unknown as JsonValue,
         });
         expect(res.id).toBe(2);
-    const err = res.error as unknown as Record<string, unknown>;
-    expect(err && err['code']).toBe('INTERNAL_ERROR');
-    expect(typeof err['message']).toBe('string');
-    expect('traceId' in err).toBe(true);
+        const err = res.error as unknown as Record<string, unknown>;
+        expect(err && err['code']).toBe(MCP_ERROR_CODES.INTERNAL_ERROR);
+        expect(typeof err['message']).toBe('string');
+        expect('traceId' in err).toBe(true);
+        expect(spy).toHaveBeenCalledTimes(1);
+        const [msg, context] = spy.mock.calls[0] as unknown as [string, Record<string, unknown>];
+        expect(msg).toBe('MCP error');
+        expect(context['event']).toBe('error');
+        expect(context['method']).toBe('file.preview');
+        expect(typeof context['traceId']).toBe('string');
+        spy.mockRestore();
     });
 });

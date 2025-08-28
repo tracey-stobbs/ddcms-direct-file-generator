@@ -1,4 +1,6 @@
 import path from 'path';
+import { logger } from '../lib/logger';
+import { MCP_ERROR_CODES, type McpErrorEnvelope } from './errors';
 import { JsonValue, McpRouter, McpValidationError } from './router';
 import { loadSchema } from './schemaLoader';
 // Default service implementations (kept thin; real logic lives outside src/mcp)
@@ -138,7 +140,11 @@ export function createMcpRouter(services: McpServices): McpRouter {
                         } as JsonValue)) as unknown as Record<string, unknown> | undefined;
                         generated.persisted = true;
                         // prefer full path returned by fs service when available
-                        if (writeResult && typeof writeResult === 'object' && 'path' in writeResult) {
+                        if (
+                            writeResult &&
+                            typeof writeResult === 'object' &&
+                            'path' in writeResult
+                        ) {
                             generated.persistedPath = String(writeResult['path']);
                         } else {
                             generated.persistedPath = rel;
@@ -299,7 +305,13 @@ export function createMcpRouter(services: McpServices): McpRouter {
                 // expose registered tool names and their schema $ids
                 // Access router internals (tools map)
                 const map = (router as unknown as { [k: string]: unknown }).tools as
-                    | Map<string, { validateParams?: { schema?: { $id?: string } }; validateResult?: { schema?: { $id?: string } } }>
+                    | Map<
+                          string,
+                          {
+                              validateParams?: { schema?: { $id?: string } };
+                              validateResult?: { schema?: { $id?: string } };
+                          }
+                      >
                     | undefined;
                 const list = map
                     ? Array.from(map.entries()).map(([name, entry]) => ({
@@ -336,7 +348,7 @@ export function createDefaultMcpRouter(): McpRouter {
         runtime?: RuntimeService;
         row?: RowService & { validate?: (params: JsonValue) => Promise<JsonValue> };
         eazipay?: EaziPayService;
-    fileParseAndValidate?: { parseAndValidate: (params: JsonValue) => Promise<JsonValue> };
+        fileParseAndValidate?: { parseAndValidate: (params: JsonValue) => Promise<JsonValue> };
     } = { file, row, calendar };
 
     // Optional: wire fileGenerate
@@ -355,8 +367,8 @@ export function createDefaultMcpRouter(): McpRouter {
     services.fs = {
         read: fsSvc.read,
         list: fsSvc.list,
-    delete: fsSvc.deleteFile,
-    write: fsSvc.write,
+        delete: fsSvc.deleteFile,
+        write: fsSvc.write,
     };
 
     // Optional runtime
@@ -402,12 +414,21 @@ export async function handleMcpRequest(router: McpRouter, req: McpRequest): Prom
     } catch (err: unknown) {
         const norm = normalizeError(err);
         // Standardized error envelope
-        const payload: { code: string; message: string; detail?: string; traceId?: string } = {
-            code: norm.code ?? 'INTERNAL_ERROR',
+        const payload: McpErrorEnvelope = {
+            code: (norm.code as McpErrorEnvelope['code']) ?? MCP_ERROR_CODES.INTERNAL_ERROR,
             message: norm.message ?? 'Unknown error',
+            ...(norm.detail ? { detail: norm.detail } : {}),
+            ...(norm.traceId ? { traceId: norm.traceId } : {}),
         };
-        if (norm.detail) payload.detail = norm.detail;
-        if (norm.traceId) payload.traceId = norm.traceId;
+        // Structured logging with trace context
+        logger.error('MCP error', {
+            event: 'error',
+            method: req.method,
+            id: req.id ?? null,
+            code: payload.code,
+            message: payload.message,
+            traceId: payload.traceId,
+        });
         return { id: req.id ?? null, error: payload };
     }
 }
@@ -421,12 +442,17 @@ function generateTraceId(): string {
 function normalizeError(err: unknown): NormalizedError {
     const traceId = generateTraceId();
     if (err instanceof McpValidationError) {
-        return { code: 'VALIDATION_ERROR', message: err.message, detail: err.detail, traceId };
+        return {
+            code: MCP_ERROR_CODES.VALIDATION_ERROR,
+            message: err.message,
+            detail: err.detail,
+            traceId,
+        };
     }
     if (err instanceof Error) {
         const anyErr = err as Error & { detail?: unknown };
         return {
-            code: 'INTERNAL_ERROR',
+            code: MCP_ERROR_CODES.INTERNAL_ERROR,
             message: anyErr.message,
             detail: typeof anyErr.detail === 'string' ? anyErr.detail : undefined,
             traceId,
@@ -436,11 +462,11 @@ function normalizeError(err: unknown): NormalizedError {
         const maybeMsg = (err as Record<string, unknown>).message;
         const maybeDetail = (err as Record<string, unknown>).detail;
         return {
-            code: 'INTERNAL_ERROR',
+            code: MCP_ERROR_CODES.INTERNAL_ERROR,
             message: typeof maybeMsg === 'string' ? maybeMsg : undefined,
             detail: typeof maybeDetail === 'string' ? maybeDetail : undefined,
             traceId,
         };
     }
-    return { code: 'INTERNAL_ERROR', message: undefined, traceId };
+    return { code: MCP_ERROR_CODES.INTERNAL_ERROR, message: undefined, traceId };
 }
