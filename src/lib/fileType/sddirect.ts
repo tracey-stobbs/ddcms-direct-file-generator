@@ -5,6 +5,7 @@ import type { FileSystem } from '../fileWriter/fsWrapper';
 import { Request } from '../types';
 import type { FileTypeAdapter, PreviewParams } from './adapter';
 import { computeInvalidRowsCap, toCsvLine, toInternalRequest } from './adapter';
+import { parseCsvContent } from './csv';
 
 // Helper: Generate a valid payment reference
 function generatePaymentReference(): string {
@@ -167,7 +168,7 @@ function computeSDHeaders(includeOptionalFields: boolean | string[] | undefined)
     return [...SD_REQUIRED, ...SD_OPTIONAL_ALL];
 }
 
-export const sdDirectAdapter: FileTypeAdapter = {
+export const sdDirectAdapter: FileTypeAdapter & { parse?: (c: string) => Record<string, unknown> } = {
     buildPreviewRows(params: PreviewParams): string[][] {
         const numberOfRows = params.numberOfRows ?? 15;
         const includeOptionalFields = params.includeOptionalFields ?? true;
@@ -219,5 +220,10 @@ export const sdDirectAdapter: FileTypeAdapter = {
         const headers = computeSDHeaders(params.includeOptionalFields ?? true);
         const fields = projectSDRow(data, headers);
         return { row: { fields, asLine: toCsvLine(fields) } };
+    },
+    // Optional parse implementation: use shared CSV parser so SDDirect files parse consistently
+    parse(content: string) {
+        const parsed = parseCsvContent(content) as { rows: Array<{ index: number; asLine: string; fields: string[] }> };
+        return parsed;
     },
 };

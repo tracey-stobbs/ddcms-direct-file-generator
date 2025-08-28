@@ -5,8 +5,9 @@ import type { FileSystem } from '../fileWriter/fsWrapper';
 import type { EaziPayDateFormat, EaziPaySpecificFields, Request } from '../types';
 import { DateFormatter } from '../utils/dateFormatter';
 import { EaziPayValidator } from '../validators/eazipayValidator';
-import type { FileTypeAdapter, PreviewParams } from './adapter';
+import type { FileTypeAdapter, PreviewParams, RowGenerateParams } from './adapter';
 import { computeInvalidRowsCap, toCsvLine, toInternalRequest } from './adapter';
+import { parseCsvLine } from './csv';
 
 /**
  * Generate valid EaziPay row data
@@ -321,7 +322,8 @@ export function getEaziPayHeaders(): string[] {
     ];
 }
 
-export const eaziPayAdapter: FileTypeAdapter = {
+
+export const eaziPayAdapter = {
     buildPreviewRows(params: PreviewParams): string[][] {
         const numberOfRows = params.numberOfRows ?? 15;
         const dateFormat = params.dateFormat || DateFormatter.getRandomDateFormat();
@@ -329,11 +331,12 @@ export const eaziPayAdapter: FileTypeAdapter = {
         const invalidRows = params.hasInvalidRows
             ? computeInvalidRowsCap(numberOfRows, params.forInlineEditing)
             : 0;
+        // Place invalid rows deterministically after the first row (if any)
         for (let i = 0; i < numberOfRows; i++) {
-            const rowData =
-                params.hasInvalidRows && i > 1 && i < invalidRows
-                    ? generateInvalidEaziPayRow(toInternalRequest('EaziPay', params), dateFormat)
-                    : generateValidEaziPayRow(toInternalRequest('EaziPay', params), dateFormat);
+            const shouldBeInvalid = params.hasInvalidRows && invalidRows > 0 && i >= 1 && i <= invalidRows;
+            const rowData = shouldBeInvalid
+                ? generateInvalidEaziPayRow(toInternalRequest('EaziPay', params), dateFormat)
+                : generateValidEaziPayRow(toInternalRequest('EaziPay', params), dateFormat);
             rows.push(formatEaziPayRowAsArray(rowData));
         }
         return rows;
@@ -351,7 +354,7 @@ export const eaziPayAdapter: FileTypeAdapter = {
             sun: params.sun,
         };
     },
-    buildRow(params) {
+    buildRow(params: RowGenerateParams) {
         const req = toInternalRequest('EaziPay', {
             sun: params.sun,
             fileType: 'EaziPay',
@@ -367,4 +370,10 @@ export const eaziPayAdapter: FileTypeAdapter = {
         const fields = formatEaziPayRowAsArray(data);
         return { row: { fields, asLine: toCsvLine(fields) } };
     },
-};
+    // Optional parse implementation to properly read files produced by this adapter
+    parse(content: string) {
+        const lines = content.split(/\r?\n/).filter((l) => l.length > 0);
+        const rows = lines.map((line, i) => ({ index: i, asLine: line, fields: parseCsvLine(line) }));
+        return { rows };
+    },
+} as unknown as FileTypeAdapter & { parse?: (c: string) => Record<string, unknown> };

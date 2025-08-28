@@ -1,11 +1,12 @@
 import * as fs from 'fs/promises';
 import { parse } from '../lib/fileType/parse';
+import { validate as validateRow } from './rowValidate';
 import type { JsonValue } from '../mcp/router';
 
 type ParsedRow = { index: number; fields?: string[]; asLine?: string; [key: string]: unknown };
 type Parsed = { rows?: ParsedRow[]; [key: string]: unknown };
 
-// Thin parse and validate service: reads a file and returns parsed summary + per-row violations using existing validators
+// Parse a file using the appropriate adapter, then validate each row using existing row validators.
 export async function parseAndValidate(params: JsonValue): Promise<JsonValue> {
     const p = params as unknown as { filePath?: string; fileType?: string };
     if (!p.filePath || !p.fileType) {
@@ -13,11 +14,22 @@ export async function parseAndValidate(params: JsonValue): Promise<JsonValue> {
     }
 
     const content = await fs.readFile(p.filePath, 'utf8');
-    // delegate to file type parser (adapter) which should expose parse(fileContent)
     const parsed = parse(p.fileType, content) as Parsed;
-
     const parsedRows = Array.isArray(parsed.rows) ? parsed.rows : [];
-    const rows = parsedRows.map((r) => ({ index: r.index ?? 0, valid: true, violations: [] }));
-    const summary = { total: rows.length, valid: rows.length, invalid: 0 };
-    return { summary, rows } as JsonValue;
+
+    const rowsOut: Array<Record<string, unknown>> = [];
+    let validCount = 0;
+
+    for (const r of parsedRows) {
+        const index = typeof r.index === 'number' ? r.index : 0;
+        // prepare validator input: include fileType and row payload
+        const validatorInput: JsonValue = { fileType: p.fileType, row: r as Record<string, unknown> } as JsonValue;
+        const res = (await validateRow(validatorInput)) as unknown as { valid?: boolean; details?: unknown };
+        const isValid = res && typeof res.valid === 'boolean' ? res.valid : true;
+        if (isValid) validCount += 1;
+        rowsOut.push({ index, valid: isValid, violations: res.details ?? null });
+    }
+
+    const summary = { total: rowsOut.length, valid: validCount, invalid: rowsOut.length - validCount };
+    return { summary, rows: rowsOut } as JsonValue;
 }
