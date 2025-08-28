@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { MemoryFileWriter } from './memoryWriter.js';
+import { describe, expect, it } from 'vitest';
 import type { Request } from '../types.js';
+import { MemoryFileWriter } from './memoryWriter.js';
 
 describe('MemoryFileWriter', () => {
     it('generates in-memory content and virtual path', async () => {
@@ -18,7 +18,9 @@ describe('MemoryFileWriter', () => {
         expect(typeof res.fileContent).toBe('string');
         expect(res.fileContent.length).toBeGreaterThan(0);
         // Path should be under output/SDDirect/TESTSUN with expected filename tokens
-    expect(res.filePath).toMatch(/output[\\/]SDDirect[\\/]TESTSUN[\\/]SDDirect_11_x_2_H_V_\d{8}_\d{6}\.csv$/);
+        expect(res.filePath).toMatch(
+            /output[\\/]SDDirect[\\/]TESTSUN[\\/]SDDirect_11_x_2_H_V_\d{8}_\d{6}\.csv$/,
+        );
         expect(res.meta.fileType).toBe('SDDirect');
         expect(res.meta.sun).toBe('TESTSUN');
         expect(res.meta.extension.startsWith('.')).toBe(true);

@@ -1,6 +1,6 @@
-import { DateTime } from "luxon"
+import { DateTime } from 'luxon';
 
-import { generateFile } from "../lib/fileWriter/fileWriter"
+import { generateFile } from '../lib/fileWriter/fileWriter';
 
 import type { Request } from '../lib/types';
 import type { JsonValue } from '../mcp/router';
@@ -8,11 +8,11 @@ export async function generate(params: JsonValue): Promise<JsonValue> {
     const p = params as unknown as Request & { sun?: string; dryRun?: boolean };
     const sun = p.sun ?? 'DEFAULT';
     const generated = await generateFile(p, sun);
-    return ({
+    return {
         filePath: generated.filePath,
         fileContent: generated.fileContent,
         meta: generated.meta,
-    }) as unknown as JsonValue;
+    } as unknown as JsonValue;
 }
 
 export async function estimateFilename(params: JsonValue): Promise<JsonValue> {

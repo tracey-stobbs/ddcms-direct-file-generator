@@ -1,4 +1,6 @@
 import path from 'path';
+import { logger } from '../lib/logger';
+import { MCP_ERROR_CODES } from './errors';
 import { JsonValue, McpRouter, McpValidationError } from './router';
 import { loadSchema } from './schemaLoader';
 // Default service implementations (kept thin; real logic lives outside src/mcp)
@@ -138,7 +140,11 @@ export function createMcpRouter(services: McpServices): McpRouter {
                         } as JsonValue)) as unknown as Record<string, unknown> | undefined;
                         generated.persisted = true;
                         // prefer full path returned by fs service when available
-                        if (writeResult && typeof writeResult === 'object' && 'path' in writeResult) {
+                        if (
+                            writeResult &&
+                            typeof writeResult === 'object' &&
+                            'path' in writeResult
+                        ) {
                             generated.persistedPath = String(writeResult['path']);
                         } else {
                             generated.persistedPath = rel;
@@ -299,7 +305,13 @@ export function createMcpRouter(services: McpServices): McpRouter {
                 // expose registered tool names and their schema $ids
                 // Access router internals (tools map)
                 const map = (router as unknown as { [k: string]: unknown }).tools as
-                    | Map<string, { validateParams?: { schema?: { $id?: string } }; validateResult?: { schema?: { $id?: string } } }>
+                    | Map<
+                          string,
+                          {
+                              validateParams?: { schema?: { $id?: string } };
+                              validateResult?: { schema?: { $id?: string } };
+                          }
+                      >
                     | undefined;
                 const list = map
                     ? Array.from(map.entries()).map(([name, entry]) => ({
@@ -336,7 +348,7 @@ export function createDefaultMcpRouter(): McpRouter {
         runtime?: RuntimeService;
         row?: RowService & { validate?: (params: JsonValue) => Promise<JsonValue> };
         eazipay?: EaziPayService;
-    fileParseAndValidate?: { parseAndValidate: (params: JsonValue) => Promise<JsonValue> };
+        fileParseAndValidate?: { parseAndValidate: (params: JsonValue) => Promise<JsonValue> };
     } = { file, row, calendar };
 
     // Optional: wire fileGenerate
@@ -355,8 +367,8 @@ export function createDefaultMcpRouter(): McpRouter {
     services.fs = {
         read: fsSvc.read,
         list: fsSvc.list,
-    delete: fsSvc.deleteFile,
-    write: fsSvc.write,
+        delete: fsSvc.deleteFile,
+        write: fsSvc.write,
     };
 
     // Optional runtime
@@ -383,35 +395,6 @@ export function createDefaultMcpRouter(): McpRouter {
     return createMcpRouter(services as McpServices);
 }
 
-// Optional: tiny JSON-RPC like envelope types
-export interface McpRequest {
-    id: string | number | null;
-    method: string;
-    params?: JsonValue;
-}
-export interface McpResponse {
-    id: string | number | null;
-    result?: unknown;
-    error?: { message: string; detail?: string };
-}
-
-export async function handleMcpRequest(router: McpRouter, req: McpRequest): Promise<McpResponse> {
-    try {
-        const result = await router.invoke(req.method, req.params ?? null);
-        return { id: req.id ?? null, result };
-    } catch (err: unknown) {
-        const norm = normalizeError(err);
-        // Standardized error envelope
-        const payload: { code: string; message: string; detail?: string; traceId?: string } = {
-            code: norm.code ?? 'INTERNAL_ERROR',
-            message: norm.message ?? 'Unknown error',
-        };
-        if (norm.detail) payload.detail = norm.detail;
-        if (norm.traceId) payload.traceId = norm.traceId;
-        return { id: req.id ?? null, error: payload };
-    }
-}
-
 type NormalizedError = { code?: string; message?: string; detail?: string; traceId?: string };
 function generateTraceId(): string {
     // Simple stable-ish trace id using timestamp + random hex
@@ -421,12 +404,17 @@ function generateTraceId(): string {
 function normalizeError(err: unknown): NormalizedError {
     const traceId = generateTraceId();
     if (err instanceof McpValidationError) {
-        return { code: 'VALIDATION_ERROR', message: err.message, detail: err.detail, traceId };
+        return {
+            code: MCP_ERROR_CODES.VALIDATION_ERROR,
+            message: err.message,
+            detail: err.detail,
+            traceId,
+        };
     }
     if (err instanceof Error) {
         const anyErr = err as Error & { detail?: unknown };
         return {
-            code: 'INTERNAL_ERROR',
+            code: MCP_ERROR_CODES.INTERNAL_ERROR,
             message: anyErr.message,
             detail: typeof anyErr.detail === 'string' ? anyErr.detail : undefined,
             traceId,
@@ -436,11 +424,74 @@ function normalizeError(err: unknown): NormalizedError {
         const maybeMsg = (err as Record<string, unknown>).message;
         const maybeDetail = (err as Record<string, unknown>).detail;
         return {
-            code: 'INTERNAL_ERROR',
+            code: MCP_ERROR_CODES.INTERNAL_ERROR,
             message: typeof maybeMsg === 'string' ? maybeMsg : undefined,
             detail: typeof maybeDetail === 'string' ? maybeDetail : undefined,
             traceId,
         };
     }
-    return { code: 'INTERNAL_ERROR', message: undefined, traceId };
+    return { code: MCP_ERROR_CODES.INTERNAL_ERROR, message: undefined, traceId };
+}
+
+// JSON-RPC 2.0 types and adapter
+export interface JsonRpcRequest {
+    jsonrpc: '2.0';
+    id: string | number | null;
+    method: string;
+    params?: JsonValue;
+}
+
+export interface JsonRpcError {
+    code: number; // -32601 unknown method, -32602 invalid params, -32603 internal error
+    message: string;
+    data?: unknown;
+}
+
+export interface JsonRpcResponse {
+    jsonrpc: '2.0';
+    id: string | number | null;
+    result?: JsonValue;
+    error?: JsonRpcError;
+}
+
+export async function handleJsonRpcRequest(
+    router: McpRouter,
+    req: JsonRpcRequest,
+): Promise<JsonRpcResponse> {
+    try {
+        const result = await router.invoke(req.method, req.params ?? null);
+        return { jsonrpc: '2.0', id: req.id ?? null, result };
+    } catch (err: unknown) {
+        const norm = normalizeError(err);
+        // Determine JSON-RPC error code
+        let code = -32603; // Internal error
+        let message = norm.message || 'Internal error';
+        if (err instanceof McpValidationError) {
+            code = -32602; // Invalid params
+            message = 'Invalid params';
+        } else if (err instanceof Error && /Unknown tool:/i.test(err.message)) {
+            code = -32601; // Unknown method
+            message = 'Method not found';
+        }
+        const error: JsonRpcError = {
+            code,
+            message,
+            data: {
+                // expose useful context for debugging/correlation
+                traceId: norm.traceId,
+                detail: norm.detail,
+                // preserve internal classification for observability
+                mcpCode: norm.code,
+            },
+        };
+        logger.error('JSON-RPC error', {
+            event: 'jsonrpc.error',
+            method: req.method,
+            id: req.id ?? null,
+            code: error.code,
+            message: error.message,
+            traceId: norm.traceId,
+        });
+        return { jsonrpc: '2.0', id: req.id ?? null, error };
+    }
 }

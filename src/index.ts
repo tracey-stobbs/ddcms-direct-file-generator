@@ -73,9 +73,9 @@ app.post('/api/:sun/:filetype/generate', async (req: Request, res: Response) => 
         }
 
         const internal = toInternalRequest(filetype, normalizedRequest, sun);
-    // API context: persist to filesystem by default
-    const writer = resolveFileWriter('api');
-    const generated = await writer.generate(internal, sun);
+        // API context: persist to filesystem by default
+        const writer = resolveFileWriter('api');
+        const generated = await writer.generate(internal, sun);
         const relFilePath = generated.filePath
             .replace(process.cwd() + path.sep, '')
             .replace(/\\/g, '/');

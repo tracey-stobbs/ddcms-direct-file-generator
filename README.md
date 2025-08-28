@@ -274,59 +274,137 @@ eazipay.http                    # EaziPay API test requests
 
 -   Location: `src/mcp`
     -   `router.ts`: Schema-backed tool registry using Ajv. Validates params and results.
-    -   `server.ts`: Creates the router and registers initial tools (`file.preview`, `row.generate`, `calendar.nextWorkingDay`). Exposes a simple JSON-RPC-like handler.
+    -   `server.ts`: Creates the router and registers initial tools (`file.preview`, `row.generate`, `calendar.nextWorkingDay`). Exposes a strict JSON-RPC 2.0 handler `handleJsonRpcRequest`.
     -   `schemaLoader.ts`: Loads canonical JSON Schemas from `documentation/Schemas/**`. Tests mock this to avoid filesystem I/O.
 -   Business logic must live outside `src/mcp` and be passed in via the `McpServices` interface when creating the router.
 -   Phase 4.0 runs in-memory only; any filesystem tools are deferred to Phase 4.1.
 
-### MCP examples
+### MCP examples (JSON-RPC 2.0)
 
-Use the in-memory router plus the simple JSON-RPC-like handler in `src/mcp/server.ts`.
+Use the in-memory router plus the strict JSON-RPC 2.0 handler `handleJsonRpcRequest` in `src/mcp/server.ts`.
 
 -   file.preview
 
-    -   Request: `{ id: 1, method: "file.preview", params: { sun: "123456", fileType: "EaziPay", numberOfRows: 2 } }`
-    -   Result: `{ content: "...", meta: { fileType: "EaziPay", rows: 2, columns: 14, header: false, validity: "valid", sun: "123456" } }`
-    -   Bacs18 example: `{ id: 11, method: "file.preview", params: { sun: "123456", fileType: "Bacs18PaymentLines", numberOfRows: 2, variant: "MULTI" } }`
-    -   Result: `{ content: "...", meta: { fileType: "Bacs18PaymentLines", rows: 2, columns: 12, header: "NH", validity: "V", sun: "123456" } }`
+        -   Request:
+
+                ```json
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "file.preview",
+                    "params": { "sun": "123456", "fileType": "EaziPay", "numberOfRows": 2 }
+                }
+                ```
+
+        -   Result:
+
+                ```json
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "result": {
+                        "content": "...",
+                        "meta": { "fileType": "EaziPay", "rows": 2, "columns": 14, "header": "NH", "validity": "V", "sun": "123456" }
+                    }
+                }
+                ```
+
+        -   Bacs18 example:
+
+                ```json
+                {
+                    "jsonrpc": "2.0",
+                    "id": 11,
+                    "method": "file.preview",
+                    "params": { "sun": "123456", "fileType": "Bacs18PaymentLines", "numberOfRows": 2, "variant": "MULTI" }
+                }
+                ```
 
 -   row.generate
 
-    -   Request: `{ id: 2, method: "row.generate", params: { sun: "123456", fileType: "SDDirect", validity: "valid" } }`
-    -   Result: `{ row: { fields: [ ... ], asLine: "..." }, issues?: [ ... ] }`
-    -   Bacs18 example: `{ id: 12, method: "row.generate", params: { sun: "123456", fileType: "Bacs18PaymentLines", validity: "invalid", variant: "DAILY" } }`
-    -   Result: `{ row: { fields: [ ...fixed-width fields... ], asLine: "...100 chars..." } }`
+        -   Request:
 
--   calendar.nextWorkingDay
-    -   Request: `{ id: 3, method: "calendar.nextWorkingDay", params: { offsetDays: 2 } }`
-    -   Result: `{ date: "YYYY-MM-DD" }`
+                ```json
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "row.generate",
+                    "params": { "sun": "123456", "fileType": "SDDirect", "validity": "valid" }
+                }
+                ```
+
+        -   Result: `{ "jsonrpc": "2.0", "id": 2, "result": { "row": { "fields": [ ... ], "asLine": "..." }, "issues": [ ... ] } }`
+
+        -   Bacs18 example:
+
+                ```json
+                {
+                    "jsonrpc": "2.0",
+                    "id": 12,
+                    "method": "row.generate",
+                    "params": { "sun": "123456", "fileType": "Bacs18PaymentLines", "validity": "invalid", "variant": "DAILY" }
+                }
+                ```
+
+-   calendar.nextWorkingDay - Request: `{ "jsonrpc": "2.0", "id": 3, "method": "calendar.nextWorkingDay", "params": { "offsetDays": 2 } }` - Result: `{ "jsonrpc": "2.0", "id": 3, "result": { "date": "YYYY-MM-DD" } }`
+
+#### JSON-RPC 2.0 error mapping
+
+Errors use standard JSON-RPC codes and include correlation data:
+
+-   -32601 Method not found — unknown tool name
+-   -32602 Invalid params — Ajv validation failure (params)
+-   -32603 Internal error — unexpected server-side error
+
+Example error:
+
+```json
+{
+    "jsonrpc": "2.0",
+    "id": 4,
+    "error": {
+        "code": -32602,
+        "message": "Invalid params",
+        "data": {
+            "traceId": "abc123-ef456789",
+            "detail": "Ajv validation error details...",
+            "mcpCode": "VALIDATION_ERROR"
+        }
+    }
+}
+```
 
 ## MCP tools (Phase 4.1)
 
 Phase 4.1 adds optional tools behind Ajv-validated schemas under `documentation/Schemas/**`. The MCP server registers these when schemas and services are available.
 
 -   file.estimateFilename
+
     -   Params schema: `file/estimateFilename.params.json` (fileType, columns, rows, header, validity, optional timestamp/extension)
     -   Result schema: `file/estimateFilename.result.json`
     -   Returns: `{ filename: string }`
-    -   Example: `{ id: 11, method: "file.estimateFilename", params: { fileType: "EaziPay", columns: 14, rows: 1, header: "NH", validity: "V" } }`
+    -   Example: `{ "jsonrpc": "2.0", "id": 11, "method": "file.estimateFilename", "params": { "fileType": "EaziPay", "columns": 14, "rows": 1, "header": "NH", "validity": "V" } }`
 
 -   row.validate
+
     -   Params schema: `row/validate.params.json` (fields must be string | number | boolean; no undefined)
     -   Result schema: `row/validate.result.json` ({ valid: boolean, violations: [...] })
-    -   Example: `{ id: 20, method: "row.validate", params: { fileType: "EaziPay", row: { fields: ["01", "123456", "12345678", "123456", "12345678", "Name", 0, 1, "2025-10-01", "", "Sun Name", "REF12345", "", ""] } } }`
+    -   Example: `{ "jsonrpc": "2.0", "id": 20, "method": "row.validate", "params": { "fileType": "EaziPay", "row": { "fields": ["01", "123456", "12345678", "123456", "12345678", "Name", 0, 1, "2025-10-01", "", "Sun Name", "REF12345", "", ""] } } }`
 
 -   file.parseAndValidate
+
     -   Params schema: `file/parseAndValidate.params.json` ({ filePath, fileType })
     -   Result schema: `file/parseAndValidate.result.json` (summary + per-row flags)
-    -   Example: `{ id: 27, method: "file.parseAndValidate", params: { filePath: ".../output/parse-validate/demo.csv", fileType: "EaziPay" } }`
+    -   Example: `{ "jsonrpc": "2.0", "id": 27, "method": "file.parseAndValidate", "params": { "filePath": ".../output/parse-validate/demo.csv", "fileType": "EaziPay" } }`
 
 -   fs.read | fs.list | fs.delete
+
     -   Params/results schemas under `fs/` (Phase 4.1)
     -   Reads/writes are sandboxed under `./output` only; paths are normalized and access is denied outside
     -   `fs.read` supports partial reads with `{ offset, length }` and returns `{ content, eof }`
 
 -   runtime.health
+
     -   Params/results schemas under `runtime/`
     -   Returns `{ status: "ok", uptime: number }`
 
