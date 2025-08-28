@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://example.com/mcp/fs.delete.result.json",
+    "title": "fs.delete result",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "success": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "success"
+    ]
+}

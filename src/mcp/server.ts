@@ -7,6 +7,7 @@ import * as configSvc from '../services/config';
 import * as eazipaySvc from '../services/eazipay';
 import * as fileSvc from '../services/file';
 import * as fileGenerate from '../services/fileGenerate';
+import * as fileParseAndValidateSvc from '../services/fileParseAndValidate';
 import * as fsSvc from '../services/fsService';
 import * as row from '../services/row';
 import * as rowValidate from '../services/rowValidate';
@@ -335,6 +336,7 @@ export function createDefaultMcpRouter(): McpRouter {
         runtime?: RuntimeService;
         row?: RowService & { validate?: (params: JsonValue) => Promise<JsonValue> };
         eazipay?: EaziPayService;
+    fileParseAndValidate?: { parseAndValidate: (params: JsonValue) => Promise<JsonValue> };
     } = { file, row, calendar };
 
     // Optional: wire fileGenerate
@@ -371,6 +373,11 @@ export function createDefaultMcpRouter(): McpRouter {
     // Optional eazipay
     services.eazipay = {
         pickOptions: eazipaySvc.pickOptions,
+    };
+
+    // Optional file.parseAndValidate
+    services.fileParseAndValidate = {
+        parseAndValidate: fileParseAndValidateSvc.parseAndValidate,
     };
 
     return createMcpRouter(services as McpServices);

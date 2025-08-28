@@ -26,3 +26,13 @@ Schemas for MCP tool registration, organized by category.
 ## FS
 
 -   read: [params](./fs/read.params.json) · [result](./fs/read.result.json)
+-   list: [params](./fs/list.params.json) · [result](./fs/list.result.json)
+-   delete: [params](./fs/delete.params.json) · [result](./fs/delete.result.json)
+
+## Runtime
+
+-   health: [params](./runtime/health.params.json) · [result](./runtime/health.result.json)
+
+## MCP
+
+-   discover: [params](./mcp/discover.params.json) · [result](./mcp/discover.result.json)

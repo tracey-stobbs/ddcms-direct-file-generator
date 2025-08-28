@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import { parse } from '../lib/fileType/parse';
-import { validate as validateRow } from './rowValidate';
 import type { JsonValue } from '../mcp/router';
+import { validate as validateRow } from './rowValidate';
 
 type ParsedRow = { index: number; fields?: string[]; asLine?: string; [key: string]: unknown };
 type Parsed = { rows?: ParsedRow[]; [key: string]: unknown };
@@ -24,10 +24,13 @@ export async function parseAndValidate(params: JsonValue): Promise<JsonValue> {
         const index = typeof r.index === 'number' ? r.index : 0;
         // prepare validator input: include fileType and row payload
         const validatorInput: JsonValue = { fileType: p.fileType, row: r as Record<string, unknown> } as JsonValue;
-        const res = (await validateRow(validatorInput)) as unknown as { valid?: boolean; details?: unknown };
+        const res = (await validateRow(validatorInput)) as unknown as {
+            valid?: boolean;
+            violations?: Array<{ field: string; code: string; message: string }>;
+        };
         const isValid = res && typeof res.valid === 'boolean' ? res.valid : true;
         if (isValid) validCount += 1;
-        rowsOut.push({ index, valid: isValid, violations: res.details ?? null });
+        rowsOut.push({ index, valid: isValid, violations: res.violations ?? [] });
     }
 
     const summary = { total: rowsOut.length, valid: validCount, invalid: rowsOut.length - validCount };
