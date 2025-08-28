@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://example.com/mcp/runtime.health.result.json",
+    "title": "runtime.health result",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "status": {
+            "type": "string"
+        },
+        "uptime": {
+            "type": "number",
+            "minimum": 0
+        }
+    },
+    "required": [
+        "status",
+        "uptime"
+    ]
+}

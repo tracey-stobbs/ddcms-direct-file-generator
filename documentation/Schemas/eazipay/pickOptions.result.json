@@ -5,10 +5,43 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-        "dateFormat": {
-            "type": "string",
-            "enum": ["YYYY-MM-DD", "DD-MMM-YYYY", "DD/MM/YYYY"]
+        "options": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "dateFormats": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "YYYY-MM-DD",
+                            "DD-MMM-YYYY",
+                            "DD/MM/YYYY"
+                        ]
+                    }
+                },
+                "trailerFormats": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "quoted",
+                            "unquoted"
+                        ]
+                    }
+                },
+                "examples": {
+                    "type": "object"
+                }
+            },
+            "required": [
+                "dateFormats",
+                "trailerFormats",
+                "examples"
+            ]
         }
     },
-    "required": ["dateFormat"]
+    "required": [
+        "options"
+    ]
 }

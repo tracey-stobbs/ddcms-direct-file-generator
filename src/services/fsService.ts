@@ -11,11 +11,18 @@ function safePath(p: string): string {
 }
 
 export async function read(params: JsonValue): Promise<JsonValue> {
-    const p = (params as unknown as Record<string, unknown>)?.path as string | undefined;
-    if (!p) return { content: null } as JsonValue;
+    const obj = (params as unknown as Record<string, unknown>) ?? {};
+    const p = obj.path as string | undefined;
+    const offset = typeof obj.offset === 'number' ? (obj.offset as number) : 0;
+    const length = typeof obj.length === 'number' ? (obj.length as number) : undefined;
+    if (!p) return { content: '', eof: true } as JsonValue;
     const full = safePath(p);
-    const content = await fs.readFile(full, 'utf8');
-    return { content } as JsonValue;
+    const contentFull = await fs.readFile(full, 'utf8');
+    const start = Math.max(0, offset);
+    const slice =
+        length && length > 0 ? contentFull.slice(start, start + length) : contentFull.slice(start);
+    const eof = start + (length ?? contentFull.length) >= contentFull.length;
+    return { content: slice, eof } as JsonValue;
 }
 
 export async function list(params: JsonValue): Promise<JsonValue> {

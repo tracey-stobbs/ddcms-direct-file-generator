@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseCsvLine, parseCsvContent } from './csv';
+import { describe, expect, it } from 'vitest';
+import { parseCsvContent, parseCsvLine } from './csv';
 
 interface ParsedRow { index: number; asLine: string; fields: string[] }
 interface ParseResult { rows: ParsedRow[] }
