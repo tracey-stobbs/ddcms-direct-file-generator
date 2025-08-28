@@ -1,6 +1,6 @@
-import type { IFileWriter, GeneratedFile } from './interfaces';
 import type { Request } from '../types';
 import { computeFilenameAndContent } from './core';
+import type { GeneratedFile, IFileWriter } from './interfaces';
 
 export class MemoryFileWriter implements IFileWriter {
     async generate(request: Request, sun: string): Promise<GeneratedFile> {

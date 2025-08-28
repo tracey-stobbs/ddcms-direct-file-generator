@@ -24,6 +24,32 @@ describe('MCP integration (schemas + services)', () => {
         expect(r.meta.columns).toBeGreaterThan(0);
     });
 
+    it('file.preview (SDDirect) respects includeHeaders=false (NH)', async () => {
+        const router = createDefaultMcpRouter();
+        const res = await handleMcpRequest(router, {
+            id: 101,
+            method: 'file.preview',
+            params: { sun: '123456', fileType: 'SDDirect', numberOfRows: 2, includeHeaders: false },
+        });
+        expect(res.error).toBeUndefined();
+        const r = res.result as { meta: { fileType: string; header: 'H' | 'NH' } };
+        expect(r.meta.fileType).toBe('SDDirect');
+        expect(r.meta.header).toBe('NH');
+    });
+
+    it('file.preview (SDDirect) respects includeHeaders=true (H)', async () => {
+        const router = createDefaultMcpRouter();
+        const res = await handleMcpRequest(router, {
+            id: 102,
+            method: 'file.preview',
+            params: { sun: '123456', fileType: 'SDDirect', numberOfRows: 2, includeHeaders: true },
+        });
+        expect(res.error).toBeUndefined();
+        const r = res.result as { meta: { fileType: string; header: 'H' | 'NH' } };
+        expect(r.meta.fileType).toBe('SDDirect');
+        expect(r.meta.header).toBe('H');
+    });
+
     it('row.generate (SDDirect) happy path', async () => {
         const router = createDefaultMcpRouter();
         const res = await handleMcpRequest(router, {
@@ -79,9 +105,14 @@ describe('MCP integration (schemas + services)', () => {
             method: 'file.generate',
             params: { sun: '999999', fileType: 'EaziPay', persist: true } as unknown as JsonValue,
         });
-    // previously had diagnostic logging here; removed now that validation issues are fixed
+        // previously had diagnostic logging here; removed now that validation issues are fixed
         expect(res.error).toBeUndefined();
-        const r = res.result as { filePath?: string; fileContent?: string; persisted?: boolean; persistedPath?: string };
+        const r = res.result as {
+            filePath?: string;
+            fileContent?: string;
+            persisted?: boolean;
+            persistedPath?: string;
+        };
         expect(r.persisted).toBe(true);
         expect(typeof r.persistedPath).toBe('string');
 
@@ -93,6 +124,23 @@ describe('MCP integration (schemas + services)', () => {
 
         // cleanup
         await fs.unlink(path);
+    });
+
+    it('file.generate (SDDirect) includeHeaders=false yields NH in meta', async () => {
+        const router = createDefaultMcpRouter();
+        const res = await handleMcpRequest(router, {
+            id: 103,
+            method: 'file.generate',
+            params: {
+                sun: '555555',
+                fileType: 'SDDirect',
+                includeHeaders: false,
+            } as unknown as JsonValue,
+        });
+        expect(res.error).toBeUndefined();
+        const r = res.result as { meta: { header: 'H' | 'NH'; fileType: string } };
+        expect(r.meta.fileType).toBe('SDDirect');
+        expect(r.meta.header).toBe('NH');
     });
 
     it('file.estimateFilename returns deterministic filename', async () => {
@@ -118,7 +166,24 @@ describe('MCP integration (schemas + services)', () => {
         const req: JsonValue = {
             fileType: 'EaziPay',
             // Ensure no undefined entries; schema allows string|number|boolean
-            row: { fields: ['01', '123456', '12345678', '123456', '12345678', 'Name', 0, 1, '2025-10-01', '', 'Sun Name', 'REF12345', '', ''] },
+            row: {
+                fields: [
+                    '01',
+                    '123456',
+                    '12345678',
+                    '123456',
+                    '12345678',
+                    'Name',
+                    0,
+                    1,
+                    '2025-10-01',
+                    '',
+                    'Sun Name',
+                    'REF12345',
+                    '',
+                    '',
+                ],
+            },
         } as unknown as JsonValue;
         const res = await handleMcpRequest(router, { id: 20, method: 'row.validate', params: req });
         expect(res.error).toBeUndefined();
@@ -128,15 +193,23 @@ describe('MCP integration (schemas + services)', () => {
 
     it('eazipay.pickOptions returns options', async () => {
         const router = createDefaultMcpRouter();
-    const res = await handleMcpRequest(router, { id: 21, method: 'eazipay.pickOptions', params: {} });
+        const res = await handleMcpRequest(router, {
+            id: 21,
+            method: 'eazipay.pickOptions',
+            params: {},
+        });
         expect(res.error).toBeUndefined();
-    const r = res.result as { options: { dateFormats: string[]; trailerFormats: string[] } };
-    expect(Array.isArray(r.options.dateFormats)).toBe(true);
+        const r = res.result as { options: { dateFormats: string[]; trailerFormats: string[] } };
+        expect(Array.isArray(r.options.dateFormats)).toBe(true);
     });
 
     it('runtime.health returns status', async () => {
         const router = createDefaultMcpRouter();
-        const res = await handleMcpRequest(router, { id: 22, method: 'runtime.health', params: {} });
+        const res = await handleMcpRequest(router, {
+            id: 22,
+            method: 'runtime.health',
+            params: {},
+        });
         expect(res.error).toBeUndefined();
         const r = res.result as { status: string; uptime: number };
         expect(r.status).toBe('ok');
@@ -152,18 +225,30 @@ describe('MCP integration (schemas + services)', () => {
         await fs.mkdir(path.dirname(full), { recursive: true });
         await fs.writeFile(full, 'hello world');
 
-        const list = await handleMcpRequest(router, { id: 23, method: 'fs.list', params: { path: 'test' } });
+        const list = await handleMcpRequest(router, {
+            id: 23,
+            method: 'fs.list',
+            params: { path: 'test' },
+        });
         expect(list.error).toBeUndefined();
         const names = (list.result as { names: string[] }).names;
         expect(Array.isArray(names)).toBe(true);
 
-        const read = await handleMcpRequest(router, { id: 24, method: 'fs.read', params: { path: rel, offset: 0, length: 5 } });
+        const read = await handleMcpRequest(router, {
+            id: 24,
+            method: 'fs.read',
+            params: { path: rel, offset: 0, length: 5 },
+        });
         expect(read.error).toBeUndefined();
         const r = read.result as { content: string; eof: boolean };
         expect(r.content).toBe('hello');
         expect(typeof r.eof).toBe('boolean');
 
-        const del = await handleMcpRequest(router, { id: 25, method: 'fs.delete', params: { path: rel } });
+        const del = await handleMcpRequest(router, {
+            id: 25,
+            method: 'fs.delete',
+            params: { path: rel },
+        });
         expect(del.error).toBeUndefined();
         const d = del.result as { success: boolean };
         expect(d.success).toBe(true);

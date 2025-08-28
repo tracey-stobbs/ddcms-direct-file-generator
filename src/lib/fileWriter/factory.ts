@@ -1,8 +1,8 @@
-import type { IFileWriter, WriterContext } from './interfaces';
-import { MemoryFileWriter } from './memoryWriter';
 import { FilesystemFileWriter } from './filesystemWriter';
 import type { FileSystem } from './fsWrapper';
 import { nodeFs } from './fsWrapper';
+import type { IFileWriter, WriterContext } from './interfaces';
+import { MemoryFileWriter } from './memoryWriter';
 
 export function resolveFileWriter(
     context: WriterContext,

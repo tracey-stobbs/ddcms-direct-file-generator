@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { FilesystemFileWriter } from './filesystemWriter.js';
 import type { Request } from '../types.js';
+import { FilesystemFileWriter } from './filesystemWriter.js';
 import type { FileSystem } from './fsWrapper.js';
 
 describe('FilesystemFileWriter', () => {

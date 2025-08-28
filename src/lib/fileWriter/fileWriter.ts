@@ -13,10 +13,10 @@
  *   - fileContent is the serialized file as produced by the adapter.
  */
 import type { Request } from '../types';
-import type { FileSystem } from './fsWrapper';
-import { resolveFileWriter } from './factory';
-import type { GeneratedFile } from './interfaces';
 import { computeFilenameAndContent, getFileExtension, toPreviewParams } from './core';
+import { resolveFileWriter } from './factory';
+import type { FileSystem } from './fsWrapper';
+import type { GeneratedFile } from './interfaces';
 
 export type { GeneratedFile } from './interfaces';
 

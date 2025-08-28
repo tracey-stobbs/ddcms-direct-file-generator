@@ -33,7 +33,10 @@ export function getFileExtension(fileType: string): string {
     }
 }
 
-export function computeFilenameAndContent(request: Request, sun: string): {
+export function computeFilenameAndContent(
+    request: Request,
+    sun: string,
+): {
     filePath: string;
     content: string;
     meta: {
