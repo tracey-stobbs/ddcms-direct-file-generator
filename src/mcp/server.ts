@@ -1,6 +1,6 @@
 import path from 'path';
 import { logger } from '../lib/logger';
-import { MCP_ERROR_CODES, type McpErrorEnvelope } from './errors';
+import { MCP_ERROR_CODES } from './errors';
 import { JsonValue, McpRouter, McpValidationError } from './router';
 import { loadSchema } from './schemaLoader';
 // Default service implementations (kept thin; real logic lives outside src/mcp)
@@ -395,44 +395,6 @@ export function createDefaultMcpRouter(): McpRouter {
     return createMcpRouter(services as McpServices);
 }
 
-// Optional: tiny JSON-RPC like envelope types
-export interface McpRequest {
-    id: string | number | null;
-    method: string;
-    params?: JsonValue;
-}
-export interface McpResponse {
-    id: string | number | null;
-    result?: unknown;
-    error?: { message: string; detail?: string };
-}
-
-export async function handleMcpRequest(router: McpRouter, req: McpRequest): Promise<McpResponse> {
-    try {
-        const result = await router.invoke(req.method, req.params ?? null);
-        return { id: req.id ?? null, result };
-    } catch (err: unknown) {
-        const norm = normalizeError(err);
-        // Standardized error envelope
-        const payload: McpErrorEnvelope = {
-            code: (norm.code as McpErrorEnvelope['code']) ?? MCP_ERROR_CODES.INTERNAL_ERROR,
-            message: norm.message ?? 'Unknown error',
-            ...(norm.detail ? { detail: norm.detail } : {}),
-            ...(norm.traceId ? { traceId: norm.traceId } : {}),
-        };
-        // Structured logging with trace context
-        logger.error('MCP error', {
-            event: 'error',
-            method: req.method,
-            id: req.id ?? null,
-            code: payload.code,
-            message: payload.message,
-            traceId: payload.traceId,
-        });
-        return { id: req.id ?? null, error: payload };
-    }
-}
-
 type NormalizedError = { code?: string; message?: string; detail?: string; traceId?: string };
 function generateTraceId(): string {
     // Simple stable-ish trace id using timestamp + random hex
@@ -469,4 +431,67 @@ function normalizeError(err: unknown): NormalizedError {
         };
     }
     return { code: MCP_ERROR_CODES.INTERNAL_ERROR, message: undefined, traceId };
+}
+
+// JSON-RPC 2.0 types and adapter
+export interface JsonRpcRequest {
+    jsonrpc: '2.0';
+    id: string | number | null;
+    method: string;
+    params?: JsonValue;
+}
+
+export interface JsonRpcError {
+    code: number; // -32601 unknown method, -32602 invalid params, -32603 internal error
+    message: string;
+    data?: unknown;
+}
+
+export interface JsonRpcResponse {
+    jsonrpc: '2.0';
+    id: string | number | null;
+    result?: JsonValue;
+    error?: JsonRpcError;
+}
+
+export async function handleJsonRpcRequest(
+    router: McpRouter,
+    req: JsonRpcRequest,
+): Promise<JsonRpcResponse> {
+    try {
+        const result = await router.invoke(req.method, req.params ?? null);
+        return { jsonrpc: '2.0', id: req.id ?? null, result };
+    } catch (err: unknown) {
+        const norm = normalizeError(err);
+        // Determine JSON-RPC error code
+        let code = -32603; // Internal error
+        let message = norm.message || 'Internal error';
+        if (err instanceof McpValidationError) {
+            code = -32602; // Invalid params
+            message = 'Invalid params';
+        } else if (err instanceof Error && /Unknown tool:/i.test(err.message)) {
+            code = -32601; // Unknown method
+            message = 'Method not found';
+        }
+        const error: JsonRpcError = {
+            code,
+            message,
+            data: {
+                // expose useful context for debugging/correlation
+                traceId: norm.traceId,
+                detail: norm.detail,
+                // preserve internal classification for observability
+                mcpCode: norm.code,
+            },
+        };
+        logger.error('JSON-RPC error', {
+            event: 'jsonrpc.error',
+            method: req.method,
+            id: req.id ?? null,
+            code: error.code,
+            message: error.message,
+            traceId: norm.traceId,
+        });
+        return { jsonrpc: '2.0', id: req.id ?? null, error };
+    }
 }

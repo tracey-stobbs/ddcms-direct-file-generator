@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { logger } from '../lib/logger';
-import { MCP_ERROR_CODES } from './errors';
 import { JsonValue } from './router';
-import { createMcpRouter, handleMcpRequest, McpServices } from './server';
+import { createMcpRouter, handleJsonRpcRequest, type JsonRpcRequest, McpServices } from './server';
 
 vi.mock('./schemaLoader', () => {
     return {
@@ -97,66 +95,54 @@ const services: McpServices = {
     },
 };
 
-describe('MCP server envelope', () => {
-    it('wraps successful result', async () => {
-        const router = createMcpRouter(services);
-        const res = await handleMcpRequest(router, {
-            id: 1,
-            method: 'file.preview',
-            params: { count: 2 } as unknown as JsonValue,
-        });
-        expect(res).toEqual({ id: 1, result: { preview: ['row-1', 'row-2'] } });
-    });
+// Legacy MCP envelope removed; tests now cover the JSON-RPC adapter only.
 
-    it('wraps validation errors', async () => {
-        const spy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+describe('JSON-RPC 2.0 adapter', () => {
+    it('returns jsonrpc 2.0 success envelope', async () => {
         const router = createMcpRouter(services);
-        const res = await handleMcpRequest(router, {
-            id: 'a',
-            method: 'file.preview',
-            params: {} as unknown as JsonValue,
-        });
-        expect(res.id).toBe('a');
-        // Standard envelope properties
-        expect(res.error?.message).toMatch(/Invalid params/);
-        const e1 = res.error as unknown as Record<string, unknown> | undefined;
-        expect(e1 && e1['code']).toBe(MCP_ERROR_CODES.VALIDATION_ERROR);
-        expect(res.error && 'traceId' in res.error).toBe(true);
-        expect(spy).toHaveBeenCalledTimes(1);
-        const [msg, context] = spy.mock.calls[0] as unknown as [string, Record<string, unknown>];
-        expect(msg).toBe('MCP error');
-        expect(context['event']).toBe('error');
-        expect(context['method']).toBe('file.preview');
-        expect(typeof context['traceId']).toBe('string');
-        spy.mockRestore();
-    });
-
-    it('wraps internal errors with traceId', async () => {
-        const spy = vi.spyOn(logger, 'error').mockImplementation(() => {});
-        const router = createMcpRouter({
-            ...services,
-            file: {
-                preview: async () => {
-                    throw new Error('boom');
-                },
-            },
-        });
-        const res = await handleMcpRequest(router, {
-            id: 2,
+        const req: JsonRpcRequest = {
+            jsonrpc: '2.0',
+            id: 10,
             method: 'file.preview',
             params: { count: 1 } as unknown as JsonValue,
-        });
-        expect(res.id).toBe(2);
-        const err = res.error as unknown as Record<string, unknown>;
-        expect(err && err['code']).toBe(MCP_ERROR_CODES.INTERNAL_ERROR);
-        expect(typeof err['message']).toBe('string');
-        expect('traceId' in err).toBe(true);
-        expect(spy).toHaveBeenCalledTimes(1);
-        const [msg, context] = spy.mock.calls[0] as unknown as [string, Record<string, unknown>];
-        expect(msg).toBe('MCP error');
-        expect(context['event']).toBe('error');
-        expect(context['method']).toBe('file.preview');
-        expect(typeof context['traceId']).toBe('string');
-        spy.mockRestore();
+        };
+        const res = await handleJsonRpcRequest(router, req);
+        expect(res.jsonrpc).toBe('2.0');
+        expect(res.id).toBe(10);
+        expect(res.result).toEqual({ preview: ['row-1'] });
+        expect(res.error).toBeUndefined();
+    });
+
+    it('maps validation errors to -32602', async () => {
+        const router = createMcpRouter(services);
+        const req: JsonRpcRequest = {
+            jsonrpc: '2.0',
+            id: 'v1',
+            method: 'file.preview',
+            params: {} as unknown as JsonValue,
+        };
+        const res = await handleJsonRpcRequest(router, req);
+        expect(res.jsonrpc).toBe('2.0');
+        expect(res.id).toBe('v1');
+        expect(res.error?.code).toBe(-32602);
+        expect(res.error?.message).toBe('Invalid params');
+        // data should include traceId
+        // @ts-expect-error runtime check
+        expect(typeof res.error?.data?.traceId).toBe('string');
+    });
+
+    it('maps unknown method to -32601', async () => {
+        const router = createMcpRouter(services);
+        const req: JsonRpcRequest = {
+            jsonrpc: '2.0',
+            id: 99,
+            method: 'no.such.method',
+            params: null,
+        };
+        const res = await handleJsonRpcRequest(router, req);
+        expect(res.jsonrpc).toBe('2.0');
+        expect(res.id).toBe(99);
+        expect(res.error?.code).toBe(-32601);
+        expect(res.error?.message).toBe('Method not found');
     });
 });
