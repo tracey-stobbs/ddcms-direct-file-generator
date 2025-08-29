@@ -1,3 +1,33 @@
+## Title
+
+[Backlog-<ID>] Short description
+
+## Linked item
+
+-   Backlog #<ID>
+
+## Summary
+
+-   What changed and why
+
+## Changes
+
+-   Bullet points of notable changes
+
+## Tests
+
+-   Unit/integration added/updated
+
+## Risk/impact
+
+-   Backward compatibility and rollback plan
+
+## Quality gates
+
+-   [ ] Lint PASS
+-   [ ] Build PASS
+-   [ ] Tests PASS
+
 ## Summary
 
 -   What changed and why (1–3 sentences)
