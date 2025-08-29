@@ -23,6 +23,33 @@ fi
 
 echo "Using repo: ${repo}" >&2
 
+# Ensure labels exist (idempotent)
+ensure_label() {
+  local name="$1"; shift
+  local color="$1"; shift
+  local description="$*"
+  if gh label list --limit 500 --json name -q '.[].name' | grep -Fxq "${name}"; then
+    return 0
+  fi
+  gh label create "${name}" --color "${color}" --description "${description}" >/dev/null
+}
+
+# Core labels used by issues below
+ensure_label testing FFDF00 "Testing and QA"
+ensure_label documentation 0366D6 "Docs and guides"
+ensure_label security D93F0B "Security improvements"
+ensure_label performance 0E8A16 "Performance work"
+ensure_label ci-cd FBCA04 "Build/CI/CD pipeline"
+ensure_label code-quality 5319E7 "Code quality and linting"
+ensure_label refactor A2EEEF "Refactoring"
+ensure_label enhancement A2EEEF "Enhancements"
+ensure_label devx 1D76DB "Developer experience"
+ensure_label observability 0052CC "Logging/metrics/tracing"
+ensure_label process C5DEF5 "Process and workflow"
+ensure_label P1 B60205 "High priority"
+ensure_label P2 FBCA04 "Medium priority"
+ensure_label P3 0E8A16 "Low priority"
+
 # Helper to create issues idempotently (skip if a title already exists)
 create_issue() {
   local title="$1"
