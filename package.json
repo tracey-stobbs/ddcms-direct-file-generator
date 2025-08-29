@@ -13,22 +13,26 @@
     "test:watch": "vitest watch",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"**/*.{ts,js,json,md,mdx,css,scss,yml,yaml}\"",
-    "issues:import": "ts-node src/scripts/github/issues-import.ts"
+    "issues:import": "ts-node src/scripts/github/issues-import.ts",
+    "backlog:start": "ts-node src/scripts/backlog/manage.ts start",
+    "backlog:pr": "ts-node src/scripts/backlog/manage.ts pr",
+    "git:commit-template": "git config commit.template .github/commit-template.txt"
   },
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
+    "ajv": "^8.13.0",
     "express": "^5.0.0",
-    "luxon": "^3.4.4",
-    "ajv": "^8.13.0"
+    "luxon": "^3.4.4"
   },
   "devDependencies": {
-    "@types/node": "^22.5.1",
     "@types/express": "^5.0.3",
     "@types/luxon": "^3.6.2",
+    "@types/node": "^22.5.1",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
   "@vitest/coverage-v8": "^1.4.0",
+    "dotenv": "^16.6.1",
     "eslint": "^8.56.0",
     "prettier": "^2.8.8",
     "supertest": "^7.1.3",
