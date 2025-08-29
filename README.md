@@ -499,6 +499,12 @@ The project includes HTTP request files for manual testing with VS Code's REST C
 -   EaziPay: trailer removed; fixed 14 columns with last column as empty
 -   Test suite: 123 passing tests (Vitest)
 
+## Dependency updates (Dependabot)
+
+Automated updates for npm packages and GitHub Actions are configured.
+
+-   See `documentation/dependabot.md` for schedules, PR conventions, and a temporary TypeScript version note.
+
 ## License
 
 MIT
