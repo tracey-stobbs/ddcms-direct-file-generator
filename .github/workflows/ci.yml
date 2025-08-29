@@ -6,9 +6,19 @@ on:
     pull_request:
         branches: ['**']
 
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
     build-test:
-        runs-on: ubuntu-latest
+        name: Node ${{ matrix.node }} • ${{ matrix.os }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-latest]
+                node: [22.x]
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -16,7 +26,7 @@ jobs:
             - name: Setup Node
               uses: actions/setup-node@v4
               with:
-                  node-version: 22.x
+                  node-version: ${{ matrix.node }}
                   cache: 'npm'
 
             - name: Install
@@ -28,5 +38,21 @@ jobs:
             - name: Build
               run: npm run build
 
-            - name: Test
-              run: npm test
+            - name: Test (with coverage)
+              run: npm run test:coverage
+
+            - name: Upload coverage artifact
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage-${{ matrix.os }}-node${{ matrix.node }}
+                  path: coverage/
+                  if-no-files-found: ignore
+
+            - name: Job summary
+              if: always()
+              run: |
+                  echo "### CI Summary" >> $GITHUB_STEP_SUMMARY
+                  echo "- OS: ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
+                  echo "- Node: ${{ matrix.node }}" >> $GITHUB_STEP_SUMMARY
+                  echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
