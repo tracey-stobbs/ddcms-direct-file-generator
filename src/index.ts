@@ -18,7 +18,10 @@ import type {
     SuccessResponse,
 } from './lib/types';
 import { logError, logRequest, logResponse } from './lib/utils/logger';
-import { validateAndNormalizeGenerateRequest } from './lib/validators/requestValidator';
+import {
+    validateAndNormalizeGenerateRequest,
+    validateRowPreviewRequest,
+} from './lib/validators/requestValidator';
 
 const app = express();
 app.use(express.json());
@@ -100,6 +103,13 @@ app.post('/api/:sun/:filetype/valid-row', async (req: Request, res: Response) =>
     try {
         const { sun, filetype } = req.params as { sun: string; filetype: string };
         const body = req.body as RowPreviewRequest;
+        // Validate preview request
+        const previewErrors = validateRowPreviewRequest(body);
+        if (previewErrors.length > 0) {
+            const response: ErrorResponse = { success: false, error: previewErrors.join('; ') };
+            logResponse(res, response);
+            return res.status(400).json(response);
+        }
         const internal = toInternalRequest(filetype, body, sun);
         const numberOfRows = internal.numberOfRows ?? 15;
         const rows = await buildRowsResponse(filetype, internal, numberOfRows, false);
@@ -121,6 +131,13 @@ app.post('/api/:sun/:filetype/invalid-row', async (req: Request, res: Response) 
     try {
         const { sun, filetype } = req.params as { sun: string; filetype: string };
         const body = req.body as RowPreviewRequest;
+        // Validate preview request
+        const previewErrors = validateRowPreviewRequest(body);
+        if (previewErrors.length > 0) {
+            const response: ErrorResponse = { success: false, error: previewErrors.join('; ') };
+            logResponse(res, response);
+            return res.status(400).json(response);
+        }
         const internal = toInternalRequest(filetype, body, sun);
         const numberOfRows = internal.numberOfRows ?? 15;
         const rows = await buildRowsResponse(filetype, internal, numberOfRows, true);

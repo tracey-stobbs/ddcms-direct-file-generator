@@ -86,4 +86,24 @@ describe('API: new endpoints', () => {
             expect(res.body.success).toBe(false);
         });
     });
+
+    describe('Backlog #15: preview input validation', () => {
+        it('returns 400 for SDDirect valid-row when numberOfRows is invalid', async () => {
+            const res = await request(app)
+                .post('/api/TESTSUN/SDDirect/valid-row')
+                .send({ numberOfRows: 0 });
+            expect(res.status).toBe(400);
+            expect(res.body.success).toBe(false);
+            expect(String(res.body.error)).toContain('numberOfRows');
+        });
+
+        it('returns 400 for SDDirect invalid-row when dateFormat is invalid', async () => {
+            const res = await request(app)
+                .post('/api/TESTSUN/SDDirect/invalid-row')
+                .send({ numberOfRows: 1, dateFormat: 'YYYY/MM/DD' });
+            expect(res.status).toBe(400);
+            expect(res.body.success).toBe(false);
+            expect(String(res.body.error)).toContain('dateFormat');
+        });
+    });
 });
