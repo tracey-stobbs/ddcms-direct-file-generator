@@ -309,11 +309,7 @@ Assumption for initial status
 -   Owner: Unassigned
 -   Due: —
 
----
-
-Traceability to the review
-
--   All items above come directly from sections “Areas for Improvement”, “Recommendations”, and “Next Steps” in `shiny palm tree/Code Review.md`.
+- All items above come directly from sections “Areas for Improvement”, “Recommendations”, and “Next Steps” in `Code Review.md`.
 
 New item template
 
