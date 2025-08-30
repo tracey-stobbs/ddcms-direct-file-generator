@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { EaziPayDateFormat, Request, EaziPaySpecificFields } from '../types';
+import type { EaziPayDateFormat, EaziPaySpecificFields, Request } from '../types';
 import { EaziPayValidator } from '../validators/eazipayValidator';
 import {
     formatEaziPayRowAsArray,

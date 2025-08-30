@@ -32,7 +32,7 @@ Assumption for initial status
 |   3 | Interfaces vs types consistency policy      |    P3    |   🔴   | code-quality                |
 |   4 | Path aliases in tsconfig                    |    P3    |   🔴   | enhancement, devx           |
 |   5 | Document complex type definitions           |    P3    |   🔴   | documentation, code-quality |
-|   6 | Integration tests for API endpoints         |    P1    |   �   | testing                     |
+|   6 | Integration tests for API endpoints         |    P1    |   �    | testing                     |
 |   7 | Coverage reporting & CI threshold           |    P2    |   🟢   | testing, ci-cd              |
 |   8 | E2E tests for critical flows                |    P3    |   🔴   | testing                     |
 |   9 | Module-level READMEs                        |    P3    |   🔴   | documentation               |
@@ -41,13 +41,13 @@ Assumption for initial status
 |  12 | Pre-commit hooks                            |    P2    |   🔴   | devx, code-quality, ci-cd   |
 |  13 | Complexity/static analysis                  |    P3    |   🔴   | code-quality                |
 |  14 | Error handling standardization              |    P2    |   🔴   | code-quality, refactor      |
-|  15 | Input validation for endpoints              |    P1    |   �   | security                    |
-|  16 | Security scanning in CI                     |    P1    |   �   | security, ci-cd             |
+|  15 | Input validation for endpoints              |    P1    |   �    | security                    |
+|  16 | Security scanning in CI                     |    P1    |   �    | security, ci-cd             |
 |  17 | Rate limiting for API endpoints             |    P2    |   🔴   | security, performance       |
 |  18 | Performance metrics & instrumentation       |    P2    |   🔴   | performance, observability  |
 |  19 | Caching strategy for hot paths              |    P3    |   🔴   | performance, enhancement    |
 |  20 | Profiling setup                             |    P3    |   🔴   | performance                 |
-|  21 | CI pipeline completeness                    |    P1    |   �   | ci-cd                       |
+|  21 | CI pipeline completeness                    |    P1    |   �    | ci-cd                       |
 |  22 | Deployment docs and rollback                |    P2    |   🟢   | documentation, ci-cd        |
 |  23 | Enhanced typing with utility types/generics |    P3    |   🟢   | code-quality, enhancement   |
 |  24 | Logging & monitoring improvements           |    P2    |   🟢   | observability               |
@@ -309,7 +309,7 @@ Assumption for initial status
 -   Owner: Unassigned
 -   Due: —
 
-- All items above come directly from sections “Areas for Improvement”, “Recommendations”, and “Next Steps” in `Code Review.md`.
+-   All items above come directly from sections “Areas for Improvement”, “Recommendations”, and “Next Steps” in `Code Review.md`.
 
 New item template
 

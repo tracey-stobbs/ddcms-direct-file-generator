@@ -77,6 +77,37 @@ npm run lint          # ESLint
 -   Type errors: run `npm run build` locally to mirror CI.
 -   Test failures: run `npm test` and `npm run test:watch` to iterate.
 
+### Ajv v8 + TypeScript (ESM) typing tips
+
+Ajv v8 is ESM-first. Use default import for the constructor and type-only imports for types. Avoid using the `Ajv` namespace as a type.
+
+-   Symptoms you might see:
+    -   TS2709: Cannot use namespace 'Ajv' as a type
+    -   TS2351: This expression is not constructable (Ajv has no construct signatures)
+
+Recommended pattern:
+
+```ts
+import Ajv from 'ajv';
+import type { ErrorObject, ValidateFunction } from 'ajv';
+
+type AjvInstance = import('ajv').default;
+
+interface RouterOptions {
+    ajv?: AjvInstance;
+}
+
+class ExampleRouter {
+    private readonly ajv: AjvInstance;
+    constructor(opts?: RouterOptions) {
+        this.ajv = opts?.ajv ?? new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
+    }
+    // ...
+}
+```
+
+Why: the default export is the constructor; types should be imported type-only to keep emit clean and avoid namespace-type errors.
+
 Thanks for contributing!
 
 ## Filetype adapter pattern (developer guide)

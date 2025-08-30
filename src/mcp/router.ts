@@ -1,5 +1,5 @@
-import Ajv from 'ajv';
 import type { ErrorObject, ValidateFunction } from 'ajv';
+import Ajv from 'ajv';
 
 type AjvInstance = import('ajv').default;
 
