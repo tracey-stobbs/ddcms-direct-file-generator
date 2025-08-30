@@ -27,7 +27,7 @@ function log(level: LogLevel, message: string, context?: LogContext): void {
         ...context,
     };
     // Use console methods to surface in Node tooling; keep one-line JSON.
-    // eslint-disable-next-line no-console
+     
     console[level](JSON.stringify(entry));
 }
 

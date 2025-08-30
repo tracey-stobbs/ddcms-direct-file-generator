@@ -98,13 +98,13 @@ function ensureIdInBacklog(id: number): { title?: string } {
                 .some((l) => new RegExp(`^\\|\\s*${id}\\s*\\|`).test(l));
         }
         if (!inSummary) {
-            // eslint-disable-next-line no-console
+             
             console.error(
                 `Backlog ID ${id} not found in Backlog summary table. Update documentation/review-issues.md first.`,
             );
             process.exit(1);
         }
-        // eslint-disable-next-line no-console
+         
         console.warn(`Backlog ID ${id} found but title is missing in the summary table.`);
     }
     return { title };
@@ -215,7 +215,7 @@ async function createPrViaApi(params: {
                 .filter(Boolean);
             const hasRepo = scopes.includes('repo') || scopes.includes('public_repo');
             if (!hasRepo) {
-                // eslint-disable-next-line no-console
+                 
                 console.warn('Token appears to lack repo/public_repo scope; PR creation may fail.');
             }
         }
@@ -244,12 +244,12 @@ async function createPrViaApi(params: {
     if (res.status === 422) {
         try {
             const bodyJson = await res.json();
-            // eslint-disable-next-line no-console
+             
             console.warn('GitHub API 422 response:', JSON.stringify(bodyJson));
         } catch {
             try {
                 const txt = await res.text();
-                // eslint-disable-next-line no-console
+                 
                 console.warn('GitHub API 422 text response:', txt);
             } catch {
                 // ignore
@@ -257,7 +257,7 @@ async function createPrViaApi(params: {
         }
         return false;
     }
-    // eslint-disable-next-line no-console
+     
     console.error(`GitHub API PR create failed: ${res.status} ${res.statusText}`);
     return false;
 }
@@ -288,7 +288,7 @@ function openUrlInBrowser(url: string): void {
             execFileSync('xdg-open', [url]);
         }
     } catch {
-        // eslint-disable-next-line no-console
+         
         console.error(`Open this URL to create the PR: ${url}`);
     }
 }
@@ -302,7 +302,7 @@ function startBranch(id: number): void {
     } catch {
         // ignore push failures
     }
-    // eslint-disable-next-line no-console
+     
     console.log(`\nBranch ready: ${branch}\n`);
 }
 
@@ -333,7 +333,7 @@ async function openPr(id: number): Promise<void> {
     try {
         git(['checkout', branch]);
     } catch {
-        // eslint-disable-next-line no-console
+         
         console.error(`Branch ${branch} not found locally. Run start first.`);
         return;
     }
@@ -349,7 +349,7 @@ async function openPr(id: number): Promise<void> {
     const upstream = parseRepo(upstreamUrl);
     const baseRemote = upstream ?? origin;
     if (!baseRemote) {
-        // eslint-disable-next-line no-console
+         
         console.error('Cannot determine GitHub repo from git remotes (origin/upstream).');
         return;
     }
@@ -360,7 +360,7 @@ async function openPr(id: number): Promise<void> {
     // Validate base exists on the remote; fallback to common names if not
     if (!hasRemoteBranch(baseRemoteName, base)) {
         if (baseOverride) {
-            // eslint-disable-next-line no-console
+             
             console.warn(
                 `BACKLOG_BASE='${baseOverride}' not found on ${baseRemoteName}; attempting common fallbacks.`,
             );
@@ -374,7 +374,7 @@ async function openPr(id: number): Promise<void> {
             : branch;
 
     if (debug) {
-        // eslint-disable-next-line no-console
+         
         console.log(
             JSON.stringify(
                 {
@@ -403,7 +403,7 @@ async function openPr(id: number): Promise<void> {
         body,
     });
     if (ok) {
-        // eslint-disable-next-line no-console
+         
         console.log('PR created or already exists.');
         return;
     }
@@ -433,7 +433,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((e) => {
-    // eslint-disable-next-line no-console
+     
     console.error(String(e));
     process.exitCode = 1;
 });

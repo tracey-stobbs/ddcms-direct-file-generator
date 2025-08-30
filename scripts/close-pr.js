@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 const https = require('https');
 const { execSync } = require('child_process');
 
@@ -123,7 +123,7 @@ async function closePr(number) {
 (async () => {
     const results = [];
     for (const n of numbers) {
-        // eslint-disable-next-line no-await-in-loop
+         
         results.push(await closePr(n));
     }
     const failed = results.filter((r) => !r.ok);

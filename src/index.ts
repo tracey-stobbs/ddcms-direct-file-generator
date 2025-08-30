@@ -211,7 +211,7 @@ async function buildRowsResponse(
     return { headers, rows, metadata: {} };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     // Touch _next to satisfy TS noUnusedParameters if enabled
     void _next;
@@ -224,7 +224,7 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 const PORT = process.env.PORT || 3001;
 if (require.main === module) {
     app.listen(PORT, () => {
-        // eslint-disable-next-line no-console
+         
         console.log(`Server running on port ${PORT}`);
     });
 }
