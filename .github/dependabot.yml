@@ -1,51 +1,49 @@
 version: 2
 updates:
-    - package-ecosystem: 'npm'
-        directory: '/'
+    - package-ecosystem: "npm"
+        directory: "/"
         schedule:
-            interval: 'weekly'
-            day: 'monday'
-            time: '04:00'
-            timezone: 'UTC'
+            interval: "weekly"
+            day: "monday"
+            time: "04:00"
+            timezone: "UTC"
         open-pull-requests-limit: 5
         versioning-strategy: increase-if-necessary
         commit-message:
-            prefix: 'deps'
+            prefix: "deps"
         labels:
-            - 'dependencies'
-            - 'deps:minor'
+            - "dependencies"
+            - "deps:minor"
         reviewers:
-            - 'tracey-stobbs'
+            - "tracey-stobbs"
         assignees:
-            - 'tracey-stobbs'
+            - "tracey-stobbs"
         ignore:
-            # Block all semver-major updates (breaking changes)
-            - dependency-name: '*'
+            - dependency-name: "*"
                 update-types:
-                    - version-update:semver-major
-            - dependency-name: 'typescript'
+                    - "version-update:semver-major"
+            - dependency-name: "typescript"
                 versions:
-                    - '>=5.5.0'
-    - package-ecosystem: 'github-actions'
-        directory: '/'
+                    - ">=5.5.0"
+    - package-ecosystem: "github-actions"
+        directory: "/"
         schedule:
-            interval: 'weekly'
-            day: 'monday'
-            time: '04:30'
-            timezone: 'UTC'
+            interval: "weekly"
+            day: "monday"
+            time: "04:30"
+            timezone: "UTC"
         open-pull-requests-limit: 5
         versioning-strategy: increase-if-necessary
         commit-message:
-            prefix: 'deps(actions)'
+            prefix: "deps(actions)"
         labels:
-            - 'dependencies'
-            - 'deps:actions'
+            - "dependencies"
+            - "deps:actions"
         reviewers:
-            - 'tracey-stobbs'
+            - "tracey-stobbs"
         assignees:
-            - 'tracey-stobbs'
+            - "tracey-stobbs"
         ignore:
-            # Block all semver-major updates to Actions
-            - dependency-name: '*'
+            - dependency-name: "*"
                 update-types:
-                    - version-update:semver-major
+                    - "version-update:semver-major"

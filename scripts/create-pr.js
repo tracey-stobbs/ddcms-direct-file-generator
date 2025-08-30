@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-const { execSync } = require('child_process');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'node:child_process';
+import https from 'node:https';
 
 function run(cmd) {
     return execSync(cmd, { encoding: 'utf8' }).trim();
