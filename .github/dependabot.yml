@@ -11,8 +11,12 @@ updates:
       commit-message:
           prefix: 'deps'
       ignore:
+          - dependency-name: '*'
+            update-types:
+                - 'version-update:semver-major'
           - dependency-name: 'typescript'
-            versions: ['>=5.5.0']
+            versions:
+                - '>=5.5.0'
     - package-ecosystem: 'github-actions'
       directory: '/'
       schedule:
@@ -23,3 +27,7 @@ updates:
       open-pull-requests-limit: 5
       commit-message:
           prefix: 'deps(actions)'
+      ignore:
+          - dependency-name: '*'
+            update-types:
+                - 'version-update:semver-major'

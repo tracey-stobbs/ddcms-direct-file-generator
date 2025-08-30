@@ -42,3 +42,10 @@ ignore:
 -   Rebase stale PRs by commenting `@dependabot rebase`.
 -   Temporarily pause updates by changing the schedule to `monthly`.
 -   For security fixes only, add a separate weekly job with `security-updates: true`.
+
+## Semver policy and auto-merge
+
+-   Semver policy: Dependabot PRs are restricted to minor and patch updates; major updates are ignored by default.
+-   Auto-merge: Patch updates from Dependabot are auto-merged when CI is green.
+    -   Workflow: `.github/workflows/dependabot-auto-merge.yml`
+    -   To include minor updates as well, edit the workflow condition to allow `version-update:semver-minor`.
