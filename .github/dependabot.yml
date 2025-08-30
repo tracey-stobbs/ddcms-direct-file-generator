@@ -8,7 +8,6 @@ updates:
           time: '04:00'
           timezone: 'UTC'
       open-pull-requests-limit: 5
-      versioning-strategy: increase-if-necessary
       commit-message:
           prefix: 'deps'
       ignore:
@@ -26,7 +25,6 @@ updates:
           time: '04:30'
           timezone: 'UTC'
       open-pull-requests-limit: 5
-      versioning-strategy: increase-if-necessary
       commit-message:
           prefix: 'deps(actions)'
       ignore:
