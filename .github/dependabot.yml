@@ -1,49 +1,49 @@
 version: 2
 updates:
-    - package-ecosystem: "npm"
-        directory: "/"
-        schedule:
-            interval: "weekly"
-            day: "monday"
-            time: "04:00"
-            timezone: "UTC"
-        open-pull-requests-limit: 5
-        versioning-strategy: increase-if-necessary
-        commit-message:
-            prefix: "deps"
-        labels:
-            - "dependencies"
-            - "deps:minor"
-        reviewers:
-            - "tracey-stobbs"
-        assignees:
-            - "tracey-stobbs"
-        ignore:
-            - dependency-name: "*"
-                update-types:
-                    - "version-update:semver-major"
-            - dependency-name: "typescript"
-                versions:
-                    - ">=5.5.0"
-    - package-ecosystem: "github-actions"
-        directory: "/"
-        schedule:
-            interval: "weekly"
-            day: "monday"
-            time: "04:30"
-            timezone: "UTC"
-        open-pull-requests-limit: 5
-        versioning-strategy: increase-if-necessary
-        commit-message:
-            prefix: "deps(actions)"
-        labels:
-            - "dependencies"
-            - "deps:actions"
-        reviewers:
-            - "tracey-stobbs"
-        assignees:
-            - "tracey-stobbs"
-        ignore:
-            - dependency-name: "*"
-                update-types:
-                    - "version-update:semver-major"
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+          interval: weekly
+          day: monday
+          time: '04:00'
+          timezone: UTC
+      open-pull-requests-limit: 5
+      versioning-strategy: increase-if-necessary
+      commit-message:
+          prefix: deps
+      labels:
+          - dependencies
+          - 'deps:minor'
+      reviewers:
+          - tracey-stobbs
+      assignees:
+          - tracey-stobbs
+      ignore:
+          - dependency-name: '*'
+            update-types:
+                - 'version-update:semver-major'
+          - dependency-name: typescript
+            versions:
+                - '>=5.5.0'
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+          interval: weekly
+          day: monday
+          time: '04:30'
+          timezone: UTC
+      open-pull-requests-limit: 5
+      versioning-strategy: increase-if-necessary
+      commit-message:
+          prefix: deps(actions)
+      labels:
+          - dependencies
+          - 'deps:actions'
+      reviewers:
+          - tracey-stobbs
+      assignees:
+          - tracey-stobbs
+      ignore:
+          - dependency-name: '*'
+            update-types:
+                - 'version-update:semver-major'
