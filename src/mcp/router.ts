@@ -1,4 +1,7 @@
-import Ajv, { ErrorObject, ValidateFunction } from 'ajv';
+import Ajv from 'ajv';
+import type { ErrorObject, ValidateFunction } from 'ajv';
+
+type AjvInstance = import('ajv').default;
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue };
 
@@ -12,11 +15,11 @@ export interface ToolDefinition {
 }
 
 export interface RouterOptions {
-    ajv?: Ajv;
+    ajv?: AjvInstance;
 }
 
 export class McpRouter {
-    private readonly ajv: Ajv;
+    private readonly ajv: AjvInstance;
     private readonly tools = new Map<
         string,
         { validateParams: ValidateFunction; validateResult: ValidateFunction; handler: ToolHandler }
