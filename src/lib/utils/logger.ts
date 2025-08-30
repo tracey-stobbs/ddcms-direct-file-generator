@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { DateTime } from 'luxon';
+import { getConfig } from '../../config/index.js';
 
 export enum LogLevel {
     INFO = 'INFO',
@@ -21,16 +22,20 @@ export function log(level: LogLevel, message: string, meta?: Record<string, unkn
         message,
         meta,
     };
-     
+
     console.log(JSON.stringify(entry));
 }
 
 export function logRequest(req: Request, _res: Response, next: NextFunction): void {
-    log(LogLevel.INFO, 'Incoming request', {
+    const cfg = getConfig();
+    const meta: Record<string, unknown> = {
         method: req.method,
         url: req.originalUrl,
-        body: req.body,
-    });
+    };
+    if (cfg.logging.requestBody) {
+        meta.body = req.body;
+    }
+    log(LogLevel.INFO, 'Incoming request', meta);
     next();
 }
 
