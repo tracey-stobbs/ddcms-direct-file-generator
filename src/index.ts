@@ -1,5 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
+import promClient from 'prom-client';
+import swaggerUi from 'swagger-ui-express';
+import { getConfig } from './config/index.js';
 import path from 'path';
 import {
     formatEaziPayRowAsArray,
@@ -18,6 +22,7 @@ import type {
     SuccessResponse,
 } from './lib/types';
 import { logError, logRequest, logResponse } from './lib/utils/logger';
+import { isAppError } from './lib/errors.js';
 import {
     validateAndNormalizeGenerateRequest,
     validateRowPreviewRequest,
@@ -26,6 +31,39 @@ import {
 const app = express();
 app.use(express.json());
 app.use(logRequest);
+
+// Config-driven middlewares
+const cfg = getConfig();
+if (cfg.rateLimit.enabled) {
+    const limiter = rateLimit({
+        windowMs: cfg.rateLimit.windowMs,
+        max: cfg.rateLimit.max,
+        standardHeaders: true,
+        legacyHeaders: false,
+    });
+    app.use('/api', limiter);
+}
+
+if (cfg.metrics.enabled) {
+    promClient.collectDefaultMetrics();
+    app.get('/metrics', async (_req, res) => {
+        res.set('Content-Type', promClient.register.contentType);
+        res.end(await promClient.register.metrics());
+    });
+}
+
+if (cfg.apiDocs.enabled) {
+    const spec = {
+        openapi: '3.0.0',
+        info: { title: 'Shiny Palm Tree API', version: '1.0.0' },
+        paths: {
+            '/api/{sun}/{filetype}/generate': { post: { summary: 'Generate file' } },
+            '/api/{sun}/{filetype}/valid-row': { post: { summary: 'Build valid rows' } },
+            '/api/{sun}/{filetype}/invalid-row': { post: { summary: 'Build invalid rows' } },
+        },
+    } as const;
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(spec as unknown as Record<string, unknown>));
+}
 
 // Helper to map public body to internal generator request
 function toInternalRequest(
@@ -211,20 +249,24 @@ async function buildRowsResponse(
     return { headers, rows, metadata: {} };
 }
 
- 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     // Touch _next to satisfy TS noUnusedParameters if enabled
     void _next;
     logError(err, req);
-    const response = { success: false, error: err.message };
+    const status = isAppError(err) ? err.status : 500;
+    const response = {
+        success: false,
+        error: err.message,
+        code: isAppError(err) ? err.code : undefined,
+        details: isAppError(err) ? err.details : undefined,
+    } as const;
     logResponse(res, response);
-    res.status(500).json(response);
+    res.status(status).json(response);
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = getConfig().port;
 if (require.main === module) {
     app.listen(PORT, () => {
-         
         console.log(`Server running on port ${PORT}`);
     });
 }
