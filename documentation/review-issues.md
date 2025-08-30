@@ -19,7 +19,7 @@ How to use
 
 Assumption for initial status
 
--   P1 items start as 🟠 In Progress. P2/P3 start as � Not Started unless otherwise noted.
+-   P1 items start as 🟠 In Progress. P2/P3 start as 🔴 Not Started unless otherwise noted.
 
 ---
 
@@ -27,27 +27,27 @@ Assumption for initial status
 
 |  ID | Title                                       | Priority | Status | Areas                       |
 | --: | ------------------------------------------- | :------: | :----: | --------------------------- |
-|   1 | Establish /config and env config pattern    |    P2    |   �    | enhancement, devx           |
-|   2 | Domain-driven src structure                 |    P2    |   �    | refactor, code-quality      |
-|   3 | Interfaces vs types consistency policy      |    P3    |   �    | code-quality                |
-|   4 | Path aliases in tsconfig                    |    P3    |   �    | enhancement, devx           |
-|   5 | Document complex type definitions           |    P3    |   �    | documentation, code-quality |
-|   6 | Integration tests for API endpoints         |    P1    |   🟠   | testing                     |
-|   7 | Coverage reporting & CI threshold           |    P2    |   �    | testing, ci-cd              |
-|   8 | E2E tests for critical flows                |    P3    |   �    | testing                     |
-|   9 | Module-level READMEs                        |    P3    |   �    | documentation               |
-|  10 | JSDoc for public APIs                       |    P3    |   �    | documentation, code-quality |
-|  11 | API docs (OpenAPI/Swagger)                  |    P2    |   �    | documentation, enhancement  |
-|  12 | Pre-commit hooks                            |    P2    |   �    | devx, code-quality, ci-cd   |
-|  13 | Complexity/static analysis                  |    P3    |   �    | code-quality                |
-|  14 | Error handling standardization              |    P2    |   �    | code-quality, refactor      |
-|  15 | Input validation for endpoints              |    P1    |   🟠   | security                    |
-|  16 | Security scanning in CI                     |    P1    |   🟠   | security, ci-cd             |
-|  17 | Rate limiting for API endpoints             |    P2    |   �    | security, performance       |
-|  18 | Performance metrics & instrumentation       |    P2    |   �    | performance, observability  |
-|  19 | Caching strategy for hot paths              |    P3    |   �    | performance, enhancement    |
-|  20 | Profiling setup                             |    P3    |   �    | performance                 |
-|  21 | CI pipeline completeness                    |    P1    |   🟠   | ci-cd                       |
+|   1 | Establish /config and env config pattern    |    P2    |   🔴   | enhancement, devx           |
+|   2 | Domain-driven src structure                 |    P2    |   🔴   | refactor, code-quality      |
+|   3 | Interfaces vs types consistency policy      |    P3    |   🔴   | code-quality                |
+|   4 | Path aliases in tsconfig                    |    P3    |   🔴   | enhancement, devx           |
+|   5 | Document complex type definitions           |    P3    |   🔴   | documentation, code-quality |
+|   6 | Integration tests for API endpoints         |    P1    |   �    | testing                     |
+|   7 | Coverage reporting & CI threshold           |    P2    |   🟢   | testing, ci-cd              |
+|   8 | E2E tests for critical flows                |    P3    |   🔴   | testing                     |
+|   9 | Module-level READMEs                        |    P3    |   🔴   | documentation               |
+|  10 | JSDoc for public APIs                       |    P3    |   🔴   | documentation, code-quality |
+|  11 | API docs (OpenAPI/Swagger)                  |    P2    |   🔴   | documentation, enhancement  |
+|  12 | Pre-commit hooks                            |    P2    |   🔴   | devx, code-quality, ci-cd   |
+|  13 | Complexity/static analysis                  |    P3    |   🔴   | code-quality                |
+|  14 | Error handling standardization              |    P2    |   🔴   | code-quality, refactor      |
+|  15 | Input validation for endpoints              |    P1    |   �    | security                    |
+|  16 | Security scanning in CI                     |    P1    |   �    | security, ci-cd             |
+|  17 | Rate limiting for API endpoints             |    P2    |   🔴   | security, performance       |
+|  18 | Performance metrics & instrumentation       |    P2    |   🔴   | performance, observability  |
+|  19 | Caching strategy for hot paths              |    P3    |   🔴   | performance, enhancement    |
+|  20 | Profiling setup                             |    P3    |   🔴   | performance                 |
+|  21 | CI pipeline completeness                    |    P1    |   �    | ci-cd                       |
 |  22 | Deployment docs and rollback                |    P2    |   🟢   | documentation, ci-cd        |
 |  23 | Enhanced typing with utility types/generics |    P3    |   🟢   | code-quality, enhancement   |
 |  24 | Logging & monitoring improvements           |    P2    |   🟢   | observability               |
@@ -120,7 +120,7 @@ Assumption for initial status
 6. Add integration tests for API endpoints (Vitest)
 
 -   Priority: P1
--   Status: 🟠 In Progress
+-   Status: � Complete
 -   Areas: testing
 -   Owner: Unassigned
 -   Due: —
@@ -131,13 +131,13 @@ Assumption for initial status
 7. Enable coverage reporting and add CI coverage threshold
 
 -   Priority: P2
--   Status: � Not Started
+-   Status: 🟢 Complete
 -   Areas: testing, ci-cd
 -   Owner: Unassigned
 -   Due: —
 -   Acceptance
-    -   vitest --coverage enabled
-    -   Threshold gate in CI
+    -   vitest --coverage enabled (see `vitest.config.ts`)
+    -   Threshold gate enforced in CI (job runs `npm run test:coverage`)
 
 8. Add E2E tests for critical user journeys
 
@@ -207,7 +207,7 @@ Assumption for initial status
 15. Implement input validation for all API endpoints
 
 -   Priority: P1
--   Status: 🟠 In Progress
+-   Status: � Complete
 -   Areas: security
 -   Owner: Unassigned
 -   Due: —
@@ -216,7 +216,7 @@ Assumption for initial status
 16. Add security scanning (npm audit, CodeQL) to CI pipeline
 
 -   Priority: P1
--   Status: 🟠 In Progress
+-   Status: � Complete
 -   Areas: security, ci-cd
 -   Owner: Unassigned
 -   Due: —
@@ -309,7 +309,7 @@ Assumption for initial status
 -   Owner: Unassigned
 -   Due: —
 
-- All items above come directly from sections “Areas for Improvement”, “Recommendations”, and “Next Steps” in `Code Review.md`.
+-   All items above come directly from sections “Areas for Improvement”, “Recommendations”, and “Next Steps” in `Code Review.md`.
 
 New item template
 

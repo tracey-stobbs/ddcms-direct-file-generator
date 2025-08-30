@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { EaziPayDateFormat, Request } from '../types';
+import type { EaziPayDateFormat, EaziPaySpecificFields, Request } from '../types';
 import { EaziPayValidator } from '../validators/eazipayValidator';
 import {
     formatEaziPayRowAsArray,
@@ -260,7 +260,7 @@ describe('EaziPay Generator', () => {
         });
 
         it('should generate different rows on multiple calls', () => {
-            const rows = [];
+            const rows: EaziPaySpecificFields[] = [];
             for (let i = 0; i < 10; i++) {
                 rows.push(generateValidEaziPayRow(mockRequest, 'YYYY-MM-DD'));
             }
