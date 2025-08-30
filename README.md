@@ -39,28 +39,9 @@ See also: [Contributing](./CONTRIBUTING.md) for Volta/nvm setup and workflow gui
 -   npm
 -   **VS Code** (recommended IDE with configured workspace)
 
-### VS Code Setup 🔧
+### Developer Environment
 
-This project includes a complete VS Code workspace configuration for optimal development experience:
-
-**Recommended Extensions** (auto-prompted on workspace open):
-
--   **TypeScript & Testing**: TypeScript Next, Vitest Explorer
--   **HTTP Testing**: REST Client (for `.http` files)
--   **Code Quality**: ESLint, Prettier, Code Spell Checker
--   **Git Integration**: GitLens, GitHub PR/Issues
--   **Node.js Tools**: NPM Intellisense, Azure Node Pack
--   **Documentation**: Markdown All-in-One, Mermaid support
--   **Productivity**: Error Lens, Path Intellisense, Todo Highlight
-
-**Pre-configured Settings**:
-
--   Auto-format on save with Prettier
--   ESLint auto-fix on save
--   TypeScript import organization
--   REST Client optimization for `.http` files
--   Vitest integration for test running
--   Custom spell checker dictionary with project terms
+For VS Code extensions and developer tooling, see Contributing → Development environment & VS Code setup.
 
 ### Install
 
@@ -164,52 +145,12 @@ Where:
 -   `validity`: `V` (valid data) or `I` (includes invalid data)
 -   `timestamp`: YYYYMMDD_HHMMSS format
 
-## EaziPay File Format Specification
+## File Format Specs (Summaries)
 
-### Field Structure (14 fields in exact order)
-
-1. Transaction Code — One of: 01, 17, 18, 99, 0C, 0N, 0S
-2. Originating Sort Code — 6 digit numeric
-3. Originating Account Number — 8 digit numeric
-4. Destination Sort Code — 6 digit numeric
-5. Destination Account Number — 8 digit numeric
-6. Destination Account Name — Max 18 characters
-7. Fixed Zero — Always 0 (literal zero)
-8. Amount — Integer (0 for 0C, 0N, 0S)
-9. Processing Date — Formatted per dateFormat
-10. Empty — Always empty/undefined (renders as empty string)
-11. SUN Name — Max 18 characters
-12. Payment Reference — 7-17 chars, specific validation rules
-13. SUN Number — Optional; only allowed for 0C, 0N, 0S
-14. Empty Trailer 1 — Always empty string
-
-### Date Format Options
-
--   **`"YYYY-MM-DD"`** → `2025-07-30`
--   **`"DD-MMM-YYYY"`** → `30-JUL-2025` (uppercase month)
--   **`"DD/MM/YYYY"`** → `30/07/2025`
-
-If not specified, a random format is selected for the entire file.
-
-### Trailer Behavior
-
--   Trailer field removed and replaced with a single empty trailing column.
--   EaziPay column count is fixed at 14.
-
-### Special Validation Rules
-
--   **Fixed Zero**: Must always be exactly `0`
--   **Empty Field**: Must always be `undefined` (appears as empty in CSV)
--   **SUN Number**: Only allowed when Transaction Code is 0C, 0N, or 0S
--   **Amount**: Must be `0` when Transaction Code is 0C, 0N, or 0S
--   **Processing Date**: Exactly 2 working days in future for codes 0C, 0N, 0S
-
-### File Characteristics
-
--   Headers: Never included (always headerless)
--   Extensions: Randomly selected `.csv` or `.txt`
--   Column Count: Fixed at 14
--   Working Days: UK Bank Holiday aware calculations
+-   SDDirect — see `documentation/FileFormats/SDDirect.md`
+-   EaziPay — see `documentation/FileFormats/EaziPay.md`
+-   Bacs18PaymentLines — see `documentation/FileFormats/Bacs18PaymentLines.md`
+-   Bacs18StandardFile — planned; see `documentation/FileFormats/Bacs18StandardFile.md`
 
 ## Project Structure
 
@@ -427,9 +368,7 @@ Discovery: `mcp.discover` returns the registered tool names and their schema `$i
 
 ## Backlog Management
 
-Backlog documents live outside this repository.
-
--   Backlog location guide: [BACKLOG-LOCATION.md](./BACKLOG-LOCATION.md)
+Backlog documents live outside this repository. See Contributing → Backlog execution workflow for the process. If a local summary exists, it will be under `documentation/`.
 
 ## Testing
 
