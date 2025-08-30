@@ -2,7 +2,7 @@ import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { logError, logRequest, logResponse } from './lib/utils/logger.js';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 import app from './index.js';
 
 // Mock logger to avoid noisy output
