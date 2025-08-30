@@ -1,16 +1,17 @@
 import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import promClient from 'prom-client';
 import swaggerUi from 'swagger-ui-express';
 import { getConfig } from './config/index.js';
-import path from 'path';
 import {
     formatEaziPayRowAsArray,
     generateInvalidEaziPayRow,
     generateValidEaziPayRow,
     getEaziPayHeaders,
-} from './lib/fileType/eazipay';
+} from './domains/eazipay/index.js';
+import { isAppError } from './lib/errors.js';
 import { generateInvalidSDDirectRow, generateValidSDDirectRow } from './lib/fileType/sddirect';
 import { resolveFileWriter } from './lib/fileWriter/factory';
 import type {
@@ -22,7 +23,6 @@ import type {
     SuccessResponse,
 } from './lib/types';
 import { logError, logRequest, logResponse } from './lib/utils/logger';
-import { isAppError } from './lib/errors.js';
 import {
     validateAndNormalizeGenerateRequest,
     validateRowPreviewRequest,
