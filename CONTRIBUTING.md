@@ -1,6 +1,21 @@
 # Contributing
 
-Welcome! This guide covers toolchain setup (Volta or nvm), local workflows, and PR expectations for this repo.
+Welcome! This guide covers toolchain setup (Volta or nvm), local workflows, backlog execution, and PR expectations.
+
+## Table of Contents
+
+-   Toolchain
+-   Development environment & VS Code setup
+-   Project setup
+-   Dev loop
+-   Backlog execution workflow
+-   Branching and commits
+-   Pull Requests
+-   Quality gates checklist
+-   Environment notes
+-   Troubleshooting
+-   Ajv v8 + TypeScript typing tips
+-   Filetype adapter pattern (developer guide)
 
 ## Toolchain
 
@@ -30,6 +45,29 @@ Choose one of the setups below.
     node -v   # v22.x
     ```
 
+## Development environment & VS Code setup
+
+This project ships a tuned VS Code workspace for a smooth DX.
+
+Recommended extensions:
+
+-   TypeScript & Testing: TypeScript Next, Vitest Explorer
+-   HTTP Testing: REST Client (for .http files)
+-   Code Quality: ESLint, Prettier, Code Spell Checker
+-   Git Integration: GitLens, GitHub PR/Issues
+-   Node.js Tools: NPM Intellisense, Azure Node Pack
+-   Documentation: Markdown All-in-One, Mermaid support
+-   Productivity: Error Lens, Path Intellisense, Todo Highlight
+
+Pre-configured settings:
+
+-   Auto-format on save with Prettier
+-   ESLint auto-fix on save
+-   TypeScript import organization
+-   REST Client optimization for .http files
+-   Vitest integration for test running
+-   Custom spell checker dictionary with project terms
+
 ## Project setup
 
 From the repo root:
@@ -48,6 +86,74 @@ npm run test:watch    # Vitest watch mode
 npm run lint          # ESLint
 ```
 
+## Backlog execution workflow
+
+Single-source process for executing code review backlog items efficiently. Origin: Implementation Plan — Code Review Backlog (now consolidated here).
+
+Rules and scope:
+
+-   One branch and one PR per backlog item. Do not batch unrelated changes.
+-   Source of truth for status remains the backlog summary file; this section defines how to execute items.
+
+Workflow:
+
+1. Pick the next item from the backlog summary (prefer lowest ID within the highest priority bucket).
+2. Create a dedicated branch using the naming scheme below.
+3. Implement the minimal change that meets the Acceptance criteria.
+4. Add/update unit tests (Vitest) and run lint/build/tests locally.
+5. Commit with a conventional message including the backlog ID.
+6. Push branch and open a PR linked to the backlog item; request review.
+7. Merge after approvals and green checks; update backlog status emoji.
+
+Automation helpers:
+
+-   Optional: set `GITHUB_TOKEN`/`GH_TOKEN`/`GITHUB_PAT` to enable API PR creation.
+-   One-time (optional) commit template:
+    -   `npm run git:commit-template`
+-   Start work for an item (creates/pushes branch):
+    -   `npm run backlog:start -- <ID>`
+-   Create a PR for an item (from its branch):
+    -   `npm run backlog:pr -- <ID>`
+    -   With token: PR created via API; without token: opens prefilled compare page.
+
+Advanced:
+
+-   Base override: `BACKLOG_BASE=master` (auto-detects otherwise).
+-   Debug: `BACKLOG_DEBUG=1` prints origin/upstream/base/head and API error bodies.
+-   Forks: When origin≠upstream, uses `owner:branch` for cross-fork PRs.
+-   Windows: Browser fallback uses PowerShell; no GitHub CLI required.
+
+Branch naming:
+
+-   Format: `<type>/<short-slug>-<backlog-id>`
+-   Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `ci`, `perf`, `security`
+-   Examples:
+    -   `chore/config-env-pattern-1`
+    -   `refactor/domain-structure-2`
+    -   `test/integration-api-6`
+
+Commit message template:
+
+-   Conventional Commit including the backlog ID, e.g.: `feat(config): establish typed /config module (Backlog #1)`
+
+Pull request template (lightweight):
+
+-   Title: `[Backlog-<ID>] <Short description>`
+-   Body:
+    -   Summary: What changed and why
+    -   Linked item: `Backlog #<ID>` (and link to the section in the backlog file)
+    -   Changes: bullets
+    -   Tests: unit/integration added/updated
+    -   Risk/impact: compatibility, rollbacks if needed
+    -   Quality gates: lint/build/tests PASS
+
+Definition of Done (per item):
+
+-   Acceptance criteria met
+-   Build (tsc), Lint (eslint), Tests (vitest) are green
+-   Docs updated where behavior changes
+-   PR merged; backlog status updated (🟢 Complete)
+
 ## Branching and commits
 
 -   Branch per issue: `feature/MCP-4.0-011-file-preview` (or similar)
@@ -65,6 +171,19 @@ npm run lint          # ESLint
     -   Backward-compat preserved unless requirements say otherwise
     -   Schemas (if touched) validated and in sync
     -   Linked issue(s) included
+
+## Quality gates checklist
+
+-   Build: TypeScript compiles (tsc)
+-   Lint: ESLint passes
+-   Tests: unit tests pass (Vitest)
+-   Behavior change? Small smoke test added/executed
+-   Docs: README/schemas updated or N/A
+-   Security: no secrets, sandboxed IO, no unsafe ops
+-   Backward-compat: preserved unless explicitly changed
+-   JSON Schemas (if touched): validated and in sync with code
+-   Observability (if relevant): logs structured and minimal
+-   Linked issue(s): included; PR auto-closes target issues
 
 ## Environment notes
 
