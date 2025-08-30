@@ -38,13 +38,13 @@ Assumption for initial status
 |   9 | Module-level READMEs                        |    P3    |   🔴   | documentation               |
 |  10 | JSDoc for public APIs                       |    P3    |   🔴   | documentation, code-quality |
 |  11 | API docs (OpenAPI/Swagger)                  |    P2    |   🔴   | documentation, enhancement  |
-|  12 | Pre-commit hooks                            |    P2    |   🔴   | devx, code-quality, ci-cd   |
+|  12 | Pre-commit hooks                            |    P2    |   �    | devx, code-quality, ci-cd   |
 |  13 | Complexity/static analysis                  |    P3    |   🔴   | code-quality                |
-|  14 | Error handling standardization              |    P2    |   🔴   | code-quality, refactor      |
+|  14 | Error handling standardization              |    P2    |   �    | code-quality, refactor      |
 |  15 | Input validation for endpoints              |    P1    |   �    | security                    |
 |  16 | Security scanning in CI                     |    P1    |   �    | security, ci-cd             |
-|  17 | Rate limiting for API endpoints             |    P2    |   🔴   | security, performance       |
-|  18 | Performance metrics & instrumentation       |    P2    |   🔴   | performance, observability  |
+|  17 | Rate limiting for API endpoints             |    P2    |   �    | security, performance       |
+|  18 | Performance metrics & instrumentation       |    P2    |   �    | performance, observability  |
 |  19 | Caching strategy for hot paths              |    P3    |   🔴   | performance, enhancement    |
 |  20 | Profiling setup                             |    P3    |   🔴   | performance                 |
 |  21 | CI pipeline completeness                    |    P1    |   �    | ci-cd                       |
@@ -180,7 +180,7 @@ Assumption for initial status
 12. Add pre-commit hooks for linting/formatting (husky + lint-staged + prettier)
 
 -   Priority: P2
--   Status: � Not Started
+-   Status: 🟢 Complete
 -   Areas: devx, code-quality, ci-cd
 -   Owner: Unassigned
 -   Due: —
@@ -197,7 +197,7 @@ Assumption for initial status
 14. Standardize error handling (error types, handler/middleware)
 
 -   Priority: P2
--   Status: � Not Started
+-   Status: 🟢 Complete
 -   Areas: code-quality, refactor
 -   Owner: Unassigned
 -   Due: —
@@ -224,7 +224,7 @@ Assumption for initial status
 17. Add rate limiting middleware for API endpoints
 
 -   Priority: P2
--   Status: � Not Started
+-   Status: 🟢 Complete
 -   Areas: security, performance
 -   Owner: Unassigned
 -   Due: —
@@ -234,7 +234,7 @@ Assumption for initial status
 18. Add performance metrics and instrumentation (pino + OpenTelemetry/Prometheus)
 
 -   Priority: P2
--   Status: � Not Started
+-   Status: 🟢 Complete
 -   Areas: performance, observability
 -   Owner: Unassigned
 -   Due: —
@@ -268,7 +268,7 @@ Assumption for initial status
 22. Add deployment documentation and rollback strategy
 
 -   Priority: P2
--   Status: � Not Started
+-   Status: 🟢 Complete
 -   Areas: documentation, ci-cd
 -   Owner: Unassigned
 -   Due: —
